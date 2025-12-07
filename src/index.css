@@ -1,0 +1,6 @@
+@import "tailwindcss";
+@keyframes float3d {
+  0% { transform: translateY(0px) rotateX(0deg); }
+  50% { transform: translateY(-8px) rotateX(10deg); }
+  100% { transform: translateY(0px) rotateX(0deg); }
+}
