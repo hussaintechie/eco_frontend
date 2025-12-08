@@ -1,48 +1,39 @@
-import React, { useState } from 'react';
-import { 
-  ArrowLeft, MapPin, Home, Briefcase, 
-  Navigation, Save, Snowflake, Sun, CloudRain, Flower2 
-} from 'lucide-react';
-import { useNavigate, useLocation } from 'react-router-dom';
+// src/pages/EditAddressPage.jsx
+import React, { useState, useRef, useEffect } from "react";
+import { ArrowLeft, Home, Briefcase, Navigation } from "lucide-react";
+import { useLocation, useNavigate } from "react-router-dom";
+import API from "../api/auth";
+import { editAddressAPI } from "../api/addressAPI";
 
-// --- SEASON CONFIG (Consistent) ---
 const SEASON_CONFIG = {
   winter: {
-    name: "Winter Fest",
     gradient: "bg-gradient-to-br from-blue-50 via-slate-50 to-indigo-50",
     primary: "bg-indigo-600",
     primaryText: "text-indigo-600",
     light: "bg-indigo-50",
     border: "border-indigo-100",
-    icon: Snowflake,
   },
   summer: {
-    name: "Summer Chill",
     gradient: "bg-gradient-to-br from-orange-50 via-yellow-50 to-amber-50",
     primary: "bg-orange-500",
     primaryText: "text-orange-600",
     light: "bg-orange-50",
     border: "border-orange-100",
-    icon: Sun,
   },
   spring: {
-    name: "Spring Bloom",
     gradient: "bg-gradient-to-br from-emerald-50 via-green-50 to-teal-50",
     primary: "bg-emerald-600",
     primaryText: "text-emerald-600",
     light: "bg-emerald-50",
     border: "border-emerald-100",
-    icon: Flower2,
   },
   monsoon: {
-    name: "Monsoon",
     gradient: "bg-gradient-to-br from-slate-200 via-gray-100 to-slate-300",
     primary: "bg-teal-600",
     primaryText: "text-teal-600",
     light: "bg-teal-50",
     border: "border-teal-100",
-    icon: CloudRain,
-  }
+  },
 };
 
 const getSeason = () => {
@@ -55,136 +46,431 @@ const getSeason = () => {
 
 const EditAddressPage = () => {
   const navigate = useNavigate();
-  const location = useLocation();
-  const currentSeason = getSeason();
-  const theme = SEASON_CONFIG[currentSeason];
+  const { state } = useLocation();
+  const theme = SEASON_CONFIG[getSeason()];
 
-  // Get address passed from previous page, or use defaults
-  const initialData = location.state?.address || {
-    type: "Home",
-    line1: "",
-    line2: "",
-    city: ""
+  const original = state?.address;
+
+  // If no address passed, go back
+  useEffect(() => {
+    if (!original) {
+      navigate("/addresses");
+    }
+  }, [original, navigate]);
+
+  const [loadingLocation, setLoadingLocation] = useState(false);
+  const [showMapModal, setShowMapModal] = useState(false);
+  const [detectedAddress, setDetectedAddress] = useState("");
+
+  const [address, setAddress] = useState({
+    name: original?.name || "",
+    phone: original?.phone || "",
+    line1: original?.building || original?.Building || "", // Building
+    line2: original?.street || "", // Area / Street
+    landmark: original?.landmark || "",
+    city: original?.city || "",
+    pin: original?.pincode || "",
+    type: original?.address_type || "Home",
+    lat: original?.lat || null,
+    lon: original?.lng || null,
+  });
+
+  const [mapCoords, setMapCoords] = useState({
+    lat: Number(original?.lat) || 13.0678784,
+    lng: Number(original?.lng) || 80.1767424,
+  });
+
+  const mapRef = useRef(null);
+  const mapInstanceRef = useRef(null);
+  const markerRef = useRef(null);
+  const searchInputRef = useRef(null);
+
+  const handleChange = (key, value) => {
+    setAddress((prev) => ({ ...prev, [key]: value }));
   };
 
-  const [formData, setFormData] = useState(initialData);
 
-  const handleSave = () => {
-    // In a real app, you would API call here
-    alert("Address Updated Successfully!");
-    navigate(-1); // Go back
+  const fetchAutofill = async (lat, lng) => {
+    try {
+      setLoadingLocation(true);
+
+      const res = await API.get("/auser/autofill-location", {
+        params: { lat, lng },
+      });
+
+      const data = res.data;
+
+      if (data.status === 1) {
+        const a = data.parsed;
+
+        setAddress((prev) => ({
+          ...prev,
+          lat,
+          lon: lng,
+          line1: a.building || prev.line1,
+          line2: a.area || a.street || prev.line2,
+          city: a.city || prev.city,
+          pin: a.pincode || prev.pin,
+        }));
+
+        setDetectedAddress(data.address);
+      } else {
+        alert(data.message || "Failed to autofill");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Error fetching location details");
+    } finally {
+      setLoadingLocation(false);
+    }
+  };
+
+  // GOOGLE MAP INIT IN MODAL
+  useEffect(() => {
+    if (!showMapModal) return;
+    if (!window.google) return;
+
+    mapInstanceRef.current = new window.google.maps.Map(mapRef.current, {
+      center: mapCoords,
+      zoom: 17,
+      disableDefaultUI: true,
+    });
+
+    markerRef.current = new window.google.maps.Marker({
+      position: mapCoords,
+      map: mapInstanceRef.current,
+      draggable: true,
+    });
+
+    markerRef.current.addListener("dragend", (e) => {
+      const lat = e.latLng.lat();
+      const lng = e.latLng.lng();
+      setMapCoords({ lat, lng });
+      fetchAutofill(lat, lng);
+    });
+
+    mapInstanceRef.current.addListener("click", (e) => {
+      const lat = e.latLng.lat();
+      const lng = e.latLng.lng();
+      markerRef.current.setPosition({ lat, lng });
+      setMapCoords({ lat, lng });
+      fetchAutofill(lat, lng);
+    });
+
+    const autocomplete = new window.google.maps.places.Autocomplete(
+      searchInputRef.current,
+      {
+        types: ["geocode", "establishment"],
+      }
+    );
+
+    autocomplete.addListener("place_changed", () => {
+      const place = autocomplete.getPlace();
+      if (!place.geometry) return;
+
+      const lat = place.geometry.location.lat();
+      const lng = place.geometry.location.lng();
+
+      mapInstanceRef.current.setCenter({ lat, lng });
+      markerRef.current.setPosition({ lat, lng });
+      setMapCoords({ lat, lng });
+      fetchAutofill(lat, lng);
+    });
+  }, [showMapModal]); // re-init when modal opens
+
+  const getCurrentLocation = () => {
+    if (!navigator.geolocation) {
+      alert("Location not supported");
+      return;
+    }
+
+    setLoadingLocation(true);
+
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        const { latitude, longitude } = pos.coords;
+        setMapCoords({ lat: latitude, lng: longitude });
+        
+        await fetchAutofill(latitude, longitude);
+      },
+      
+      () => {
+        alert("Location permission denied!");
+        setLoadingLocation(false);
+      },
+      {
+      enableHighAccuracy: true,
+    timeout: 15000,
+    maximumAge: 0,
+  }
+    );
+  };
+
+  const saveEditedAddress = async () => {
+    if (!original?.address_id) {
+      alert("Invalid address");
+      return;
+    }
+
+    try {
+      const payload = {
+        address_type: address.type,
+        name: address.name,
+        phone: address.phone,
+        pincode: address.pin,
+        Building: address.line1,
+        street: address.line2,
+        landmark: address.landmark,
+        city: address.city,
+        lat: address.lat,
+        lng: address.lon,
+        // is_default: original.is_default || false, // you can enable if needed
+      };
+
+      const { data } = await editAddressAPI(original.address_id, payload);
+
+      if (data.status === 1) {
+        alert("Address updated successfully!");
+        navigate("/addresses");
+      } else {
+        alert(data.message || "Failed to update address");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Error updating address");
+    }
   };
 
   return (
-    <div className={`min-h-screen flex flex-col ${theme.gradient}`}>
-      
-      {/* --- 1. Top Half: Map View --- */}
-      <div className="relative h-[40vh] bg-slate-200 w-full overflow-hidden">
-        {/* Header (Absolute) */}
-        <div className="absolute top-0 left-0 right-0 p-4 z-20 flex items-center justify-between">
-             <button onClick={() => navigate(-1)} className="w-10 h-10 bg-white shadow-md rounded-full flex items-center justify-center text-slate-700 hover:bg-slate-50">
-                <ArrowLeft size={20} />
-             </button>
-             <div className="bg-white/90 backdrop-blur px-3 py-1 rounded-full shadow-sm text-xs font-bold text-slate-600">
-                Adjust Pin
-             </div>
+    <div className={`min-h-screen ${theme.gradient} pb-20 font-sans`}>
+      {/* HEADER */}
+      <div className="bg-white sticky top-0 z-20 shadow-sm">
+        <div className="max-w-5xl mx-auto px-4 h-16 flex items-center gap-3">
+          <button
+            onClick={() => navigate(-1)}
+            className="p-2 rounded-full hover:bg-slate-100"
+          >
+            <ArrowLeft className="w-5 h-5 text-slate-700" />
+          </button>
+          <h1 className="font-bold text-lg text-slate-800">Edit Address</h1>
         </div>
-
-        {/* Simulated Map Background */}
-        <div className="absolute inset-0 opacity-20" 
-             style={{ backgroundImage: 'radial-gradient(#475569 1px, transparent 1px)', backgroundSize: '24px 24px' }}>
-        </div>
-
-        {/* Center Pin (Draggable simulation) */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 -mt-4 flex flex-col items-center">
-            <div className={`p-3 rounded-full ${theme.primary} shadow-xl ring-4 ring-white animate-bounce`}>
-                <MapPin className="text-white w-6 h-6" fill="currentColor" />
-            </div>
-            <div className="w-2 h-2 bg-black/20 rounded-full blur-[2px] mt-1"></div>
-        </div>
-
-        {/* "Locate Me" Button */}
-        <button className="absolute bottom-4 right-4 bg-white p-3 rounded-full shadow-lg text-slate-700 hover:bg-slate-50">
-            <Navigation size={20} />
-        </button>
       </div>
 
-      {/* --- 2. Bottom Half: Edit Form --- */}
-      <div className="flex-1 bg-white rounded-t-[2rem] -mt-6 relative z-10 shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.1)] p-6 md:p-8">
-         <div className="w-12 h-1.5 bg-slate-100 rounded-full mx-auto mb-6"></div>
+      {/* MAIN LAYOUT */}
+      <div className="max-w-5xl mx-auto px-4 py-6">
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
+          {/* LEFT SECTION */}
+          <div className="md:col-span-7 space-y-6">
+            {/* MAP TRIGGER + PREVIEW */}
+            <div className="bg-white rounded-2xl shadow-sm border p-6">
+              <h3 className="font-bold text-slate-800 text-lg mb-3">
+                Delivery Location
+              </h3>
 
-         <h2 className="text-xl font-bold text-slate-800 mb-6">Edit Location Details</h2>
+              <button
+                onClick={() => setShowMapModal(true)}
+                className="w-full p-3 rounded-xl border-2 border-dashed text-sm font-semibold text-slate-700 hover:bg-slate-50"
+              >
+                {loadingLocation ? "Detecting location..." : "Choose on Map"}
+              </button>
 
-         {/* Form Fields */}
-         <div className="space-y-5">
-            
-            {/* Tag Selection */}
-            <div>
-                <label className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 block">Save As</label>
-                <div className="flex gap-3">
-                    {['Home', 'Work', 'Other'].map(type => (
-                        <button
-                            key={type}
-                            onClick={() => setFormData({...formData, type})}
-                            className={`px-4 py-2 rounded-xl text-sm font-bold border transition flex items-center gap-2
-                                ${formData.type === type 
-                                    ? `${theme.light} ${theme.primaryText} ${theme.border}` 
-                                    : 'bg-white border-slate-200 text-slate-500 hover:border-slate-300'}
-                            `}
-                        >
-                            {type === 'Home' && <Home size={14}/>}
-                            {type === 'Work' && <Briefcase size={14}/>}
-                            {type === 'Other' && <MapPin size={14}/>}
-                            {type}
-                        </button>
-                    ))}
+              <button
+                onClick={getCurrentLocation}
+                className="mt-3 w-full p-2.5 rounded-xl text-xs border text-slate-600 hover:bg-slate-50"
+              >
+                Use Current Location
+              </button>
+
+              {detectedAddress && (
+                <div className="mt-4 text-xs text-slate-600 bg-slate-50 rounded-xl p-3">
+                  <div className="font-semibold text-slate-800 mb-1">
+                    Detected Address
+                  </div>
+                  <div>{detectedAddress}</div>
                 </div>
+              )}
             </div>
 
-            {/* Inputs */}
-            <div className="space-y-4">
+            {/* CONTACT + ADDRESS FORM */}
+            <div className="bg-white rounded-2xl shadow-sm border p-6">
+              {/* CONTACT DETAILS */}
+              <h3 className="font-bold text-slate-800 text-lg mb-6">
+                Contact Details
+              </h3>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div>
-                    <label className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1 block">House / Flat / Block No.</label>
-                    <input 
-                        type="text" 
-                        value={formData.line1}
-                        onChange={(e) => setFormData({...formData, line1: e.target.value})}
-                        className="w-full p-4 bg-slate-50 rounded-xl font-medium text-slate-700 outline-none focus:ring-2 focus:ring-indigo-100 transition"
+                  <label className="text-xs font-bold text-slate-400">
+                    Full Name
+                  </label>
+                  <input
+                    className="w-full p-3 rounded-xl bg-slate-50 border"
+                    placeholder="e.g. Alex Johnson"
+                    value={address.name}
+                    onChange={(e) => handleChange("name", e.target.value)}
+                  />
+                </div>
+
+                <div>
+                  <label className="text-xs font-bold text-slate-400">
+                    Phone Number
+                  </label>
+                  <input
+                    className="w-full p-3 rounded-xl bg-slate-50 border"
+                    placeholder="9876543210"
+                    value={address.phone}
+                    onChange={(e) => handleChange("phone", e.target.value)}
+                  />
+                </div>
+              </div>
+
+              {/* ADDRESS DETAILS */}
+              <h3 className="font-bold text-slate-800 text-lg mt-8 mb-6">
+                Address Details
+              </h3>
+
+              <div className="space-y-5">
+                <div>
+                  <label className="text-xs font-bold text-slate-400">
+                    House / Flat / Building
+                  </label>
+                  <input
+                    className="w-full p-3 rounded-xl bg-slate-50 border"
+                    placeholder="Flat 402, Rose Apartments"
+                    value={address.line1}
+                    onChange={(e) => handleChange("line1", e.target.value)}
+                  />
+                </div>
+
+                <div>
+                  <label className="text-xs font-bold text-slate-400">
+                    Area / Street
+                  </label>
+                  <input
+                    className="w-full p-3 rounded-xl bg-slate-50 border"
+                    placeholder="Market Road, Sector 14"
+                    value={address.line2}
+                    onChange={(e) => handleChange("line2", e.target.value)}
+                  />
+                </div>
+
+                <div>
+                  <label className="text-xs font-bold text-slate-400">
+                    Landmark (optional)
+                  </label>
+                  <input
+                    className="w-full p-3 rounded-xl bg-slate-50 border"
+                    placeholder="Near temple, shop, school"
+                    value={address.landmark}
+                    onChange={(e) =>
+                      handleChange("landmark", e.target.value)
+                    }
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  <div>
+                    <label className="text-xs font-bold text-slate-400">
+                      City
+                    </label>
+                    <input
+                      className="w-full p-3 rounded-xl bg-slate-50 border"
+                      placeholder="Chennai"
+                      value={address.city}
+                      onChange={(e) => handleChange("city", e.target.value)}
                     />
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-bold text-slate-400">
+                      Pincode
+                    </label>
+                    <input
+                      className="w-full p-3 rounded-xl bg-slate-50 border"
+                      placeholder="600001"
+                      value={address.pin}
+                      onChange={(e) => handleChange("pin", e.target.value)}
+                    />
+                  </div>
                 </div>
-                
-                <div className="flex gap-4">
-                    <div className="flex-1">
-                        <label className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1 block">Area / Street</label>
-                        <input 
-                            type="text" 
-                            value={formData.line2}
-                            onChange={(e) => setFormData({...formData, line2: e.target.value})}
-                            className="w-full p-4 bg-slate-50 rounded-xl font-medium text-slate-700 outline-none focus:ring-2 focus:ring-indigo-100 transition"
-                        />
-                    </div>
-                    <div className="flex-1">
-                        <label className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1 block">City</label>
-                        <input 
-                            type="text" 
-                            value={formData.city}
-                            onChange={(e) => setFormData({...formData, city: e.target.value})}
-                            className="w-full p-4 bg-slate-50 rounded-xl font-medium text-slate-700 outline-none focus:ring-2 focus:ring-indigo-100 transition"
-                        />
-                    </div>
-                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* RIGHT SECTION */}
+          <div className="md:col-span-5 space-y-6">
+            <div className="bg-white rounded-2xl shadow-sm border p-6 sticky top-24">
+              <div className="flex gap-3 mb-6">
+                {[
+                  { label: "Home", icon: Home },
+                  { label: "Work", icon: Briefcase },
+                  { label: "Other", icon: Navigation },
+                ].map((item) => (
+                  <button
+                    key={item.label}
+                    onClick={() => handleChange("type", item.label)}
+                    className={`flex-1 p-3 rounded-xl border ${
+                      address.type === item.label
+                        ? theme.primaryText + " font-bold"
+                        : "text-slate-500"
+                    }`}
+                  >
+                    <item.icon className="w-5 h-5 mx-auto" />
+                    <span className="text-xs">{item.label}</span>
+                  </button>
+                ))}
+              </div>
+
+              <button
+                onClick={saveEditedAddress}
+                className={`w-full py-4 rounded-xl text-white font-bold text-lg ${theme.primary}`}
+              >
+                Save Changes
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* MAP MODAL */}
+      {showMapModal && (
+        <div className="fixed inset-0 z-40 flex items-end justify-center bg-black/40">
+          <div className="bg-white w-full max-w-xl rounded-t-3xl p-4 pb-6 shadow-xl">
+            <div className="w-12 h-1.5 bg-slate-300 rounded-full mx-auto mb-4"></div>
+            <div className="flex justify-between items-center mb-3">
+              <h2 className="font-semibold text-slate-800">
+                Choose Location on Map
+              </h2>
+              <button
+                onClick={() => setShowMapModal(false)}
+                className="px-3 py-1 text-base bg-red-500 text-white rounded-lg hover:bg-red-600"
+              >
+                Close
+              </button>
             </div>
 
-            {/* Save Button */}
-            <button 
-                onClick={handleSave}
-                className={`w-full py-4 rounded-xl font-bold text-white text-lg shadow-lg shadow-indigo-200 hover:opacity-90 active:scale-[0.98] transition flex items-center justify-center gap-2 mt-4 ${theme.primary}`}
-            >
-                <Save size={20} /> Save Address
-            </button>
+            <input
+              ref={searchInputRef}
+              placeholder="Search for apartment, street..."
+              className="w-full p-2.5 mb-3 rounded-xl border text-sm"
+            />
 
-         </div>
-      </div>
+            <div
+              ref={mapRef}
+              className="w-full h-64 rounded-2xl border overflow-hidden"
+            ></div>
+
+            {detectedAddress && (
+              <p className="mt-3 text-xs text-slate-600">
+                <span className="font-semibold text-slate-800">
+                  Selected Location:
+                </span>{" "}
+                {detectedAddress}
+              </p>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 };

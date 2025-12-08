@@ -67,6 +67,8 @@ const AddNewAddressPage = () => {
     type: "Home",
     lat: null,
     lon: null,
+    full_address:"",
+
   });
 
   const [mapCoords, setMapCoords] = useState({
@@ -91,7 +93,7 @@ const AddNewAddressPage = () => {
       setLoadingLocation(true);
 
       const res = await fetch(
-        `http://192.168.56.1:5000/auser/autofill-location?lat=${lat}&lng=${lng}`
+        `http://192.168.0.210:5000/auser/autofill-location?lat=${lat}&lng=${lng}`
       );
 
       const data = await res.json();
@@ -198,13 +200,18 @@ const AddNewAddressPage = () => {
         const { latitude, longitude } = pos.coords;
 
         setMapCoords({ lat: latitude, lng: longitude });
-        setShowMapModal(true);       // open map modal
+        setShowMapModal(false);       // open map modal
         await fetchAutofill(latitude, longitude);
       },
       () => {
         alert("Location permission denied!");
         setLoadingLocation(false);
-      }
+      },
+      {
+    enableHighAccuracy: true,
+    timeout: 15000,
+    maximumAge: 0,
+  }
     );
   };
 
@@ -227,6 +234,8 @@ const saveAddress = async () => {
       lat: address.lat,
       lng: address.lon,
       is_default: false,
+      full_address:detectedAddress,
+
     };
 
     const { data } = await API.post("/auser/add", payload);
@@ -335,6 +344,8 @@ const saveAddress = async () => {
               <h3 className="font-bold text-slate-800 text-lg mt-8 mb-6">
                 Address Details
               </h3>
+
+               
 
               <div className="space-y-5">
                 <div>
