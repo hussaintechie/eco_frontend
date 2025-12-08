@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Snowflake, Sun, CloudRain, Flower2, 
-  User, MapPin, ShoppingBag, Settings, 
-  LogOut, ChevronRight, Edit2, Phone, Mail, 
-  Camera, X, Check 
+  User, MapPin, ShoppingBag,
+  LogOut, ChevronRight, Edit2, Phone,  
+   X,  
 } from 'lucide-react';
-
+import { getProfileAPI, updateProfileAPI } from "../api/profileAPI";
 import { useNavigate } from "react-router-dom";
 
 // --- 1. SEASON CONFIG (Kept same) ---
@@ -70,39 +70,61 @@ const ProfilePage = () => {
   const theme = SEASON_CONFIG[currentSeason];
   const SeasonIcon = theme.icon;
 
-  // --- STATE MANAGEMENT ---
-  const [isEditing, setIsEditing] = useState(false);
-  
-  // Real User State
+  // --- USER STATE (Backend returns only name + phone) ---
   const [user, setUser] = useState({
-    name: "Alex Johnson",
-    phone: "+91 98765 43210",
-    email: "alex.j@example.com",
-    avatar: "https://i.pravatar.cc/150?img=12"
+    name: "",
+    phone: "",
+    avatar: "https://i.pravatar.cc/150?img=12" // fallback avatar
   });
 
   // Temporary Form State (for editing)
   const [formData, setFormData] = useState(user);
 
-  // --- HANDLERS ---
-  const handleEditClick = () => {
-    setFormData(user); // Reset form to current user data
-    setIsEditing(true);
+  const [isEditing, setIsEditing] = useState(false);
+
+  // --- LOAD PROFILE FROM BACKEND ---
+  useEffect(() => {
+    loadProfile();
+  }, []);
+
+  const loadProfile = async () => {
+    try {
+      const res = await getProfileAPI();
+
+      // Merge with fallback avatar/email
+      const profileData = {
+        ...user,
+        ...res.data
+      };
+
+      setUser(profileData);
+      setFormData(profileData);
+    } catch (err) {
+      console.log("Error loading profile:", err);
+    }
   };
 
-  const handleSave = () => {
-    setUser(formData); // Commit changes
-    setIsEditing(false);
+  // --- SAVE PROFILE ---
+  const handleSave = async () => {
+    try {
+      await updateProfileAPI(formData);
+      setUser(formData);
+      setIsEditing(false);
+    } catch (err) {
+      console.log("Error updating profile:", err);
+    }
   };
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
-
+const handleremove =()=>{
+  localStorage.removeItem("token")
+  navigate("/")
+}
   const menuItems = [
     { icon: ShoppingBag, label: "My Orders", sub: "Check order status", route: "/orders" },
     { icon: MapPin, label: "Saved Addresses", sub: "Home, Office", route: "/addresses" },
-    { icon: Settings, label: "Settings", sub: "Notifications, Privacy", route: "/settings" },
   ];
 
   return (
@@ -123,10 +145,10 @@ const ProfilePage = () => {
       <div className="px-5 -mt-20">
         <div className="bg-white rounded-2xl shadow-xl p-6 relative">
 
-          {/* Edit Button Trigger */}
+          {/* Edit Button */}
           <button 
-            onClick={handleEditClick}
-            className={`absolute top-4 right-4 p-2 rounded-full ${theme.accent} ${theme.primaryText} hover:bg-gray-100 transition`}
+            onClick={() => setIsEditing(true)}
+            className={`absolute top-4 right-4 p-2 rounded-full ${theme.accent} ${theme.primaryText}`}
           >
             <Edit2 size={16} />
           </button>
@@ -134,7 +156,7 @@ const ProfilePage = () => {
           {/* User Display Info */}
           <div className="flex flex-col items-center">
             <img 
-              src={user.avatar} 
+              src={user.avatar}
               alt="Profile"
               className="w-24 h-24 rounded-full border-4 border-white shadow-md object-cover"
             />
@@ -144,146 +166,99 @@ const ProfilePage = () => {
               <Phone size={14}/> <span>{user.phone}</span>
             </div>
 
-            <div className="flex items-center gap-2 text-slate-500 text-sm">
-              <Mail size={14}/> <span>{user.email}</span>
-            </div>
-          </div>
-
-          {/* Wallet */}
-          <div className={`mt-6 p-4 rounded-xl ${theme.accent} border ${theme.border} flex justify-between items-center`}>
-            <div>
-              <p className={`${theme.primaryText} text-xs font-semibold`}>Wallet Balance</p>
-              <h3 className={`${theme.primaryText} text-xl font-bold`}>₹450.00</h3>
-            </div>
-            <button className={`bg-white px-4 py-2 rounded-lg text-sm font-semibold shadow ${theme.primaryText}`}>
-              Add Money
-            </button>
+            
           </div>
         </div>
 
-        {/* --- Menu --- */}
+        {/* Menu */}
         <div className="mt-6 space-y-4">
           {menuItems.map((item, index) => (
             <button
               key={index}
               onClick={() => navigate(item.route)}
-              className="w-full bg-white p-4 rounded-xl shadow-sm flex items-center justify-between hover:shadow-md transition"
+              className="w-full bg-white p-4 rounded-xl shadow-sm flex items-center justify-between hover:shadow-md"
             >
               <div className="flex items-center gap-4">
                 <div className={`p-3 rounded-lg ${theme.accent} ${theme.primaryText}`}>
                   <item.icon size={22} />
                 </div>
                 <div>
-                  <h4 className="font-semibold text-slate-800 text-left">{item.label}</h4>
-                  <p className="text-xs text-slate-400 text-left">{item.sub}</p>
+                  <h4 className="font-semibold text-slate-800">{item.label}</h4>
+                  <p className="text-xs text-slate-400">{item.sub}</p>
                 </div>
               </div>
               <ChevronRight size={20} className="text-slate-300" />
             </button>
           ))}
 
-          <button className="w-full bg-white p-4 rounded-xl shadow-sm flex items-center gap-4 text-red-500 hover:bg-red-50 transition border border-transparent hover:border-red-200">
-            <div className="p-3 rounded-lg bg-red-50">
-              <LogOut size={22} />
-            </div>
+          <button className="w-full bg-white p-4 rounded-xl shadow-sm flex items-center gap-4 text-red-500" onClick={handleremove}>
+            <LogOut size={22} />
             <span className="font-semibold">Log Out</span>
           </button>
         </div>
-
-        {/* Footer */}
-        <div className="mt-8 text-center pb-6">
-          <p className="text-xs text-slate-400 flex items-center justify-center gap-1">
-            Designed with <SeasonIcon className={`w-3 h-3 ${theme.primaryText}`} /> for {theme.name}
-          </p>
-        </div>
       </div>
 
-      {/* --- EDIT MODAL OVERLAY --- */}
+      {/* EDIT POPUP */}
       {isEditing && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-fade-in">
-          <div className="bg-white rounded-2xl w-full max-w-sm shadow-2xl overflow-hidden">
-            
-            {/* Modal Header */}
-            <div className={`p-4 border-b ${theme.border} flex justify-between items-center bg-gray-50`}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-2xl w-full max-w-sm shadow-xl">
+
+            {/* Header */}
+            <div className={`p-4 border-b ${theme.border} flex justify-between bg-gray-50`}>
               <h3 className="font-bold text-lg text-slate-800">Edit Profile</h3>
-              <button onClick={() => setIsEditing(false)} className="p-1 rounded-full hover:bg-gray-200 text-slate-500">
+              <button onClick={() => setIsEditing(false)} className="p-1">
                 <X size={20} />
               </button>
             </div>
 
-            {/* Modal Body */}
+            {/* Body */}
             <div className="p-6 space-y-4">
-              
-              {/* Avatar Change (Visual Only) */}
-              <div className="flex justify-center mb-6">
-                <div className="relative">
-                   <img src={formData.avatar} className="w-20 h-20 rounded-full object-cover opacity-80" alt="edit" />
-                   <div className={`absolute inset-0 flex items-center justify-center bg-black/30 rounded-full cursor-pointer`}>
-                      <Camera className="text-white w-8 h-8" />
-                   </div>
-                </div>
-              </div>
 
-              {/* Name Input */}
+              {/* Name */}
               <div className="space-y-1">
                 <label className="text-xs font-semibold text-slate-500 uppercase">Full Name</label>
                 <div className="relative">
-                  <User className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
+                  <User className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
                   <input 
-                    type="text" 
+                    type="text"
                     name="name"
                     value={formData.name}
                     onChange={handleChange}
-                    className={`w-full pl-10 pr-4 py-3 rounded-xl bg-slate-50 border-none outline-none focus:ring-2 ${theme.ring} transition`}
+                    className={`w-full pl-10 py-3 rounded-xl bg-slate-50 outline-none focus:ring-2 ${theme.ring}`}
                   />
                 </div>
               </div>
 
-              {/* Phone Input */}
+              {/* Phone */}
               <div className="space-y-1">
                 <label className="text-xs font-semibold text-slate-500 uppercase">Phone Number</label>
                 <div className="relative">
-                  <Phone className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
+                  <Phone className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
                   <input 
-                    type="text" 
+                    type="text"
                     name="phone"
                     value={formData.phone}
                     onChange={handleChange}
-                    className={`w-full pl-10 pr-4 py-3 rounded-xl bg-slate-50 border-none outline-none focus:ring-2 ${theme.ring} transition`}
-                  />
-                </div>
-              </div>
-
-               {/* Email Input */}
-               <div className="space-y-1">
-                <label className="text-xs font-semibold text-slate-500 uppercase">Email Address</label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
-                  <input 
-                    type="email" 
-                    name="email"
-                    value={formData.email}
-                    onChange={handleChange}
-                    className={`w-full pl-10 pr-4 py-3 rounded-xl bg-slate-50 border-none outline-none focus:ring-2 ${theme.ring} transition`}
+                    className={`w-full pl-10 py-3 rounded-xl bg-slate-50 outline-none focus:ring-2 ${theme.ring}`}
                   />
                 </div>
               </div>
 
             </div>
 
-            {/* Modal Footer */}
-            <div className="p-4 border-t border-gray-100 flex gap-3">
+            {/* Footer */}
+            <div className="p-4 border-t flex gap-3">
               <button 
                 onClick={() => setIsEditing(false)}
-                className="flex-1 py-3 rounded-xl font-semibold text-slate-600 bg-gray-100 hover:bg-gray-200 transition"
+                className="flex-1 py-3 rounded-xl bg-gray-100"
               >
                 Cancel
               </button>
               <button 
                 onClick={handleSave}
-                className={`flex-1 py-3 rounded-xl font-semibold text-white ${theme.primary} shadow-lg shadow-indigo-200 hover:opacity-90 transition flex items-center justify-center gap-2`}
+                className={`flex-1 py-3 rounded-xl text-white ${theme.primary}`}
               >
-                <Check size={18} /> Save Changes
+                 Save
               </button>
             </div>
 

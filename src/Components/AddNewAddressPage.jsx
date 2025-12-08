@@ -93,7 +93,7 @@ const AddNewAddressPage = () => {
       setLoadingLocation(true);
 
       const res = await fetch(
-        `http://192.168.0.210:5000/auser/autofill-location?lat=${lat}&lng=${lng}`
+        `http://localhost:5000/auser/autofill-location?lat=${lat}&lng=${lng}`
       );
 
       const data = await res.json();
