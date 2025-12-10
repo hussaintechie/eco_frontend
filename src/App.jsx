@@ -41,6 +41,7 @@ function App() {
         <Route path="/checkout" element={<CheckoutPage />} />
         <Route path="/profile" element={<ProfilePage />} />
         <Route path="/cart" element={<CartPage />} />
+        
         <Route path="/addresses" element={<SavedAddressesPage />} />
         <Route path="/orders" element={<MyOrdersPage />} />
         <Route path="/settings" element={<SettingsPage />} />
