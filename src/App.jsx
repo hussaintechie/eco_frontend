@@ -18,6 +18,7 @@ import OrderDetailPage from "./Components/OrderDetailPage.jsx";
 import EditAddressPage from "./Components/EditAddressPage.jsx";
 import ForgotPasswordForm from "./Components/ForgotPasswordForm.jsx"
 import ResetPasswordForm from "./Components/ResetPasswordForm.jsx"
+import PostPaymentDeliveryFlow from "./Components/PostPaymentDeliveryFlow.jsx"
 
 
 function App() {
@@ -50,6 +51,7 @@ function App() {
         <Route path="/track-order" element={<TrackOrderPage />} />
         <Route path="/order-details" element={<OrderDetailPage />} />
         <Route path="/edit-address" element={<EditAddressPage />} />
+        <Route path ="/PostPaymentDeliveryFlow" element={<PostPaymentDeliveryFlow/>}></Route>
       </Routes>
     </BrowserRouter>
   );
