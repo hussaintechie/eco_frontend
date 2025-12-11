@@ -3,8 +3,14 @@ import {
   ArrowLeft, Home, ChevronDown, Minus, Plus, Wallet, ChevronRight, X,
   Snowflake, Sun, CloudRain, Flower2, BellOff, DoorOpen, Phone,
   CreditCard, Smartphone, FileText, ShieldCheck, AlertCircle,
-  Briefcase, MapPin, PlusCircle, CheckCircle2
+  Briefcase, MapPin, PlusCircle, CheckCircle2,
+  AwardIcon
 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+
+
+
+
 
 import { SEASON_CONFIG, getSeason } from "../SEASON_CONFIG.jsx";
 import {
@@ -14,15 +20,18 @@ import {
   updateCartQtyAPI,
   clearCartAPI
 } from "../api/cartapi.js";
+import {fetchAddresses} from "../api/addressAPI.js"
+const iconMap = {
+  Home: Home,
+  Work: Briefcase,
+  Other: MapPin,
+};
+
 
 // ------------------------------------------------
 // STATIC DATA (UI-ONLY SECTIONS)
 // ------------------------------------------------
-const savedAddresses = [
-  { id: 1, type: "Home", address: "19, MGR University Road, VGP Ambattur", icon: Home },
-  { id: 2, type: "Work", address: "Tech Park, 4th Floor, OMR Road, Chennai", icon: Briefcase },
-  { id: 3, type: "Other", address: "Flat 4B, Green Valley Apts, Adyar", icon: MapPin },
-];
+
 
 const bestsellers = [
   {
@@ -79,10 +88,13 @@ const paymentOptions = [
 // MAIN COMPONENT
 // ------------------------------------------------
 const cartpage = () => {
+  const navigate = useNavigate();
   // Season / theme
   // Season / theme
 const [currentSeason, setCurrentSeason] = useState("spring");
 const [theme, setTheme] = useState(SEASON_CONFIG.spring);
+const [savedAddresses, setSavedAddresses] = useState([]);
+
 
 // Delivery slots
 const [todaySlots, setTodaySlots] = useState([]);
@@ -106,7 +118,7 @@ const [selectedSlot, setSelectedSlot] = useState("");
 const [selectedInstruction, setSelectedInstruction] = useState("");
 const [customInstruction, setCustomInstruction] = useState("");
 const [selectedPayment, setSelectedPayment] = useState(paymentOptions[0]);
-const [selectedAddress, setSelectedAddress] = useState(savedAddresses[0]);
+const [selectedAddress, setSelectedAddress] = useState(null);
 const [slots, setSlots] = useState([]);
 
 
@@ -142,7 +154,39 @@ useEffect(() => {
   loadCart();
   loadBill();
   loadSlots();
+  loadAddresses();
 }, []);
+ 
+const loadAddresses = async () => {
+  try {
+    const res = await fetchAddresses();
+
+    // API returns an array directly
+    const raw = Array.isArray(res?.data) ? res.data : [];
+
+    // Ensure fallback for missing full_address
+    const list = raw.map(a => ({
+      address_id: a.address_id,
+      address_type: a.address_type,
+      full_address: a.full_address || 
+                    `${a.building || ""} ${a.street || ""} ${a.city || ""} ${a.pincode || ""}`.trim()
+    }));
+
+    setSavedAddresses(list);
+
+    // Select default address or first address
+    const defaultAddress = list.find(a => a.is_default) || list[0];
+
+    if (defaultAddress) setSelectedAddress(defaultAddress);
+
+  } catch (err) {
+    console.error("Error loading addresses:", err);
+    setSavedAddresses([]);
+  }
+};
+
+
+
 
 
   // -------------------------------
@@ -257,10 +301,20 @@ const handleClearCart = async () => {
                   className="flex items-center gap-1 text-xs text-slate-500 hidden md:flex cursor-pointer hover:text-slate-700"
                   onClick={() => setShowAddressModal(true)}
                 >
-                  <selectedAddress.icon className="w-3 h-3" />
-                  <span className="truncate max-w-[220px]">
-                    {selectedAddress.type} • {selectedAddress.address}
-                  </span>
+                {selectedAddress && (
+  <>
+    {(() => {
+      const Icon = iconMap[selectedAddress.address_type] || MapPin;
+      return <Icon className="w-3 h-3" />;
+    })()}
+
+    <span className="truncate max-w-[220px]">
+      {selectedAddress.address_type} • {selectedAddress.full_address}
+    </span>
+  </>
+)}
+
+
                   <ChevronDown className="w-3 h-3" />
                 </div>
               </div>
@@ -282,12 +336,23 @@ const handleClearCart = async () => {
 
         {/* Mobile header address */}
         <div
-          className="md:hidden px-4 pb-2 text-xs text-slate-500 flex items-center gap-1 cursor-pointer"
-          onClick={() => setShowAddressModal(true)}
-        >
-          <selectedAddress.icon className="w-3 h-3" />
-          <span className="truncate">{selectedAddress.type} • {selectedAddress.address}</span>
-        </div>
+  className="md:hidden px-4 pb-2 text-xs text-slate-500 flex items-center gap-1 cursor-pointer"
+  onClick={() => setShowAddressModal(true)}
+>
+  {selectedAddress && (
+    <>
+      {(() => {
+        const Icon = iconMap[selectedAddress.address_type] || MapPin;
+        return <Icon className="w-3 h-3" />;
+      })()}
+
+      <span className="truncate">
+        {selectedAddress.address_type} • {selectedAddress.full_address}
+      </span>
+    </>
+  )}
+</div>
+
 
         {/* Congrats strip */}
        
@@ -312,18 +377,29 @@ const handleClearCart = async () => {
               </button>
             </div>
 
-            <div className="flex items-start gap-4">
-              <div className={`p-3 rounded-xl ${theme.light} shrink-0`}>
-                <selectedAddress.icon className={`w-6 h-6 ${theme.primaryText}`} />
-              </div>
-              <div>
-                <h4 className="font-bold text-slate-800">{selectedAddress.type}</h4>
-                <p className="text-sm text-slate-500 mt-1 leading-relaxed">
-                  {selectedAddress.address}
-                </p>
-               
-              </div>
-            </div>
+           <div className="flex items-start gap-4">
+  {selectedAddress && (
+    <>
+      <div className={`p-3 rounded-xl ${theme.light} shrink-0`}>
+        {(() => {
+          const Icon = iconMap[selectedAddress.address_type] || MapPin;
+          return <Icon className={`w-6 h-6 ${theme.primaryText}`} />;
+        })()}
+      </div>
+
+      <div>
+        <h4 className="font-bold text-slate-800">
+          {selectedAddress.address_type}
+        </h4>
+
+        <p className="text-sm text-slate-500 mt-1 leading-relaxed">
+          {selectedAddress.full_address}
+        </p>
+      </div>
+    </>
+  )}
+</div>
+
           </div>
 
           {/* BAG TOGGLE */}
@@ -635,9 +711,10 @@ const handleClearCart = async () => {
       {/* SLOT MODAL (uses backend slots; falls back to static) */}
      {/* SLOT MODAL */}
 {/* SLOT MODAL */}
+{/* SLOT MODAL */}
 {showSlotModal && (
   <div className="fixed inset-0 z-[60] flex items-end md:items-center justify-center bg-black/60 backdrop-blur-sm p-0 md:p-6">
-   <div className="bg-white w-full md:max-w-lg rounded-t-3xl md:rounded-3xl p-5 md:p-8 max-h-[80vh] overflow-y-auto relative">
+    <div className="bg-white w-full md:max-w-lg rounded-t-3xl md:rounded-3xl p-5 md:p-8 max-h-[80vh] overflow-y-auto relative">
 
       {/* HEADER */}
       <div className="flex justify-between items-center mb-6">
@@ -675,8 +752,22 @@ const handleClearCart = async () => {
         })}
       </div>
 
-      {/* SLOT LIST (NOW USING slots[]) */}
+      {/* SLOT LIST */}
       <div className="space-y-3 mb-24 md:mb-8">
+
+        {/* 🔥 ASAP OPTION */}
+        <button
+          onClick={() => setSelectedSlot("Deliver Immediately")}
+          className={`w-full text-left py-3 px-3 rounded-lg border text-sm font-medium transition-all ${
+            selectedSlot === "Deliver Immediately"
+              ? `${theme.light} ${theme.border} ${theme.primaryText} ring-1`
+              : "bg-white border-slate-200 hover:bg-slate-50"
+          }`}
+        >
+          🚀 Deliver Immediately 
+        </button>
+
+        {/* AVAILABLE SLOTS */}
         {slots.length > 0 ? (
           slots.map((slot, idx) => {
             const active = selectedSlot === slot.label;
@@ -704,7 +795,12 @@ const handleClearCart = async () => {
       {/* CONFIRM BUTTON */}
       <div className="fixed md:static bottom-0 left-0 right-0 p-5 md:p-0 bg-white border-t md:border-t-0">
         <button
-          onClick={() => setShowSlotModal(false)}
+          onClick={() => {
+            if (!selectedSlot) {
+              setSelectedSlot("Deliver Immediately");
+            }
+            setShowSlotModal(false);
+          }}
           className={`w-full ${theme.primary} text-white font-bold py-4 rounded-xl shadow-lg`}
         >
           Confirm Slot
@@ -714,6 +810,7 @@ const handleClearCart = async () => {
     </div>
   </div>
 )}
+
 
       {/* INSTRUCTIONS MODAL */}
       {showInstructionModal && (
@@ -836,6 +933,7 @@ const handleClearCart = async () => {
             <div className="flex-1 overflow-y-auto space-y-4">
               {/* Add New Button (UI only now) */}
               <button
+              onClick={()=>navigate("/add-address")}
                 className={`w-full p-4 border border-dashed ${theme.border} ${theme.light} rounded-xl flex items-center gap-3 hover:brightness-95 transition`}
               >
                 <PlusCircle className={`w-5 h-5 ${theme.primaryText}`} />
@@ -847,51 +945,61 @@ const handleClearCart = async () => {
               </h3>
 
               {savedAddresses.map((addr) => {
-                const isSelected = selectedAddress.id === addr.id;
-                return (
-                  <div
-                    key={addr.id}
-                    onClick={() => {
-                      setSelectedAddress(addr);
-                      setShowAddressModal(false);
-                    }}
-                    className={`p-4 rounded-xl border cursor-pointer transition-all flex items-start gap-3 ${
-                      isSelected
-                        ? `${theme.border} bg-slate-50 ring-1 ring-inset ${theme.primaryText}`
-                        : "border-slate-100 hover:border-slate-300"
-                    }`}
-                  >
-                    <div
-                      className={`p-2 rounded-lg ${
-                        isSelected ? theme.light : "bg-slate-100"
-                      }`}
-                    >
-                      <addr.icon
-                        className={`w-5 h-5 ${
-                          isSelected ? theme.primaryText : "text-slate-500"
-                        }`}
-                      />
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex justify-between items-center">
-                        <h4
-                          className={`font-bold text-sm ${
-                            isSelected ? "text-slate-800" : "text-slate-600"
-                          }`}
-                        >
-                          {addr.type}
-                        </h4>
-                        {isSelected && (
-                          <CheckCircle2 className={`w-4 h-4 ${theme.primaryText}`} />
-                        )}
-                      </div>
-                      <p className="text-xs text-slate-500 mt-1 leading-relaxed">
-                        {addr.address}
-                      </p>
-                    </div>
-                  </div>
-                );
-              })}
+  const isSelected = selectedAddress?.address_id === addr.address_id;
+
+  // pick correct icon
+  const Icon = iconMap[addr.address_type] || MapPin;
+
+  return (
+    <div
+      key={addr.address_id}
+      onClick={() => {
+        setSelectedAddress(addr);
+        setShowAddressModal(false);
+      }}
+      className={`p-4 rounded-xl border cursor-pointer transition-all flex items-start gap-3 ${
+        isSelected
+          ? `${theme.border} bg-slate-50 ring-1 ring-inset ${theme.primaryText}`
+          : "border-slate-100 hover:border-slate-300"
+      }`}
+    >
+      {/* ICON BOX */}
+      <div
+        className={`p-2 rounded-lg ${
+          isSelected ? theme.light : "bg-slate-100"
+        }`}
+      >
+        <Icon
+          className={`w-5 h-5 ${
+            isSelected ? theme.primaryText : "text-slate-500"
+          }`}
+        />
+      </div>
+
+      {/* TEXT */}
+      <div className="flex-1">
+        <div className="flex justify-between items-center">
+          <h4
+            className={`font-bold text-sm ${
+              isSelected ? "text-slate-800" : "text-slate-600"
+            }`}
+          >
+            {addr.address_type}
+          </h4>
+
+          {isSelected && (
+            <CheckCircle2 className={`w-4 h-4 ${theme.primaryText}`} />
+          )}
+        </div>
+
+        <p className="text-xs text-slate-500 mt-1 leading-relaxed">
+          {addr.full_address}
+        </p>
+      </div>
+    </div>
+  );
+})}
+
             </div>
           </div>
         </div>
