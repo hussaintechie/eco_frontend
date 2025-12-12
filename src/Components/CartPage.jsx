@@ -314,6 +314,10 @@
     // 🔥 Force UPI Intent
     method: {
       upi: true,
+      emi:false,
+      netbanking:false,
+      wallet:false,
+      paylater:false,
     },
 
     upi: {
