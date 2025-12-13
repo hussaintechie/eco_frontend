@@ -304,15 +304,13 @@
       const { key, amount, orderId } = res.data;
 
   const options = {
-    key,
-    amount,
-    currency: "INR",
-    name: "My Grocery App",
-    description: "Order Payment",
-    order_id: orderId,
-
-    // 🔥 Force UPI Intent
-    method: {
+  key,
+  amount,
+  currency: "INR",
+  name: "BALAJI SHOP",
+  description: "Order Payment",
+  order_id: orderId,
+  method: {
       upi: true,
       emi:false,
       netbanking:false,
@@ -324,73 +322,125 @@
       flow: "intent",   // ⭐ This enables direct GPay opening
     },
 
-    handler: function (response) {
-    submitFinalOrder(
-      "Online",
-      "Paid",
-      response.razorpay_payment_id,
-      response.razorpay_order_id,
-      response.razorpay_signature
-    );
+
+  handler: async function (response) {
+    try {
+      const verifyRes = await API.post("/api/payment/verify", {
+        razorpay_order_id: response.razorpay_order_id,
+        razorpay_payment_id: response.razorpay_payment_id,
+        razorpay_signature: response.razorpay_signature,
+      });
+
+      if (verifyRes.data.success) {
+        await submitFinalOrder(
+          "Online",
+          "Paid",
+          response.razorpay_payment_id,
+          response.razorpay_order_id,
+          response.razorpay_signature
+        );
+      } else {
+        alert("Payment verification failed");
+      }
+    } catch (err) {
+      alert("Payment verification error");
+    }
   },
 
+  modal: {
+    ondismiss: function () {
+      alert("Payment cancelled by user");
+    }
+  }
+};
 
-    modal: {
-      ondismiss: function () {
-        alert("Payment cancelled");
-      },
-    },
-  };
+const rzp = new window.Razorpay(options);
 
+/* ✅ PAYMENT FAILED HANDLER */
+rzp.on("payment.failed", function (response) {
+  console.error("Payment failed:", response.error);
 
+  alert(
+    `Payment Failed\nReason: ${response.error.description || "Unknown"}`
+  );
 
-  const rzp = new window.Razorpay(options);
-  rzp.open();
+  // OPTIONAL: save failed payment to DB
+  saveFailedPayment(response.error);
+});
+
+rzp.open();
+
 
     } catch (err) {
       console.error(err);
       alert("Payment initialization failed");
     }
   };
+  const getSelectedDeliveryDate = () => {
+  const today = new Date();
+
+  let selectedDateObj = today;
+
+  if (selectedDate === "Tomorrow") {
+    selectedDateObj = new Date();
+    selectedDateObj.setDate(today.getDate() + 1);
+  }
+
+  return selectedDateObj.toLocaleDateString("en-IN"); 
+  // e.g. 12/12/2025
+};
+
   const submitFinalOrder = async (
-    payment_method,
-    payment_status,
-    razorpay_payment_id,
-    razorpay_order_id,
-    razorpay_signature
-  ) => {
-    try {
-      const payload = {
-        address_delivery: selectedAddress.full_address,
-        total_amount: toPay,
-        order_status: "Pending",
-        delivery_id: 1,
-        payment_status,
-        payment_method,
-        razorpay_payment_id,
-        razorpay_order_id,
-        razorpay_signature,
-        items_details: cart.map(item => ({
-          product_id: item.product_id,
-          product_name: item.product_name,
-          product_qty: item.quantity,
-          product_unit: item.unit ?? 1,
-          product_rate: item.price,
-          product_amount: item.price * item.quantity,
-          discount_amt: 0,
-          discount_per: 0
-        }))
-      };
+  payment_method,
+  payment_status,
+  razorpay_payment_id,
+  razorpay_order_id,
+  razorpay_signature
+) => {
+  const deliveryDate = getSelectedDeliveryDate();
 
-      await API.post("/product/submitorder", payload);
+const finalDeliverySlot = `${deliveryDate} ${selectedSlot || "Deliver Immediately"}`;
+
+  try {
+    const payload = {
+      address_delivery: selectedAddress.full_address,
+      total_amount: toPay,
+      order_status: "Pending",
+      delivery_id: 1,
+      delivery_slot: finalDeliverySlot,
+      payment_status,
+      payment_method,
+      razorpay_payment_id,
+      razorpay_order_id,
+      razorpay_signature,
+      items_details: cart.map(item => ({
+        product_id: item.product_id,
+        product_name: item.product_name,
+        product_qty: item.quantity,
+        product_unit: item.unit ?? 1,
+        product_rate: item.price,
+        product_amount: item.price * item.quantity,
+        discount_amt: 0,
+        discount_per: 0,
+        
+      }))
+    };
+
+    const res = await API.post("/product/submitorder", payload);
+
+    if (res.data?.status === 1) {
       await clearCartAPI();
-      navigate("/order-success");
-
-    } catch (error) {
-      console.error(error);
-      alert("Order saving failed!");
+      navigate("/PostPaymentDeliveryFlow");
+    } else {
+      alert(res.data?.message || "Order failed after payment");
     }
-  };
+    
+
+  } catch (error) {
+    console.error(error);
+    alert("Order failed. Amount will be refunded if debited.");
+  }
+};
 
 
 
@@ -606,11 +656,11 @@
                           </p>
                           {item.weight && (
                             <p className="text-xs text-slate-500 mt-1">
-                              {item.weight}
+                              {item.weight }
                             </p>
                           )}
                         </div>
-                        <p className="font-bold text-slate-800">₹{item.price}</p>
+                        <p className="font-bold text-slate-800">₹{item.price * item.quantity } </p>
                       </div>
 
                       <div className="flex justify-between items-center mt-3">
@@ -693,9 +743,23 @@
 
           {/* RIGHT COLUMN – BILL CARD + DESKTOP CTA */}
           <div className="lg:col-span-1">
+
             <div className="sticky top-24 space-y-6">
               {/* BILL CARD */}
               <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+                {deliveryFee !== 0 && (
+  <div className="bg-white p-4  border-slate-100 mt-2">
+    <p
+      className="text-center text-sm font-extrabold
+      bg-gradient-to-r from-indigo-600 via-purple-600 to-violet-600
+      bg-clip-text text-transparent
+      animate-pulse"
+    >
+      ✨ FREE Delivery above ₹200 ✨
+    </p>
+  </div>
+)}
+
                 <h4 className="font-bold text-slate-800 text-lg mb-4">Bill Details</h4>
                 <div className="space-y-3">
                   <div className="flex justify-between text-sm text-slate-600">
@@ -707,22 +771,18 @@
                     <span>₹{handlingFee}</span>
                   </div>
                   <div className="flex justify-between text-sm text-slate-600">
+                             
                     <span>Delivery Fee</span>
                     <span className={`${theme.primaryText} font-semibold`}>
                       {deliveryFee === 0 ? "FREE" : `₹${deliveryFee}`}
+                    
                     </span>
-                  </div>
+                            </div>
+                            
+
 
                   {/* Minimum Order Warning */}
-                  {!canPlaceOrder && (
-                    <div className="bg-red-50 text-red-600 p-3 rounded-lg text-xs flex items-start gap-2 mt-2">
-                      <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
-                      <span>
-                        Minimum order value is ₹{MIN_ORDER_VALUE}. Add items worth ₹
-                        {amountNeeded} to place order.
-                      </span>
-                    </div>
-                  )}
+                 
                 </div>
                 <div className="h-px bg-slate-100 my-4" />
                 <div className="flex justify-between text-lg font-bold text-slate-800">
