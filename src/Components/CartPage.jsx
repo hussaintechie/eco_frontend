@@ -755,7 +755,7 @@ const finalDeliverySlot = `${deliveryDate} ${selectedSlot || "Deliver Immediatel
       bg-clip-text text-transparent
       animate-pulse"
     >
-      ✨ FREE Delivery above ₹200 ✨
+      ✨ FREE Delivery above ₹150 ✨
     </p>
   </div>
 )}

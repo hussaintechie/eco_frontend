@@ -1,17 +1,19 @@
 // src/SEASON_CONFIG.jsx
 import { Snowflake, Sun, CloudRain, Flower2 } from "lucide-react";
 
+// --- THEME CONFIGURATION ---
 const COMMON = {
   cardBg: "bg-white",
   badge: "bg-black/60",
   bannerTone: "",
-  accentText: "text-gray-800",
+  accentText: "text-gray-900",
 };
 
 const SEASON_CONFIG = {
   winter: {
     name: "Winter Fest",
-    gradient: "bg-gradient-to-br from-blue-50 via-slate-50 to-indigo-50",
+    // Deep, crisp blues and violets
+    gradient: "bg-slate-50", 
     primary: "bg-indigo-600",
     primaryText: "text-indigo-600",
     accent: "bg-indigo-50",
@@ -25,7 +27,8 @@ const SEASON_CONFIG = {
 
   summer: {
     name: "Summer Chill",
-    gradient: "bg-gradient-to-br from-orange-50 via-yellow-50 to-amber-50",
+    // Warm, golden glow
+    gradient: "bg-orange-50/30",
     primary: "bg-orange-500",
     primaryText: "text-orange-600",
     accent: "bg-orange-50",
@@ -39,7 +42,8 @@ const SEASON_CONFIG = {
 
   spring: {
     name: "Spring Bloom",
-    gradient: "bg-gradient-to-br from-emerald-50 via-green-50 to-teal-50",
+    // Fresh greens and soft pinks
+    gradient: "bg-emerald-50/30",
     primary: "bg-emerald-600",
     primaryText: "text-emerald-600",
     accent: "bg-emerald-50",
@@ -53,7 +57,8 @@ const SEASON_CONFIG = {
 
   monsoon: {
     name: "Monsoon",
-    gradient: "bg-gradient-to-br from-slate-200 via-gray-100 to-slate-300",
+    // Cool, moody teals and grays
+    gradient: "bg-slate-100",
     primary: "bg-teal-600",
     primaryText: "text-teal-600",
     accent: "bg-teal-50",
@@ -66,144 +71,117 @@ const SEASON_CONFIG = {
   },
 };
 
-
 const getSeason = () => {
   const month = new Date().getMonth();
-  // Month is 0-indexed (0 = Jan, 11 = Dec)
   if (month === 10 || month === 11 || month === 0) return "winter";
   if (month === 1 || month === 2) return "spring";
   if (month >= 3 && month <= 5) return "summer";
-  return "monsoon"; // June - Oct roughly
+  return "monsoon"; 
 };
 
-// --- 2. PARTICLES COMPONENT ---
+// --- NEW CREATIVE BACKGROUND COMPONENT ---
 const SeasonalParticles = ({ season }) => {
-  const particles = Array.from({ length: 25 }).map((_, i) => ({
-    id: i,
-    left: `${Math.random() * 100}%`,
-    animationDelay: `${Math.random() * 5}s`,
-    animationDuration: `${Math.random() * 5 + 5}s`,
-    size: Math.random() * 15 + 5,
-  }));
+  
+  // 1. Texture Overlay (Makes it look like premium paper/grain)
+  const NoiseOverlay = () => (
+    <div className="fixed inset-0 z-0 pointer-events-none opacity-[0.04] mix-blend-overlay"
+      style={{
+        backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='1'/%3E%3C/svg%3E")`
+      }}
+    />
+  );
 
+  /* --- WINTER: Northern Lights Vibe --- */
   if (season === "winter") {
     return (
-      <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
-        {particles.map((p) => (
-          <div
-            key={p.id}
-            className="absolute text-white/60 animate-fall"
-            style={{
-              left: p.left,
-              top: -50,
-              fontSize: `${p.size}px`,
-              animationDelay: p.animationDelay,
-              animationDuration: `${parseFloat(p.animationDuration) + 5}s`,
-            }}
-          >
-            ❄
-          </div>
-        ))}
+      <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden bg-slate-50">
+        <NoiseOverlay />
+        {/* Large breathing blue/purple orbs */}
+        <div className="absolute top-[-10%] left-[-10%] w-[50vw] h-[50vw] bg-blue-300/30 rounded-full blur-[100px] animate-float-slow delay-0"></div>
+        <div className="absolute bottom-[10%] right-[-10%] w-[60vw] h-[60vw] bg-indigo-300/20 rounded-full blur-[120px] animate-float-slow delay-1000"></div>
+        <div className="absolute top-[40%] left-[30%] w-[40vw] h-[40vw] bg-violet-200/30 rounded-full blur-[80px] animate-pulse-slow"></div>
+        
         <style>{`
-          @keyframes fall {
-            0% { transform: translateY(-50px) rotate(0deg); opacity: 0; }
-            10% { opacity: 0.8; }
-            100% { transform: translateY(100vh) rotate(360deg); opacity: 0; }
+          @keyframes float-slow {
+            0%, 100% { transform: translate(0, 0); }
+            50% { transform: translate(30px, 40px); }
           }
-          .animate-fall { animation-name: fall; animation-timing-function: linear; animation-iteration-count: infinite; }
+          @keyframes pulse-slow {
+            0%, 100% { transform: scale(1); opacity: 0.3; }
+            50% { transform: scale(1.1); opacity: 0.5; }
+          }
+          .animate-float-slow { animation: float-slow 15s ease-in-out infinite; }
+          .animate-pulse-slow { animation: pulse-slow 10s ease-in-out infinite; }
         `}</style>
       </div>
     );
   }
 
+  /* --- SUMMER: Heat Haze & Golden Hour --- */
   if (season === "summer") {
     return (
-      <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
-        {/* Sun Glare Effect */}
-        <div className="absolute top-[-150px] right-[-150px] w-[500px] h-[500px] bg-yellow-400/20 rounded-full blur-[100px] animate-pulse"></div>
-        {particles.map((p) => (
-          <div
-            key={p.id}
-            className="absolute bg-orange-200/40 rounded-full animate-float"
-            style={{
-              left: p.left,
-              bottom: -20,
-              width: `${p.size / 2}px`,
-              height: `${p.size / 2}px`,
-              animationDelay: p.animationDelay,
-              animationDuration: `${parseFloat(p.animationDuration) * 0.5}s`,
-            }}
-          ></div>
-        ))}
+      <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden bg-[#FFFBF0]">
+        <NoiseOverlay />
+        {/* A large "Sun" glow that rotates slowly */}
+        <div className="absolute top-[-20%] right-[-20%] w-[80vw] h-[80vw] bg-gradient-to-b from-orange-300/30 to-yellow-200/10 rounded-full blur-[100px] animate-spin-slow"></div>
+        
+        {/* Rising heat blobs */}
+        <div className="absolute bottom-[-10%] left-[20%] w-[40vw] h-[40vw] bg-amber-200/40 rounded-full blur-[80px] animate-rise"></div>
+        
         <style>{`
-          @keyframes float {
-            0% { transform: translateY(100px) translateX(0); opacity: 0; }
-            20% { opacity: 0.6; }
-            100% { transform: translateY(-100vh) translateX(50px); opacity: 0; }
+          @keyframes spin-slow {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
           }
-          .animate-float { animation-name: float; animation-timing-function: ease-in; animation-iteration-count: infinite; }
+          @keyframes rise {
+            0%, 100% { transform: translateY(0) scale(1); }
+            50% { transform: translateY(-50px) scale(1.1); }
+          }
+          .animate-spin-slow { animation: spin-slow 60s linear infinite; }
+          .animate-rise { animation: rise 20s ease-in-out infinite; }
         `}</style>
       </div>
     );
   }
 
+  /* --- SPRING: Soft Pastel Bloom --- */
   if (season === "spring") {
     return (
-      <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
-        {particles.map((p) => (
-          <div
-            key={p.id}
-            className="absolute text-pink-400/50 animate-sway"
-            style={{
-              left: p.left,
-              top: -50,
-              fontSize: `${p.size}px`,
-              animationDelay: p.animationDelay,
-              animationDuration: `${parseFloat(p.animationDuration) * 1.5}s`,
-            }}
-          >
-            🌸
-          </div>
-        ))}
+      <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden bg-emerald-50/20">
+        <NoiseOverlay />
+        {/* Pink and Green merging blobs */}
+        <div className="absolute top-[10%] left-[10%] w-[40vw] h-[40vw] bg-green-200/30 rounded-full blur-[90px] animate-drift-1"></div>
+        <div className="absolute top-[20%] right-[10%] w-[35vw] h-[35vw] bg-pink-200/30 rounded-full blur-[90px] animate-drift-2"></div>
+        <div className="absolute bottom-[-10%] left-[30%] w-[50vw] h-[50vw] bg-emerald-100/40 rounded-full blur-[100px] animate-drift-3"></div>
+
         <style>{`
-          @keyframes sway {
-            0% { transform: translateY(-50px) translateX(0) rotate(0deg); opacity: 0; }
-            20% { opacity: 0.8; }
-            50% { transform: translateY(50vh) translateX(100px) rotate(180deg); }
-            100% { transform: translateY(100vh) translateX(-50px) rotate(360deg); opacity: 0; }
-          }
-          .animate-sway { animation-name: sway; animation-timing-function: ease-in-out; animation-iteration-count: infinite; }
+          @keyframes drift-1 { 0%, 100% { transform: translate(0,0); } 50% { transform: translate(40px, 20px); } }
+          @keyframes drift-2 { 0%, 100% { transform: translate(0,0); } 50% { transform: translate(-30px, 40px); } }
+          @keyframes drift-3 { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
+          .animate-drift-1 { animation: drift-1 20s ease-in-out infinite; }
+          .animate-drift-2 { animation: drift-2 18s ease-in-out infinite; }
+          .animate-drift-3 { animation: drift-3 25s ease-in-out infinite; }
         `}</style>
       </div>
     );
   }
 
+  /* --- MONSOON: Moody Glass Window --- */
   if (season === "monsoon") {
     return (
-      <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
-        {/* Gloomy Sky Overlay */}
-        <div className="absolute inset-0 bg-slate-900/5 z-0"></div>
-        {particles.map((p) => (
-          <div
-            key={p.id}
-            className="absolute bg-blue-400/60 rounded-full animate-rain"
-            style={{
-              left: p.left,
-              top: -50,
-              width: '2px',
-              height: `${p.size * 1.5}px`,
-              animationDelay: `${Math.random()}s`,
-              animationDuration: `0.8s`,
-            }}
-          ></div>
-        ))}
+      <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden bg-slate-100">
+        <NoiseOverlay />
+        {/* Cool teal/gray blobs */}
+        <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-slate-200/50 to-transparent z-0"></div>
+        
+        <div className="absolute top-[20%] left-[10%] w-[40vw] h-[40vw] bg-teal-200/30 rounded-full blur-[100px] animate-sway"></div>
+        <div className="absolute bottom-[20%] right-[10%] w-[40vw] h-[40vw] bg-slate-300/40 rounded-full blur-[100px] animate-sway-reverse"></div>
+
         <style>{`
-          @keyframes rain {
-            0% { transform: translateY(-50px); opacity: 0; }
-            20% { opacity: 0.7; }
-            100% { transform: translateY(100vh); opacity: 0; }
-          }
-          .animate-rain { animation-name: rain; animation-timing-function: linear; animation-iteration-count: infinite; }
+          @keyframes sway { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(50px); } }
+          @keyframes sway-reverse { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(-50px); } }
+          .animate-sway { animation: sway 15s ease-in-out infinite; }
+          .animate-sway-reverse { animation: sway-reverse 18s ease-in-out infinite; }
         `}</style>
       </div>
     );
@@ -211,4 +189,5 @@ const SeasonalParticles = ({ season }) => {
 
   return null;
 };
+
 export { SEASON_CONFIG, getSeason, SeasonalParticles };

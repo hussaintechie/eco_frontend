@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API = "http://192.168.56.1:5000/fuser";
+const API = "http://localhost:5000/fuser";
 
 export const getFavorites = async (token) => {
   return axios.get(API, {

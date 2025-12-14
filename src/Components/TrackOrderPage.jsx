@@ -91,8 +91,7 @@ const TrackOrderPage = () => {
 
   const trackingSteps = [
     { label: "Order Placed", time: "1:30 PM", status: "completed", icon: Package },
-    { label: "Order Packed", time: "1:45 PM", status: "completed", icon: CheckCircle2 },
-    { label: "Shipped", time: "2:00 PM", status: "completed", icon: Truck },
+   
     { label: "Out for Delivery", time: "2:15 PM", status: "current", icon: MapPin },
     { label: "Delivered", time: "Estimated 2:45 PM", status: "pending", icon: CheckCircle2 },
   ];
@@ -186,10 +185,7 @@ const TrackOrderPage = () => {
           <div className="w-12 h-1.5 bg-slate-200 rounded-full mx-auto mb-6"></div>
 
           <div className="flex justify-between items-end mb-8">
-            <div>
-                <p className="text-slate-400 text-sm font-medium mb-1">Estimated Arrival</p>
-                <h1 className="text-3xl font-bold text-slate-800">{orderInfo.arrival}</h1>
-            </div>
+          
             <div className={`px-3 py-1 rounded-full ${theme.light} ${theme.primaryText} text-xs font-bold flex items-center gap-1`}>
                 <SeasonIcon size={12}/> {theme.name}
             </div>
@@ -221,34 +217,8 @@ const TrackOrderPage = () => {
             </div>
           </div>
 
-          <hr className="border-slate-100 mb-6" />
-
-          <div className="flex items-center gap-4">
-            <div className="relative">
-                <img 
-                    src={orderInfo.driver.avatar} 
-                    alt="Driver" 
-                    className="w-14 h-14 rounded-full object-cover border-2 border-white shadow-sm"
-                />
-                <div className="absolute -bottom-1 -right-1 bg-yellow-400 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full border border-white flex items-center">
-                    ★ {orderInfo.driver.rating}
-                </div>
-            </div>
-            
-            <div className="flex-1">
-                <h3 className="font-bold text-slate-800">{orderInfo.driver.name}</h3>
-                <p className="text-xs text-slate-500">{orderInfo.driver.vehicle}</p>
-            </div>
-
-            <div className="flex gap-2">
-                <button className="w-10 h-10 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center hover:bg-slate-200 transition">
-                    <MessageSquare size={18} />
-                </button>
-                <button className={`w-10 h-10 rounded-full ${theme.primary} text-white flex items-center justify-center hover:opacity-90 shadow-lg shadow-indigo-200 transition`}>
-                    <Phone size={18} />
-                </button>
-            </div>
-          </div>
+        
+          
 
         </div>
       </div>

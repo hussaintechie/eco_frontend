@@ -4,7 +4,7 @@ import LoginForm from "./Components/LoginForm.jsx";
 import OtpPage from "./Components/OtpPage.jsx";
 import CreativeCategoryPage from "./Components/CreativeCategoryPage.jsx";
 import GroceriesPage from "./Components/GroceriesPage.jsx";
-import CheckoutPage from "./Components/CheckoutPage.jsx";
+
 import ProfilePage from "./Components/ProfilePage.jsx";
 import CartPage from "./Components/CartPage.jsx";
 import SavedAddressesPage from "./Components/SavedAddressesPage.jsx";
@@ -39,7 +39,7 @@ function App() {
         {/* Main App Pages */}
         <Route path="/category" element={<CreativeCategoryPage />} />
         <Route path="/groceries" element={<GroceriesPage />} />
-        <Route path="/checkout" element={<CheckoutPage />} />
+       
         <Route path="/profile" element={<ProfilePage />} />
         <Route path="/cart" element={<CartPage />} />
         
@@ -50,7 +50,8 @@ function App() {
         <Route path="/saved" element={<SavedProducts />} />
         <Route path="/search" element={<SearchPage />} />
         <Route path="/track-order" element={<TrackOrderPage />} />
-        <Route path="/order-details" element={<OrderDetailPage />} />
+       <Route path="/order/:orderid" element={<OrderDetailPage />} />
+
         <Route path="/edit-address" element={<EditAddressPage />} />
         <Route path ="/PostPaymentDeliveryFlow" element={<PostPaymentDeliveryFlow/>}></Route>
       </Routes>
