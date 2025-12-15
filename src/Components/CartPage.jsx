@@ -405,6 +405,9 @@ const finalDeliverySlot = `${deliveryDate} ${selectedSlot || "Deliver Immediatel
     const payload = {
       address_delivery: selectedAddress.full_address,
       total_amount: toPay,
+      item_total: itemTotal,
+      handling_fee: handlingFee,
+      delivery_fee: deliveryFee,
       order_status: "Pending",
       delivery_id: 1,
       delivery_slot: finalDeliverySlot,

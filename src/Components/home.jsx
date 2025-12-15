@@ -283,7 +283,9 @@ const Header = ({ theme, setMenuOpen, onOpenNotifications }) => {
              </div>
 
              {/* Profile Icon */}
-             <div className="hidden md:block p-2 bg-gray-100 rounded-full text-gray-600 hover:bg-gray-200 cursor-pointer transition">
+             <div 
+             onClick={()=>navigate("/settings")}
+             className="hidden md:block p-2 bg-gray-100 rounded-full text-gray-600 hover:bg-gray-200 cursor-pointer transition">
                 <User size={20} />
              </div>
           </div>

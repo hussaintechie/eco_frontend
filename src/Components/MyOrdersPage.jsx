@@ -282,16 +282,24 @@ const MyOrdersPage = () => {
           Track Order
         </button>
       ) : (
-        <button
+    <button
+  disabled={loading}
   onClick={async () => {
+    setLoading(true);
     await reorderAPI(order.id);
     navigate("/cart");
   }}
-  className="border flex-1 py-2 rounded-lg"
+  className="
+    flex items-center justify-center gap-2 flex-1
+    py-2.5 px-4 rounded-lg
+    bg-indigo-600 text-white
+    hover:bg-indigo-700
+    disabled:opacity-60 disabled:cursor-not-allowed
+  "
 >
-  <RefreshCw size={16} /> Reorder
+  <RefreshCw size={16} className={loading ? "animate-spin" : ""} />
+  {loading ? "Reordering..." : "Reorder"}
 </button>
-
       )}
 
       <button
