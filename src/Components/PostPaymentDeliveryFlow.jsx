@@ -175,21 +175,7 @@ const PostPaymentDeliveryFlow = () => {
             ))}
           </div>
 
-          {/* Comment Box */}
-          <textarea
-            className="w-full bg-gray-50 border border-gray-200 rounded-xl p-4 text-sm focus:outline-none focus:border-green-500 mb-6"
-            placeholder="Write a comment (optional)..."
-            rows="3"
-            value={comment}
-            onChange={(e) => setComment(e.target.value)}
-          />
-
-          <button 
-            onClick={submitFeedback}
-            className="w-full bg-black text-white py-4 rounded-xl font-bold shadow-lg hover:bg-gray-800 transition"
-          >
-            Submit Feedback
-          </button>
+        
         </div>
       </div>
     );
