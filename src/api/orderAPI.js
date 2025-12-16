@@ -19,3 +19,9 @@ export const getSingleOrderDetailAPI = (orderid) => {
 
 export const reorderAPI = (order_id) =>
   API.post("/ruser/reorder", { order_id });
+
+
+
+export const trackOrderAPI = (order_id) => {
+  return API.post("/tuser/trackOrder", { order_id });
+};

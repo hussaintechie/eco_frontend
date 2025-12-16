@@ -49,7 +49,7 @@ function App() {
         <Route path="/add-address" element={<AddNewAddressPage />} />
         <Route path="/saved" element={<SavedProducts />} />
         <Route path="/search" element={<SearchPage />} />
-        <Route path="/track-order" element={<TrackOrderPage />} />
+        <Route path="/track-order/:orderid" element={<TrackOrderPage />} />
        <Route path="/order/:orderid" element={<OrderDetailPage />} />
 
         <Route path="/edit-address" element={<EditAddressPage />} />

@@ -270,12 +270,14 @@ const MyOrdersPage = () => {
     </div>
 
     <div className="flex gap-3">
+      
       {order.type === "active" ? (
+         
         <button
           onClick={() =>
-            navigate("/track-order", {
-              state: { orderId: order.order_id },
-            })
+             
+           navigate(`/track-order/${order.order_id}`)
+
           }
           className={`px-5 py-2.5 rounded-xl text-sm font-semibold text-white ${theme.primary} hover:brightness-110 transition`}
         >
