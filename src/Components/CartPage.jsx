@@ -8,7 +8,7 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import API from "../api/auth";
-
+ import { applyCouponAPI } from "../api/couponAPI";
 import { SEASON_CONFIG, getSeason } from "../SEASON_CONFIG.jsx";
 import {
   getCartAPI,
@@ -17,6 +17,7 @@ import {
   updateCartQtyAPI,
   clearCartAPI
 } from "../api/cartapi.js";
+
 import { fetchAddresses } from "../api/addressAPI.js";
 
 const iconMap = {
@@ -30,40 +31,7 @@ const iconMap = {
 // ------------------------------------------------
 
 // --- MOCK DATA: Available Coupons ---
-const availableCoupons = [
-  {
-    id: 1,
-    code: "WELCOME50",
-    title: "Welcome Offer",
-    desc: "Get flat ₹50 off on your first order above ₹200",
-    minOrder: 200,
-    discountAmount: 50
-  },
-  {
-    id: 2,
-    code: "GROCERY20",
-    title: "Super Saver",
-    desc: "Get 20% off up to ₹100 on orders above ₹400",
-    minOrder: 400,
-    discountAmount: 100
-  },
-  {
-    id: 3,
-    code: "FREEDEL",
-    title: "Free Delivery",
-    desc: "Get free delivery on all orders above ₹300",
-    minOrder: 300,
-    discountAmount: 35
-  },
-  {
-    id: 4,
-    code: "PAYDAY",
-    title: "Payday Sale",
-    desc: "Flat ₹75 off. Limited time offer.",
-    minOrder: 600,
-    discountAmount: 75
-  }
-];
+
 
 const bestsellers = [
   {
@@ -221,6 +189,7 @@ const cartpage = () => {
   const [currentSeason, setCurrentSeason] = useState("spring");
   const [theme, setTheme] = useState(SEASON_CONFIG.spring);
   const [savedAddresses, setSavedAddresses] = useState([]);
+  
 
   // Delivery slots
   const [todaySlots, setTodaySlots] = useState([]);
@@ -237,7 +206,9 @@ const cartpage = () => {
   const [showInstructionModal, setShowInstructionModal] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [showAddressModal, setShowAddressModal] = useState(false);
-  const [showCouponModal, setShowCouponModal] = useState(false); 
+  const [showCouponModal, setShowCouponModal] = useState(false);
+const [appliedCoupon, setAppliedCoupon] = useState(null);
+const [couponError, setCouponError] = useState("");
 
   // Selections
   const [selectedDate, setSelectedDate] = useState("Today");
@@ -247,9 +218,18 @@ const cartpage = () => {
   const [selectedPayment, setSelectedPayment] = useState(paymentOptions[0]);
   const [selectedAddress, setSelectedAddress] = useState(null);
   const [slots, setSlots] = useState([]);
+const [availableCoupons, setAvailableCoupons] = useState([]);
 
   // Coupon States
-  const [appliedCoupon, setAppliedCoupon] = useState(null);
+const loadCoupons = async () => {
+  try {
+    const res = await API.get("/coupon/apply");
+    setAvailableCoupons(res.data.data || []);
+  } catch (err) {
+    console.error("Failed to load coupons", err);
+  }
+};
+
 
   // On mount: season + load data
   useEffect(() => {
@@ -269,7 +249,7 @@ const cartpage = () => {
       if (i === 0) label = "Today";
       else if (i === 1) label = "Tomorrow";
       else {
-        label = d.toLocaleDateString("en-IN", { weekday: "long" }); 
+        label = d.toLocaleDateString("en-IN", { weekday: "long" });
       }
 
       const sub = d.toLocaleDateString("en-IN", { day: "numeric", month: "short" });
@@ -283,6 +263,7 @@ const cartpage = () => {
     loadBill();
     loadSlots();
     loadAddresses();
+    loadCoupons();
   }, []);
 
   const loadAddresses = async () => {
@@ -339,7 +320,7 @@ const cartpage = () => {
       const currentHour = now.getHours();
 
       if (currentHour >= 20) {
-        today = []; 
+        today = [];
       }
 
       setTodaySlots(today);
@@ -391,15 +372,42 @@ const cartpage = () => {
   // -------------------------------
   // COUPON HANDLERS
   // -------------------------------
-  const handleApplySpecificCoupon = (coupon) => {
-    setAppliedCoupon(coupon);
-    setShowCouponModal(false);
-  };
+ 
 
-  const handleRemoveCoupon = (e) => {
-    e.stopPropagation();
-    setAppliedCoupon(null);
-  };
+const handleApplySpecificCoupon = async (coupon) => {
+  try {
+    const res = await applyCouponAPI(coupon.code, itemTotal);
+
+    if (res.data.status === 0) {
+      setCouponError(res.data.message);
+      return;
+    }
+
+    setAppliedCoupon({
+      code: res.data.coupon.coupon_code,
+      discount: res.data.coupon.discount,
+    });
+
+    // Update bill values dynamically
+    setBill(prev => ({
+      ...prev,
+      to_pay: res.data.to_pay,
+      coupon_discount: res.data.coupon.discount,
+      first_order_discount: res.data.first_order_discount
+    }));
+
+    setShowCouponModal(false);
+  } catch (err) {
+    console.error(err);
+    setCouponError("Failed to apply coupon");
+  }
+};
+
+  const handleRemoveCoupon = () => {
+  setAppliedCoupon(null);
+  loadBill(); // reload original bill
+};
+
 
   // -------------------------------
   // BILL CALCULATIONS
@@ -407,7 +415,7 @@ const cartpage = () => {
   const itemTotal = bill?.item_total || 0;
   const handlingFee = bill?.handling_fee || 0;
   const deliveryFee = bill?.delivery_fee || 0;
-  const toPay = bill?.to_pay || 0; 
+  const toPay = bill?.to_pay || 0;
   const MIN_ORDER_VALUE = bill?.minimum_order || 200;
   const amountNeeded = bill?.remaining_amount || 0;
   const canPlaceOrder = amountNeeded === 0;
@@ -523,7 +531,7 @@ const cartpage = () => {
         order_status: "Pending",
         delivery_id: 1,
         delivery_start,
-        delivery_end, 
+        delivery_end,
         payment_status,
         payment_method,
         razorpay_payment_id,
@@ -920,11 +928,14 @@ const cartpage = () => {
 
                 {/* COUPON ROW (VISUAL ONLY) */}
                 {appliedCoupon && (
-                  <div className="flex justify-between text-sm text-green-600 animate-in fade-in bg-green-50 p-2 rounded-lg -mx-2">
-                    <span className="flex items-center gap-1"><TicketPercent className="w-3 h-3" /> {appliedCoupon.code}</span>
-                    <span className="font-bold text-xs uppercase">Applied</span>
-                  </div>
-                )}
+  <div className="flex justify-between text-sm text-green-600 bg-green-50 p-2 rounded-lg">
+    <span>
+      Coupon ({appliedCoupon.code})
+    </span>
+    <span>-₹{appliedCoupon.discount}</span>
+  </div>
+)}
+
 
               </div>
               <div className="h-px bg-slate-100 my-4" />
@@ -1050,51 +1061,34 @@ const cartpage = () => {
               {/* Coupon List (MOCK DATA VISIBLE) */}
               <div>
                 <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">Available Offers</p>
-                <div className="space-y-4">
-                  {availableCoupons.map((coupon) => {
-                    const isApplicable = itemTotal >= coupon.minOrder;
-                    const isCurrent = appliedCoupon?.code === coupon.code;
+               {availableCoupons.map((coupon) => {
+  const isApplicable = itemTotal >= coupon.min_order_value;
+  const isCurrent = appliedCoupon?.code === coupon.coupon_code;
 
-                    return (
-                      <div key={coupon.id} className={`bg-white rounded-xl border p-4 transition-all relative overflow-hidden ${isCurrent ? 'border-green-500 ring-1 ring-green-500' : 'border-slate-100 shadow-sm'}`}>
-                        {/* Left Accent Bar */}
-                        <div className={`absolute top-0 bottom-0 left-0 w-1 ${isApplicable ? theme.primary : 'bg-slate-300'}`}></div>
+  return (
+    <div key={coupon.coupon_id} className="bg-white p-4 rounded-xl border">
+      <div className="flex justify-between">
+        <div>
+          <p className="font-bold">{coupon.coupon_code}</p>
+          <p className="text-xs text-gray-500">
+            Min order ₹{coupon.min_order_value}
+          </p>
+        </div>
 
-                        <div className="flex justify-between items-start pl-3">
-                          <div className="flex-1 pr-4">
-                            <div className="flex items-center gap-2 mb-1">
-                              <span className={`px-2 py-1 rounded text-xs font-bold uppercase tracking-wide border ${isApplicable ? 'bg-slate-50 border-slate-200 text-slate-700' : 'bg-slate-50 border-slate-100 text-slate-400'}`}>
-                                {coupon.code}
-                              </span>
-                              {isCurrent && <span className="text-[10px] font-bold text-green-600 bg-green-50 px-2 py-0.5 rounded-full">APPLIED</span>}
-                            </div>
-                            <h4 className={`font-bold text-sm ${isApplicable ? 'text-slate-800' : 'text-slate-400'}`}>{coupon.title}</h4>
-                            <p className="text-xs text-slate-500 mt-1 leading-relaxed">{coupon.desc}</p>
-                          </div>
+        <button
+          disabled={!isApplicable}
+          onClick={() => handleApplySpecificCoupon(coupon)}
+          className={`px-3 py-1 rounded ${
+            isApplicable ? "bg-green-500 text-white" : "bg-gray-200 text-gray-400"
+          }`}
+        >
+          Apply
+        </button>
+      </div>
+    </div>
+  );
+})}
 
-                          {isApplicable ? (
-                            <button
-                              onClick={() => handleApplySpecificCoupon(coupon)}
-                              className={`px-4 py-2 rounded-lg font-bold text-xs uppercase transition-colors ${isCurrent ? 'bg-green-100 text-green-700' : 'text-orange-600 hover:bg-orange-50'}`}
-                            >
-                              {isCurrent ? 'Applied' : 'Apply'}
-                            </button>
-                          ) : (
-                            <div className="text-right">
-                              <p className="text-[10px] text-red-500 font-medium bg-red-50 px-2 py-1 rounded">
-                                Add items worth ₹{coupon.minOrder - itemTotal}
-                              </p>
-                            </div>
-                          )}
-                        </div>
-
-                        {isApplicable && <div className="mt-3 pl-3 pt-3 border-t border-dashed border-slate-100">
-                          <p className="text-[10px] text-green-600 font-bold">You will save ₹{coupon.discountAmount} with this code</p>
-                        </div>}
-                      </div>
-                    )
-                  })}
-                </div>
               </div>
             </div>
           </div>
