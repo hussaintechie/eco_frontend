@@ -8,7 +8,7 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import API from "../api/auth";
- import { applyCouponAPI } from "../api/couponAPI";
+
 import { SEASON_CONFIG, getSeason } from "../SEASON_CONFIG.jsx";
 import {
   getCartAPI,
@@ -17,7 +17,6 @@ import {
   updateCartQtyAPI,
   clearCartAPI
 } from "../api/cartapi.js";
-
 import { fetchAddresses } from "../api/addressAPI.js";
 
 const iconMap = {
@@ -189,7 +188,8 @@ const cartpage = () => {
   const [currentSeason, setCurrentSeason] = useState("spring");
   const [theme, setTheme] = useState(SEASON_CONFIG.spring);
   const [savedAddresses, setSavedAddresses] = useState([]);
-  
+
+  const [availableCoupons, setAvailableCoupons] = useState([]);
 
   // Delivery slots
   const [todaySlots, setTodaySlots] = useState([]);
@@ -207,8 +207,6 @@ const cartpage = () => {
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [showAddressModal, setShowAddressModal] = useState(false);
   const [showCouponModal, setShowCouponModal] = useState(false);
-const [appliedCoupon, setAppliedCoupon] = useState(null);
-const [couponError, setCouponError] = useState("");
 
   // Selections
   const [selectedDate, setSelectedDate] = useState("Today");
@@ -218,18 +216,9 @@ const [couponError, setCouponError] = useState("");
   const [selectedPayment, setSelectedPayment] = useState(paymentOptions[0]);
   const [selectedAddress, setSelectedAddress] = useState(null);
   const [slots, setSlots] = useState([]);
-const [availableCoupons, setAvailableCoupons] = useState([]);
 
   // Coupon States
-const loadCoupons = async () => {
-  try {
-    const res = await API.get("/coupon/apply");
-    setAvailableCoupons(res.data.data || []);
-  } catch (err) {
-    console.error("Failed to load coupons", err);
-  }
-};
-
+  const [appliedCoupon, setAppliedCoupon] = useState(null);
 
   // On mount: season + load data
   useEffect(() => {
@@ -286,6 +275,13 @@ const loadCoupons = async () => {
       setSavedAddresses([]);
     }
   };
+const loadCoupons = async () => {
+  const res = await API.get("/coupon/list");
+  if (res.data.status === 1) {
+    setAvailableCoupons(res.data.data);
+  }
+};
+
 
   // -------------------------------
   // API LOAD FUNCTIONS
@@ -372,42 +368,34 @@ const loadCoupons = async () => {
   // -------------------------------
   // COUPON HANDLERS
   // -------------------------------
- 
+ const handleApplySpecificCoupon = async (coupon) => {
+  if (coupon.is_used) {
+    return alert("You have already used this coupon.");
+  }
 
-const handleApplySpecificCoupon = async (coupon) => {
-  try {
-    const res = await applyCouponAPI(coupon.code, itemTotal);
+  if (itemTotal < coupon.min_order_value) {
+    return alert(`Add ₹${coupon.min_order_value - itemTotal} more to apply this coupon`);
+  }
 
-    if (res.data.status === 0) {
-      setCouponError(res.data.message);
-      return;
-    }
+  const res = await API.post("/coupon/apply", {
+    coupon_code: coupon.coupon_code,
+    cart_total: itemTotal,
+  });
 
+  if (res.data.status === 1) {
     setAppliedCoupon({
       code: res.data.coupon.coupon_code,
       discount: res.data.coupon.discount,
     });
-
-    // Update bill values dynamically
-    setBill(prev => ({
-      ...prev,
-      to_pay: res.data.to_pay,
-      coupon_discount: res.data.coupon.discount,
-      first_order_discount: res.data.first_order_discount
-    }));
-
     setShowCouponModal(false);
-  } catch (err) {
-    console.error(err);
-    setCouponError("Failed to apply coupon");
   }
 };
 
-  const handleRemoveCoupon = () => {
-  setAppliedCoupon(null);
-  loadBill(); // reload original bill
-};
 
+  const handleRemoveCoupon = (e) => {
+    e.stopPropagation();
+    setAppliedCoupon(null);
+  };
 
   // -------------------------------
   // BILL CALCULATIONS
@@ -415,7 +403,14 @@ const handleApplySpecificCoupon = async (coupon) => {
   const itemTotal = bill?.item_total || 0;
   const handlingFee = bill?.handling_fee || 0;
   const deliveryFee = bill?.delivery_fee || 0;
-  const toPay = bill?.to_pay || 0;
+ const discount = appliedCoupon?.discount || 0;
+
+const toPay = Math.max(
+  itemTotal + handlingFee + deliveryFee - discount,
+  0
+);
+
+
   const MIN_ORDER_VALUE = bill?.minimum_order || 200;
   const amountNeeded = bill?.remaining_amount || 0;
   const canPlaceOrder = amountNeeded === 0;
@@ -538,15 +533,19 @@ const handleApplySpecificCoupon = async (coupon) => {
         razorpay_order_id,
         razorpay_signature,
         items_details: cart.map(item => ({
-          product_id: item.product_id,
-          product_name: item.product_name,
-          product_qty: item.quantity,
-          product_unit: item.unit ?? 1,
-          product_rate: item.price,
-          product_amount: item.price * item.quantity,
-          discount_amt: 0,
-          discount_per: 0,
-        }))
+  product_id: item.product_id,
+  product_name: item.product_name,
+  product_qty: item.quantity,
+  product_unit: item.unit ?? 1,
+  product_rate: item.price,
+  product_amount: item.price * item.quantity,
+  discount_amt: 0,
+  discount_per: 0
+})),
+
+coupon_code: appliedCoupon?.code || null,
+coupon_discount: appliedCoupon?.discount || 0,
+
       };
 
       const res = await API.post("/product/submitorder", payload);
@@ -567,6 +566,21 @@ const handleApplySpecificCoupon = async (coupon) => {
   // -------------------------------
   // RENDER
   // -------------------------------
+  const getCouponStatus = (coupon) => {
+  if (coupon.is_used) return "USED";
+  if (itemTotal < coupon.min_order_value) return "MIN_NOT_MET";
+  return "AVAILABLE";
+};
+
+const getRemainingAmount = (coupon) => {
+  return Math.max(coupon.min_order_value - itemTotal, 0);
+};
+const getCouponLabel = (coupon) => {
+  return coupon.discount_type === "PERCENT"
+    ? `${coupon.discount_value}% OFF`
+    : `₹${coupon.discount_value} OFF`;
+};
+
   return (
     <div className={`min-h-screen font-sans ${theme.gradient} transition-colors duration-500`}>
       {/* HEADER */}
@@ -929,13 +943,10 @@ const handleApplySpecificCoupon = async (coupon) => {
                 {/* COUPON ROW (VISUAL ONLY) */}
                 {appliedCoupon && (
   <div className="flex justify-between text-sm text-green-600 bg-green-50 p-2 rounded-lg">
-    <span>
-      Coupon ({appliedCoupon.code})
-    </span>
+    <span>{appliedCoupon.code}</span>
     <span>-₹{appliedCoupon.discount}</span>
   </div>
 )}
-
 
               </div>
               <div className="h-px bg-slate-100 my-4" />
@@ -1061,34 +1072,93 @@ const handleApplySpecificCoupon = async (coupon) => {
               {/* Coupon List (MOCK DATA VISIBLE) */}
               <div>
                 <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">Available Offers</p>
-               {availableCoupons.map((coupon) => {
-  const isApplicable = itemTotal >= coupon.min_order_value;
-  const isCurrent = appliedCoupon?.code === coupon.coupon_code;
+                <div className="space-y-4">
+                  {availableCoupons.map((coupon) => {
+  const status = getCouponStatus(coupon);
+  const isApplied = appliedCoupon?.code === coupon.coupon_code;
 
   return (
-    <div key={coupon.coupon_id} className="bg-white p-4 rounded-xl border">
-      <div className="flex justify-between">
-        <div>
-          <p className="font-bold">{coupon.coupon_code}</p>
-          <p className="text-xs text-gray-500">
+    <div
+      key={coupon.coupon_id}
+      className={`relative bg-white rounded-xl border p-4 transition-all
+      ${isApplied ? "border-green-500 ring-1 ring-green-500" : "border-slate-200"}`}
+    >
+      {/* LEFT BORDER */}
+      <div className={`absolute top-0 left-0 h-full w-1 rounded-l-xl 
+        ${isApplied ? "bg-green-500" : "bg-slate-300"}`} />
+
+      <div className="flex justify-between items-start pl-3">
+        <div className="flex-1">
+          <div className="flex items-center gap-2 mb-1">
+            <span className="px-2 py-1 text-xs font-bold bg-slate-100 rounded">
+              {coupon.coupon_code}
+            </span>
+            <span
+  className={`text-[10px] px-2 py-0.5 rounded-full font-semibold
+    ${coupon.discount_type === "PERCENT"
+      ? "bg-blue-100 text-blue-700"
+      : "bg-purple-100 text-purple-700"}
+  `}
+>
+  {coupon.discount_type === "PERCENT" ? "PERCENT" : "FLAT"}
+</span>
+
+
+            {isApplied && (
+              <span className="text-[10px] bg-green-100 text-green-700 px-2 py-0.5 rounded-full">
+                APPLIED
+              </span>
+            )}
+
+            {coupon.is_used && (
+              <span className="text-[10px] bg-gray-200 text-gray-600 px-2 py-0.5 rounded-full">
+                USED
+              </span>
+            )}
+          </div>
+
+          <p className="text-sm text-slate-600">
+  {coupon.discount_type === "PERCENT"
+    ? `${coupon.discount_value}% OFF`
+    : `₹${coupon.discount_value} OFF`}
+</p>
+
+
+          <p className="text-xs text-slate-400 mt-1">
             Min order ₹{coupon.min_order_value}
           </p>
+
+          {/* ❗ CONDITION MESSAGE */}
+          {status === "MIN_NOT_MET" && (
+            <p className="text-xs text-orange-500 mt-1">
+              Add ₹{getRemainingAmount(coupon)} more to use this coupon
+            </p>
+          )}
+
+          {status === "USED" && (
+            <p className="text-xs text-red-500 mt-1">
+              This coupon was already used
+            </p>
+          )}
         </div>
 
         <button
-          disabled={!isApplicable}
+          disabled={status !== "AVAILABLE"}
           onClick={() => handleApplySpecificCoupon(coupon)}
-          className={`px-3 py-1 rounded ${
-            isApplicable ? "bg-green-500 text-white" : "bg-gray-200 text-gray-400"
-          }`}
+          className={`px-4 py-2 text-xs font-bold rounded-lg
+            ${status === "AVAILABLE"
+              ? "bg-orange-100 text-orange-700 hover:bg-orange-200"
+              : "bg-gray-200 text-gray-400 cursor-not-allowed"}
+          `}
         >
-          Apply
+          {isApplied ? "APPLIED" : status === "USED" ? "USED" : "APPLY"}
         </button>
       </div>
     </div>
   );
 })}
 
+                </div>
               </div>
             </div>
           </div>

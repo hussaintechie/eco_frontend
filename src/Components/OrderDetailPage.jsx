@@ -54,15 +54,11 @@ const OrderDetailPage = () => {
   }
 
   /* 🔒 READ VALUES FROM DB (NO RECALCULATION) */
- const subtotal = orderData.itmdetails.reduce(
-  (sum, item) => sum + Number(item.itmamt || 0),
-  0
-);
-
-  const handlingFee = Number(orderData?.billdetails?.handling_fee || 0);
-  const deliveryFee = Number(orderData?.billdetails?.delivery_fee || 0);
-  const discount = Number(orderData?.billdetails?.discount_amount || 0);
-  const grandTotal = Number(orderData?.billdetails?.total_amount || 0);
+ const subtotal = Number(orderData?.billdetails?.item_total || 0);
+const handlingFee = Number(orderData?.billdetails?.handling_fee || 0);
+const deliveryFee = Number(orderData?.billdetails?.delivery_fee || 0);
+const discount = Number(orderData?.billdetails?.discount || 0);
+const grandTotal = Number(orderData?.billdetails?.total_amount || 0);
 
   return (
     <div className={`min-h-screen ${theme.gradient} pb-24`}>
@@ -115,7 +111,7 @@ const OrderDetailPage = () => {
               </div>
 
               <p className="font-bold text-slate-900">
-                ₹{item.itmamt}
+                ₹{item.total}
               </p>
             </div>
           ))}
@@ -165,38 +161,42 @@ const OrderDetailPage = () => {
             Bill Summary
           </h3>
 
-          <div className="space-y-3 text-sm">
-            <div className="flex justify-between text-slate-600">
-              <span>Subtotal</span>
-              <span>₹{subtotal}</span>
-            </div>
+        <div className="space-y-3 text-sm">
 
-            <div className="flex justify-between text-slate-600">
-              <span>Handling Fee</span>
-              <span>₹{handlingFee}</span>
-            </div>
+  <div className="flex justify-between text-slate-600">
+    <span>Subtotal</span>
+    <span>₹{subtotal}</span>
+  </div>
 
-            <div className="flex justify-between text-slate-600">
-              <span>Delivery Fee</span>
-              <span>{deliveryFee === 0 ? "FREE" : `₹${deliveryFee}`}</span>
-            </div>
+  <div className="flex justify-between text-slate-600">
+    <span>Handling Fee</span>
+    <span>₹{handlingFee}</span>
+  </div>
 
-            {discount > 0 && (
-              <div className="flex justify-between text-green-600">
-                <span>Discount</span>
-                <span>- ₹{discount}</span>
-              </div>
-            )}
+  <div className="flex justify-between text-slate-600">
+    <span>Delivery Fee</span>
+    <span>{deliveryFee === 0 ? "FREE" : `₹${deliveryFee}`}</span>
+  </div>
 
-            <div className="border-t pt-3 flex justify-between items-center">
-              <span className="text-base font-bold text-slate-900">
-                Grand Total
-              </span>
-              <span className={`text-xl font-extrabold ${theme.primaryText}`}>
-                ₹{grandTotal}
-              </span>
-            </div>
-          </div>
+  {/* ✅ COUPON */}
+ {discount > 0 && (
+  <div className="flex justify-between items-center bg-green-50 border border-green-200 px-3 py-2 rounded-lg text-green-700">
+    <span>🎉 {orderData.billdetails.coupon_code}</span>
+    <span>-₹{discount}</span>
+  </div>
+)}
+
+
+
+  <div className="border-t pt-3 flex justify-between items-center">
+    <span className="text-base font-bold text-slate-900">Grand Total</span>
+    <span className={`text-xl font-extrabold ${theme.primaryText}`}>
+      ₹{grandTotal}
+    </span>
+  </div>
+
+</div>
+
         </div>
 
       </div>
