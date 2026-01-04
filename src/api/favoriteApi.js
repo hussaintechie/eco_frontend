@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API = "http://localhost:5000/fuser";
+const API = "https://api.sribalajistores.com/fuser";
 
 export const getFavorites = async (token) => {
   return axios.get(API, {
