@@ -4,7 +4,7 @@ import LoginForm from "./Components/LoginForm.jsx";
 import OtpPage from "./Components/OtpPage.jsx";
 import CreativeCategoryPage from "./Components/CreativeCategoryPage.jsx";
 import GroceriesPage from "./Components/GroceriesPage.jsx";
-import CheckoutPage from "./Components/CheckoutPage.jsx";
+
 import ProfilePage from "./Components/ProfilePage.jsx";
 import CartPage from "./Components/CartPage.jsx";
 import SavedAddressesPage from "./Components/SavedAddressesPage.jsx";
@@ -18,6 +18,7 @@ import OrderDetailPage from "./Components/OrderDetailPage.jsx";
 import EditAddressPage from "./Components/EditAddressPage.jsx";
 import ForgotPasswordForm from "./Components/ForgotPasswordForm.jsx"
 import ResetPasswordForm from "./Components/ResetPasswordForm.jsx"
+import PostPaymentDeliveryFlow from "./Components/PostPaymentDeliveryFlow.jsx"
 
 
 function App() {
@@ -26,7 +27,7 @@ function App() {
       <Routes>
 
         {/* Home Route */}
-        <Route path="/home" element={<MainContent />} /> 
+        {/* <Route path="/" element={<MainContent />} />  */}
         {/* OR your home page of choice */}
 
         {/* Auth Routes */}
@@ -38,7 +39,7 @@ function App() {
         {/* Main App Pages */}
         <Route path="/category" element={<CreativeCategoryPage />} />
         <Route path="/groceries" element={<GroceriesPage />} />
-        <Route path="/checkout" element={<CheckoutPage />} />
+       
         <Route path="/profile" element={<ProfilePage />} />
         <Route path="/cart" element={<CartPage />} />
         
@@ -48,9 +49,11 @@ function App() {
         <Route path="/add-address" element={<AddNewAddressPage />} />
         <Route path="/saved" element={<SavedProducts />} />
         <Route path="/search" element={<SearchPage />} />
-        <Route path="/track-order" element={<TrackOrderPage />} />
-        <Route path="/order-details" element={<OrderDetailPage />} />
+        <Route path="/track-order/:orderid" element={<TrackOrderPage />} />
+       <Route path="/order/:orderid" element={<OrderDetailPage />} />
+
         <Route path="/edit-address" element={<EditAddressPage />} />
+        <Route path ="/PostPaymentDeliveryFlow" element={<PostPaymentDeliveryFlow/>}></Route>
       </Routes>
     </BrowserRouter>
   );

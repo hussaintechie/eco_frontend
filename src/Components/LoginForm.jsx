@@ -84,7 +84,7 @@ export default function LoginForm() {
   const [loading, setLoading] = useState(false);
 
   // Backend URL
-  const API_URL = "http://localhost:5000/auth/login";
+  const API_URL = "https://api.sribalajistores.com/auth/login";
 
   // ================= SEND OTP =================
   const handleSendOtp = async () => {

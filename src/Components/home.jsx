@@ -4,10 +4,13 @@ import {
   Menu, Heart, Phone, ChevronDown, MapPin, Search, 
   Home, ShoppingBag, User, Snowflake, Sun, Flower2, 
   Flame, ArrowRight, Plus, Clock, X, CloudRain, Gift, CreditCard, Tag, Thermometer,
-  Percent, Zap, Truck, CheckCircle2
+  Percent, Zap, Truck, CheckCircle2, 
+  Bell, AlertCircle, Package, // Added AlertCircle, Package
+  Route
 } from "lucide-react";
 import axios from "axios";
 import { useNavigate, BrowserRouter } from "react-router-dom";
+import { SEASON_CONFIG, getSeason, SeasonalParticles} from '../SEASON_CONFIG.jsx';
 
 // --- MOCK DATA ---
 // const CATEGORIES = [
@@ -52,205 +55,12 @@ import { useNavigate, BrowserRouter } from "react-router-dom";
 //   img: "https://images.unsplash.com/photo-1523049673856-6468baca292f?auto=format&fit=crop&w=300&q=80"
 // });
 
-// --- THEME CONFIGURATION ---
-const SEASON_CONFIG = {
-  winter: {
-    name: "Winter Fest",
-    gradient: "bg-gradient-to-br from-blue-50 via-slate-50 to-indigo-50",
-    primary: "bg-indigo-600",
-    primaryText: "text-indigo-600",
-    accent: "bg-indigo-100",
-    accentText: "text-indigo-700",
-    cardBg: "bg-white/90 border-indigo-100",
-    icon: Snowflake,
-    bannerTone: "brightness-105 saturate-50",
-    badge: "bg-indigo-500 text-white",
-    offerIcon: <Gift size={18} className="text-indigo-600"/>
-  },
-  summer: {
-    name: "Summer Chill",
-    gradient: "bg-gradient-to-br from-orange-50 via-yellow-50 to-amber-50",
-    primary: "bg-orange-500",
-    primaryText: "text-orange-600",
-    accent: "bg-orange-100",
-    accentText: "text-orange-700",
-    cardBg: "bg-white/90 border-orange-100",
-    icon: Sun,
-    bannerTone: "saturate-150 contrast-110",
-    badge: "bg-orange-500 text-white",
-    offerIcon: <Thermometer size={18} className="text-orange-600"/>
-  },
-  spring: {
-    name: "Spring Bloom",
-    gradient: "bg-gradient-to-br from-emerald-50 via-green-50 to-teal-50",
-    primary: "bg-emerald-600",
-    primaryText: "text-emerald-600",
-    accent: "bg-emerald-100",
-    accentText: "text-emerald-700",
-    cardBg: "bg-white/90 border-emerald-100",
-    icon: Flower2,
-    bannerTone: "contrast-105 brightness-110",
-    badge: "bg-emerald-500 text-white",
-    offerIcon: <Leaf size={18} className="text-emerald-600"/>
-  },
-  monsoon: {
-    name: "Monsoon",
-    gradient: "bg-gradient-to-br from-slate-200 via-gray-100 to-slate-300",
-    primary: "bg-teal-600",
-    primaryText: "text-teal-600",
-    accent: "bg-teal-100",
-    accentText: "text-teal-700",
-    cardBg: "bg-white/90 border-teal-100",
-    icon: CloudRain,
-    bannerTone: "contrast-125 brightness-90 sepia-[.2]",
-    badge: "bg-teal-600 text-white",
-    offerIcon: <CloudRain size={18} className="text-teal-600"/>
-  }
-};
-
-const getSeason = () => {
-  const month = new Date().getMonth(); 
-  if (month === 10 || month === 11 || month === 0) return "winter";
-  if (month === 1 || month === 2) return "spring";
-  if (month >= 3 && month <= 5) return "summer";
-  return "monsoon";
-};
-
-// --- ANIMATION COMPONENTS ---
-const SeasonalParticles = ({ season }) => {
-  const particles = Array.from({ length: 25 }).map((_, i) => ({
-    id: i,
-    left: `${Math.random() * 100}%`,
-    animationDelay: `${Math.random() * 5}s`,
-    animationDuration: `${Math.random() * 5 + 5}s`,
-    size: Math.random() * 15 + 5,
-  }));
-
-  if (season === "winter") {
-    return (
-      <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
-        {particles.map((p) => (
-          <div
-            key={p.id}
-            className="absolute text-white/60 animate-fall"
-            style={{
-              left: p.left,
-              top: -50,
-              fontSize: `${p.size}px`,
-              animationDelay: p.animationDelay,
-              animationDuration: `${parseFloat(p.animationDuration) + 5}s`,
-            }}
-          >
-            ❄
-          </div>
-        ))}
-        <style>{`
-          @keyframes fall {
-            0% { transform: translateY(-50px) rotate(0deg); opacity: 0; }
-            10% { opacity: 0.8; }
-            100% { transform: translateY(100vh) rotate(360deg); opacity: 0; }
-          }
-          .animate-fall { animation-name: fall; animation-timing-function: linear; animation-iteration-count: infinite; }
-        `}</style>
-      </div>
-    );
-  }
-
-  if (season === "summer") {
-    return (
-      <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
-        {/* Sun Glare Effect */}
-        <div className="absolute top-[-150px] right-[-150px] w-[500px] h-[500px] bg-yellow-400/20 rounded-full blur-[100px] animate-pulse"></div>
-        {particles.map((p) => (
-          <div
-            key={p.id}
-            className="absolute bg-orange-200/40 rounded-full animate-float"
-            style={{
-              left: p.left,
-              bottom: -20,
-              width: `${p.size / 2}px`,
-              height: `${p.size / 2}px`,
-              animationDelay: p.animationDelay,
-              animationDuration: `${parseFloat(p.animationDuration) * 0.5}s`,
-            }}
-          ></div>
-        ))}
-        <style>{`
-          @keyframes float {
-            0% { transform: translateY(100px) translateX(0); opacity: 0; }
-            20% { opacity: 0.6; }
-            100% { transform: translateY(-100vh) translateX(50px); opacity: 0; }
-          }
-          .animate-float { animation-name: float; animation-timing-function: ease-in; animation-iteration-count: infinite; }
-        `}</style>
-      </div>
-    );
-  }
-
-  if (season === "spring") {
-    return (
-      <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
-        {particles.map((p) => (
-          <div
-            key={p.id}
-            className="absolute text-pink-400/50 animate-sway"
-            style={{
-              left: p.left,
-              top: -50,
-              fontSize: `${p.size}px`,
-              animationDelay: p.animationDelay,
-              animationDuration: `${parseFloat(p.animationDuration) * 1.5}s`,
-            }}
-          >
-            🌸
-          </div>
-        ))}
-        <style>{`
-          @keyframes sway {
-            0% { transform: translateY(-50px) translateX(0) rotate(0deg); opacity: 0; }
-            20% { opacity: 0.8; }
-            50% { transform: translateY(50vh) translateX(100px) rotate(180deg); }
-            100% { transform: translateY(100vh) translateX(-50px) rotate(360deg); opacity: 0; }
-          }
-          .animate-sway { animation-name: sway; animation-timing-function: ease-in-out; animation-iteration-count: infinite; }
-        `}</style>
-      </div>
-    );
-  }
-
-  if (season === "monsoon") {
-    return (
-      <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
-        {/* Gloomy Sky Overlay */}
-        <div className="absolute inset-0 bg-slate-900/5 z-0"></div>
-        {particles.map((p) => (
-          <div
-            key={p.id}
-            className="absolute bg-blue-400/60 rounded-full animate-rain"
-            style={{
-              left: p.left,
-              top: -50,
-              width: '2px',
-              height: `${p.size * 1.5}px`,
-              animationDelay: `${Math.random()}s`,
-              animationDuration: `0.8s`,
-            }}
-          ></div>
-        ))}
-        <style>{`
-          @keyframes rain {
-            0% { transform: translateY(-50px); opacity: 0; }
-            20% { opacity: 0.7; }
-            100% { transform: translateY(100vh); opacity: 0; }
-          }
-          .animate-rain { animation-name: rain; animation-timing-function: linear; animation-iteration-count: infinite; }
-        `}</style>
-      </div>
-    );
-  }
-
-  return null;
-};
+const NOTIFICATIONS = [
+  { id: 1, type: 'order', title: 'Order Delivered', msg: 'Your order #12345 has been delivered successfully.', time: '2 mins ago', icon: Package, color: 'text-green-600', bg: 'bg-green-50' },
+  { id: 2, type: 'offer', title: '50% Off on Fruits', msg: 'Flash sale is live! Get fresh apples at half price.', time: '1 hour ago', icon: Percent, color: 'text-red-600', bg: 'bg-red-50' },
+  { id: 3, type: 'system', title: 'Wallet Updated', msg: '₹50 cashback added to your SB Wallet.', time: 'Yesterday', icon: CreditCard, color: 'text-blue-600', bg: 'bg-blue-50' },
+  { id: 4, type: 'alert', title: 'Rain Alert', msg: 'Deliveries might be slightly delayed due to rain.', time: 'Yesterday', icon: CloudRain, color: 'text-gray-600', bg: 'bg-gray-100' },
+];
 
 // --- SUB-COMPONENTS ---
 
@@ -309,6 +119,50 @@ const HorizontalScrollRow = ({ data, theme }) => (
     </div>
 );
 
+const NotificationDrawer = ({ isOpen, onClose, theme }) => {
+    return (
+        <>
+            {/* Backdrop */}
+            <div 
+                className={`fixed inset-0 bg-black/40 backdrop-blur-sm z-[60] transition-opacity duration-300 ${isOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
+                onClick={onClose}
+            />
+            {/* Drawer */}
+            <div className={`fixed top-0 right-0 h-full w-[85%] md:w-[400px] bg-white z-[70] shadow-2xl transform transition-transform duration-300 ease-out ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}>
+                <div className={`p-4 border-b border-gray-100 flex justify-between items-center ${theme.gradient}`}>
+                    <h2 className="text-lg font-bold text-gray-800 flex items-center gap-2">
+                        <Bell size={20} className={theme.primaryText} fill="currentColor" /> Notifications
+                    </h2>
+                    <button onClick={onClose} className="p-2 bg-white/50 rounded-full hover:bg-white transition">
+                        <X size={20} className="text-gray-600" />
+                    </button>
+                </div>
+                <div className="overflow-y-auto h-full pb-20 p-4 space-y-3">
+                    {NOTIFICATIONS.map((notif) => (
+                        <div key={notif.id} className="flex gap-3 p-3 bg-gray-50/50 hover:bg-gray-50 rounded-xl border border-gray-100 transition-colors cursor-pointer group">
+                            <div className={`w-10 h-10 rounded-full ${notif.bg} ${notif.color} flex items-center justify-center shrink-0`}>
+                                <notif.icon size={20} />
+                            </div>
+                            <div className="flex-1">
+                                <div className="flex justify-between items-start">
+                                    <h4 className="font-bold text-gray-800 text-sm group-hover:text-black">{notif.title}</h4>
+                                    <span className="text-[10px] text-gray-400 font-medium">{notif.time}</span>
+                                </div>
+                                <p className="text-xs text-gray-500 mt-1 leading-relaxed">{notif.msg}</p>
+                            </div>
+                            {notif.type === 'order' && <div className="w-2 h-2 rounded-full bg-red-500 mt-1.5"></div>}
+                        </div>
+                    ))}
+                    <div className="text-center pt-4">
+                        <button className={`text-xs font-bold ${theme.primaryText} hover:underline`}>View All History</button>
+                    </div>
+                </div>
+            </div>
+        </>
+    );
+};
+
+
 // --- AD TEMPLATES ---
 
 const ParallaxAdBanner = ({ theme }) => (
@@ -352,82 +206,108 @@ const GridAd = ({ theme }) => (
     </div>
 );
 
-const Header = ({ theme, setMenuOpen }) => (
-  <header className="sticky top-0 z-50 w-full font-sans">
-    <div className="hidden md:block bg-gray-900 text-gray-300 text-xs py-2">
-      <div className="max-w-7xl mx-auto px-6 flex justify-between">
-        <div className="flex gap-6">
-          <span className="flex items-center gap-1 hover:text-white cursor-pointer"><Phone size={12} /> +91 98765 43210</span>
-          <span className="hover:text-white cursor-pointer">Sell on WakeUp</span>
+const Header = ({ theme, setMenuOpen, onOpenNotifications }) => {
+  const [isScrolled, setIsScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 10);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  return (
+    <header className={`sticky top-0 z-50 w-full font-sans transition-all duration-300 ${isScrolled ? 'bg-white/80 backdrop-blur-xl shadow-md py-1' : 'bg-transparent py-2'}`}>
+      <div className="max-w-7xl mx-auto px-4 md:px-6">
+        
+        {/* TOP ROW: Logo + Actions */}
+        <div className="flex items-center justify-between gap-4 py-2">
+          
+          {/* Logo Section */}
+          <div className="flex items-center gap-2">
+            <div className={`p-2 rounded-xl ${theme.primary} text-white shadow-lg shadow-${theme.primary}/30`}>
+              <Leaf size={20} fill="currentColor" className="opacity-90" />
+            </div>
+            <div className="flex flex-col">
+              <h1 className={`text-xl md:text-2xl font-black tracking-tighter text-gray-800 leading-none`}>
+                SB<span className={theme.primaryText}> GROCES</span>
+              </h1>
+              <span className="text-[9px] font-bold text-gray-400 tracking-widest uppercase hidden md:block">Fresh & Organic</span>
+            </div>
+          </div>
+
+          {/* Location Pill (Hidden on tiny screens) */}
+          <div className={`hidden md:flex items-center gap-2 bg-gray-100/50 backdrop-blur-sm border border-gray-200/50 px-4 py-2 rounded-full cursor-pointer hover:bg-white hover:shadow-md transition-all group`}>
+             <div className={`p-1 rounded-full bg-white text-gray-400 group-hover:${theme.primaryText} transition-colors`}>
+               <MapPin size={14} />
+             </div>
+             <div className="leading-none flex flex-col">
+               <span className="text-[9px] font-bold text-gray-400 uppercase tracking-wide">Delivering to</span>
+               <span className="text-xs font-bold text-gray-800 group-hover:text-black">HSR Layout, 560102</span>
+             </div>
+             <ChevronDown size={14} className="text-gray-400 ml-1" />
+          </div>
+
+          {/* Desktop Search (Centered) */}
+          <div className="hidden md:flex flex-1 max-w-lg mx-auto relative group">
+             <input 
+               type="text" 
+               placeholder="Search for fresh groceries..." 
+               className={`w-full bg-gray-100/50 border-2 border-transparent hover:bg-white hover:border-gray-100 focus:bg-white focus:border-${theme.primary.replace('bg-', '')}/30 focus:ring-4 focus:ring-${theme.primary.replace('bg-', '')}/10 text-gray-800 text-sm rounded-full py-2.5 px-5 pl-12 transition-all duration-300 outline-none`}
+             />
+             <Search size={18} className="absolute left-4 top-3 text-gray-400 group-hover:text-gray-600 transition-colors" />
+          </div>
+
+          {/* Right Icons */}
+          <div className="flex items-center gap-3 md:gap-5">
+             
+             {/* Mobile Location (Compact) */}
+             <div className="md:hidden flex flex-col items-end cursor-pointer">
+                <span className="text-[9px] font-bold text-gray-500 uppercase flex items-center gap-1">HSR Layout <ChevronDown size={10}/></span>
+                <span className={`text-xs font-black ${theme.primaryText}`}>15 mins</span>
+             </div>
+
+             {/* Notifications / Offers */}
+             <div onClick={onOpenNotifications} className="relative cursor-pointer p-2 hover:bg-gray-100 rounded-full transition group">
+                <Bell size={22} className="text-gray-600 group-hover:text-gray-900 transition-colors" />
+                <span className="absolute top-1.5 right-2 flex h-2.5 w-2.5">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500 border-2 border-white"></span>
+                </span>
+             </div>
+
+             {/* Desktop Cart */}
+             <div className={`hidden md:flex items-center gap-2 px-4 py-2 rounded-full ${theme.accent} ${theme.accentText} cursor-pointer hover:shadow-lg hover:scale-105 transition-all`}>
+                <ShoppingBasket size={18} />
+                <span className="text-xs font-bold">My Cart</span>
+             </div>
+
+             {/* Profile Icon */}
+             <div 
+             onClick={()=>navigate("/settings")}
+             className="hidden md:block p-2 bg-gray-100 rounded-full text-gray-600 hover:bg-gray-200 cursor-pointer transition">
+                <User size={20} />
+             </div>
+          </div>
         </div>
-        <div className="flex gap-4">
-          <span className="hover:text-white cursor-pointer">Download App</span>
+
+        {/* MOBILE SEARCH BAR (Floating) */}
+        <div className="md:hidden pb-3 pt-1">
+           <div className="relative shadow-lg shadow-gray-200/50 rounded-2xl">
+             <input 
+               className="w-full bg-white text-sm rounded-2xl py-3 pl-11 pr-4 focus:outline-none text-gray-700 placeholder-gray-400 shadow-sm border border-gray-100/50"
+               placeholder="Search 'Strawberries'..."
+             />
+             <div className={`absolute left-3 top-2.5 p-1 rounded-lg ${theme.accent} ${theme.primaryText}`}>
+                <Search size={14} strokeWidth={3} />
+             </div>
+           </div>
         </div>
       </div>
-    </div>
-    <div className="bg-white/90 backdrop-blur-xl border-b border-gray-100 shadow-sm transition-all duration-300">
-      <div className="max-w-7xl mx-auto px-4 md:px-6 py-3 md:py-4 flex items-center justify-between gap-4">
-        <div className="flex items-center gap-2 md:gap-8 flex-1 md:flex-none">
-          <button onClick={() => setMenuOpen(true)} className="md:hidden p-2 -ml-2 text-gray-600">
-             <Menu size={24} />
-          </button>
-          <h1 className="text-2xl md:text-3xl font-black tracking-tighter text-gray-800">
-            WAKE<span className={theme.primaryText}>UP.</span>
-          </h1>
-          <div className="hidden md:flex items-center gap-2 bg-gray-50 px-3 py-2 rounded-lg cursor-pointer hover:bg-gray-100 transition">
-             <MapPin size={16} className={theme.primaryText} />
-             <div className="leading-none">
-               <span className="text-[10px] font-bold text-gray-400 block uppercase">Delivering to</span>
-               <span className="text-xs font-bold text-gray-800">HSR Layout, 560102</span>
-             </div>
-             <ChevronDown size={14} className="text-gray-400" />
-          </div>
-        </div>
-        <div className="hidden md:flex flex-1 max-w-xl relative">
-          <input 
-            type="text" 
-            placeholder="Search for fresh groceries..." 
-            className={`w-full bg-gray-50 border border-gray-200 text-gray-800 text-sm rounded-full py-3 px-5 focus:outline-none focus:ring-2 focus:ring-opacity-50 ring-${theme.primary.replace('bg-', '')}`}
-          />
-          <button className={`absolute right-2 top-2 p-1.5 rounded-full ${theme.primary} text-white hover:opacity-90 transition`}>
-            <Search size={18} />
-          </button>
-        </div>
-        <div className="flex items-center gap-3 md:gap-6">
-          <div className="md:hidden flex flex-col items-end mr-1">
-             <span className="text-[10px] text-gray-400 font-bold">HOME</span>
-             <span className={`text-xs font-bold ${theme.primaryText} flex items-center gap-1`}>
-               HSR Layout <ChevronDown size={10} />
-             </span>
-          </div>
-          <div className="hidden md:flex items-center gap-6 text-gray-600">
-             <div className="flex flex-col items-center cursor-pointer hover:text-gray-900 group">
-                <Heart size={20} className="group-hover:fill-current transition" />
-                <span className="text-[10px] font-bold mt-1">Saved</span>
-             </div>
-             <div className="flex flex-col items-center cursor-pointer hover:text-gray-900 group">
-                <User size={20} className="group-hover:fill-current transition" />
-                <span className="text-[10px] font-bold mt-1">Profile</span>
-             </div>
-          </div>
-          <div className={`relative p-2.5 rounded-full ${theme.accent} ${theme.accentText} cursor-pointer hover:scale-105 transition shadow-sm`}>
-            <ShoppingBasket size={20} />
-            <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] w-4 h-4 flex items-center justify-center rounded-full font-bold border-2 border-white">2</span>
-          </div>
-        </div>
-      </div>
-    </div>
-    <div className="md:hidden bg-white px-4 py-2 border-b border-gray-100 shadow-sm">
-       <div className="relative">
-         <Search size={16} className="absolute left-3 top-2.5 text-gray-400" />
-         <input 
-           className="w-full bg-gray-100 text-sm rounded-lg py-2 pl-10 pr-4 focus:outline-none text-gray-700 placeholder-gray-400"
-           placeholder="Search 'Strawberries'..."
-         />
-       </div>
-    </div>
-  </header>
-);
+    </header>
+  );
+};
 
 const BottomNav = ({ theme }) => {
   const [active, setActive] = useState('home');
@@ -478,6 +358,7 @@ const BottomNav = ({ theme }) => {
 const MainContent = () => {
   const [currentSeason, setCurrentSeason] = useState("winter");
   const [menuOpen, setMenuOpen] = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false); // State for notifications
   const theme = SEASON_CONFIG[currentSeason];
   const ThemeIcon = theme.icon;
 
@@ -573,53 +454,58 @@ const handleCateitm =(category)=>{
   return (
     <div className={`min-h-screen ${theme.gradient} transition-colors duration-700 font-sans pb-28 md:pb-0 relative`}>
       <SeasonalParticles season={currentSeason} />
-      <Header theme={theme} setMenuOpen={setMenuOpen} />
+      
+      {/* Header with toggle function */}
+      <Header theme={theme} setMenuOpen={setMenuOpen} onOpenNotifications={() => setShowNotifications(true)} />
+      
+      {/* Notification Drawer */}
+      <NotificationDrawer isOpen={showNotifications} onClose={() => setShowNotifications(false)} theme={theme} />
 
       {/* ATMOSPHERE */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
-         <div className={`absolute top-0 left-0 w-[500px] h-[500px] rounded-full mix-blend-multiply filter blur-3xl opacity-20 ${theme.primary} animate-pulse`}></div>
-         <div className={`absolute bottom-0 right-0 w-[400px] h-[400px] rounded-full mix-blend-multiply filter blur-3xl opacity-20 ${theme.accent} animate-pulse`}></div>
+          <div className={`absolute top-0 left-0 w-[500px] h-[500px] rounded-full mix-blend-multiply filter blur-3xl opacity-20 ${theme.primary} animate-pulse`}></div>
+          <div className={`absolute bottom-0 right-0 w-[400px] h-[400px] rounded-full mix-blend-multiply filter blur-3xl opacity-20 ${theme.accent} animate-pulse`}></div>
       </div>
 
-      <main className="relative z-10 max-w-7xl mx-auto px-4 md:px-6 pt-6">
+      <main className="relative z-10 max-w-7xl mx-auto px-4 md:px-6 pt-2">
         
         {/* --- 1. HERO SECTION --- */}
         <div className="flex flex-col md:flex-row gap-6 mb-8 items-start">
           <div className="w-full md:w-2/3 lg:w-3/4 relative rounded-2xl overflow-hidden shadow-xl aspect-[16/8] md:aspect-[16/7] group">
-             {banners.map((_, i) => (
-               <div key={i} className={`absolute inset-0 transition-opacity duration-1000 ${i === slideIndex ? 'opacity-100 z-10' : 'opacity-0 z-0'}`}>
-                 <img src={`https://picsum.photos/1200/600?random=${i + 10}`} className={`w-full h-full object-cover ${theme.bannerTone}`} alt="Banner" />
-                 <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/20 to-transparent p-6 md:p-12 flex flex-col justify-center text-white">
-                    <span className={`inline-block w-fit px-3 py-1 rounded-md text-xs font-bold mb-3 ${theme.badge} uppercase tracking-wider`}>{theme.name}</span>
-                    <h2 className="text-3xl md:text-5xl font-black mb-4 leading-tight">Fresh & Organic <br/> Delivered Fast.</h2>
-                    <p className="text-sm md:text-lg opacity-90 mb-6 max-w-md hidden md:block">Experience the best quality seasonal produce.</p>
-                    <button className="bg-white text-gray-900 font-bold py-2.5 px-6 rounded-full w-fit hover:bg-gray-100 transition shadow-lg">Shop {theme.name}</button>
-                 </div>
-               </div>
-             ))}
-             <div className="absolute bottom-4 left-6 z-20 flex gap-2">
-               {banners.map((_, i) => (
-                 <div key={i} className={`h-1.5 rounded-full transition-all duration-300 ${i === slideIndex ? 'w-6 bg-white' : 'w-1.5 bg-white/50'}`} />
-               ))}
-             </div>
+              {banners.map((_, i) => (
+                <div key={i} className={`absolute inset-0 transition-opacity duration-1000 ${i === slideIndex ? 'opacity-100 z-10' : 'opacity-0 z-0'}`}>
+                  <img src={`https://picsum.photos/1200/600?random=${i + 10}`} className={`w-full h-full object-cover ${theme.bannerTone}`} alt="Banner" />
+                  <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/20 to-transparent p-6 md:p-12 flex flex-col justify-center text-white">
+                     <span className={`inline-block w-fit px-3 py-1 rounded-md text-xs font-bold mb-3 ${theme.badge} uppercase tracking-wider`}>{theme.name}</span>
+                     <h2 className="text-3xl md:text-5xl font-black mb-4 leading-tight">Fresh & Organic <br/> Delivered Fast.</h2>
+                     <p className="text-sm md:text-lg opacity-90 mb-6 max-w-md hidden md:block">Experience the best quality seasonal produce.</p>
+                     <button className="bg-white text-gray-900 font-bold py-2.5 px-6 rounded-full w-fit hover:bg-gray-100 transition shadow-lg">Shop {theme.name}</button>
+                  </div>
+                </div>
+              ))}
+              <div className="absolute bottom-4 left-6 z-20 flex gap-2">
+                {banners.map((_, i) => (
+                  <div key={i} className={`h-1.5 rounded-full transition-all duration-300 ${i === slideIndex ? 'w-6 bg-white' : 'w-1.5 bg-white/50'}`} />
+                ))}
+              </div>
           </div>
           <div className="w-full md:w-1/3 lg:w-1/4 flex flex-col gap-3">
-             <div className={`flex items-center gap-3 p-4 rounded-2xl ${theme.cardBg} shadow-sm border ${theme.accent.replace('bg-', 'border-')} cursor-pointer hover:shadow-lg transition-all`}>
-                <div className={`p-3 rounded-full ${theme.accent} ${theme.primaryText}`}><CreditCard size={24} /></div>
-                <div>
-                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wide">HDFC Bank</p>
-                    <p className="font-black text-gray-800 text-lg leading-none">10% OFF</p>
-                    <p className="text-xs text-gray-500">On credit cards</p>
-                </div>
-             </div>
-             <div className={`flex items-center gap-3 p-4 rounded-2xl bg-gradient-to-r from-gray-900 to-gray-800 text-white shadow-md cursor-pointer hover:shadow-xl transition-all`}>
-                <div className={`p-3 rounded-full bg-white/20 backdrop-blur-sm`}><Tag size={24} className="text-white" /></div>
-                <div>
-                    <p className="text-[10px] font-bold text-gray-300 uppercase tracking-wide">Code: SAVE20</p>
-                    <p className="font-black text-white text-lg leading-none">Flat ₹50</p>
-                    <p className="text-xs text-gray-400">On orders above ₹299</p>
-                </div>
-             </div>
+              <div className={`flex items-center gap-3 p-4 rounded-2xl ${theme.cardBg} shadow-sm border ${theme.accent.replace('bg-', 'border-')} cursor-pointer hover:shadow-lg transition-all`}>
+                 <div className={`p-3 rounded-full ${theme.accent} ${theme.primaryText}`}><CreditCard size={24} /></div>
+                 <div>
+                     <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wide">HDFC Bank</p>
+                     <p className="font-black text-gray-800 text-lg leading-none">10% OFF</p>
+                     <p className="text-xs text-gray-500">On credit cards</p>
+                 </div>
+              </div>
+              <div className={`flex items-center gap-3 p-4 rounded-2xl bg-gradient-to-r from-gray-900 to-gray-800 text-white shadow-md cursor-pointer hover:shadow-xl transition-all`}>
+                 <div className={`p-3 rounded-full bg-white/20 backdrop-blur-sm`}><Tag size={24} className="text-white" /></div>
+                 <div>
+                     <p className="text-[10px] font-bold text-gray-300 uppercase tracking-wide">Code: SAVE20</p>
+                     <p className="font-black text-white text-lg leading-none">Flat ₹50</p>
+                     <p className="text-xs text-gray-400">On orders above ₹299</p>
+                 </div>
+              </div>
           </div>
         </div>
 
@@ -822,31 +708,7 @@ const handleCateitm =(category)=>{
 
       <BottomNav theme={theme} />
 
-      {menuOpen && (
-        <div className="fixed inset-0 z-[60] flex">
-           <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setMenuOpen(false)}></div>
-           <div className="relative bg-white w-4/5 max-w-sm h-full shadow-2xl flex flex-col p-6 animate-in slide-in-from-left duration-300">
-             <div className="flex justify-between items-center mb-8">
-                 <h2 className="text-2xl font-black text-gray-800">Menu</h2>
-                 <button onClick={() => setMenuOpen(false)} className="p-2 bg-gray-100 rounded-full hover:bg-gray-200"><X size={20} /></button>
-             </div>
-             <div className="space-y-4 flex-1">
-                 {['Home', 'Your Orders', 'Wallet', 'Addresses', 'Customer Support', 'Settings'].map(item => (
-                    <div key={item} className="flex items-center justify-between p-3 rounded-xl hover:bg-gray-50 cursor-pointer group">
-                       <span className="font-bold text-gray-600 group-hover:text-gray-900">{item}</span>
-                       <ArrowRight size={16} className="text-gray-300 group-hover:text-gray-800" />
-                    </div>
-                 ))}
-             </div>
-             <div className={`p-4 rounded-xl ${theme.accent} mt-auto`}>
-                 <p className={`text-xs font-bold ${theme.accentText}`}>Logged in as Guest</p>
-                 <button className={`mt-2 w-full py-2 rounded-lg bg-white text-xs font-bold shadow-sm ${theme.primaryText}`}>Login / Sign Up</button>
-             </div>
-           </div>
-        </div>
-      )}
-
-    </div>
+         </div>
   );
 };
 
