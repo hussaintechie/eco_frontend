@@ -4,16 +4,18 @@ import {
   Snowflake, Sun, Flower2, CloudRain,
   Home, Heart
 } from "lucide-react";
+import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 // --- MOCK NAVIGATION (Replaces react-router-dom for standalone preview) ---
-const useNavigate = () => {
-  return (path) => {
-    console.log(`Navigation triggered to: ${path}`);
-    if (path === -1) {
-      console.log("Navigating Back");
-    }
-  };
-};
+// const useNavigate = () => {
+//   return (path) => {
+//     console.log(`Navigation triggered to: ${path}`);
+//     if (path === -1) {
+//       console.log("Navigating Back");
+//     }
+//   };
+// };
 
 // --- 1. SEASONAL CONFIGURATION (Shared) ---
 const SEASON_CONFIG = {
@@ -184,6 +186,7 @@ const BottomNav = ({ theme }) => {
 function GroceriesPage() {
   const navigate = useNavigate();
   const [currentSeason, setCurrentSeason] = useState("winter");
+  const [categories, setCategories] = useState([]);
 
   useEffect(() => {
     setCurrentSeason(getSeason());
@@ -191,26 +194,76 @@ function GroceriesPage() {
 
   const theme = SEASON_CONFIG[currentSeason];
 
-  const categories = [
-    { name: "Dairy, Eggs & Breads", img: "https://i.postimg.cc/ZRZrjYGJ/1.png" },
-    { name: "Rice, Atta & Dal", img: "https://i.postimg.cc/tTKPMT9r/2.png" },
-    { name: "Masalas & Dry Fruits", img: "https://i.postimg.cc/XYx9nSg4/3.png" },
-    { name: "Edible Oil & Ghee", img: "https://i.postimg.cc/VvRP8yS8/4.png" },
-    { name: "Chips & Namkeens", img: "https://i.postimg.cc/L4wpJ17d/5.png" },
-    { name: "Drinks & Juices", img: "https://i.postimg.cc/GhMY3VVq/6.png" },
-    { name: "Sweets & Chocolates", img: "https://i.postimg.cc/VNtnQh33/7.png" },
-    { name: "Bakery & Biscuits", img: "https://i.postimg.cc/kXKcLrwB/8.png" },
-    { name: "Instant & Frozen", img: "https://i.postimg.cc/jd8Q8mPS/9.png" },
-    { name: "Batter & Breakfast", img: "https://i.postimg.cc/hPy0bSH3/10.png" },
-    { name: "Mayonnaise & Sauces", img: "https://i.postimg.cc/fWPfMZbN/11.png" },
-    { name: "Tea, Coffee & More", img: "https://i.postimg.cc/nLKcYS02/12.png" },
-    { name: "Cleaning Essentials", img: "https://i.postimg.cc/jdXP14k0/13.png" },
-    { name: "Personal Care", img: "https://i.postimg.cc/gjyHfH56/14.png" },
-    { name: "Health & Pharma", img: "https://i.postimg.cc/T1VS4GJK/15.png" },
-    { name: "Stationery & Party Needs", img: "https://i.postimg.cc/XJDbHj6V/16.png" },
-    { name: "Baby Care", img: "https://i.postimg.cc/T1PdJGW3/17.png" },
-    { name: "Home Needs", img: "https://i.postimg.cc/ZnmwJNCf/18.png" },
-  ];
+  // const categories = [
+  //   { name: "Dairy, Eggs & Breads", img: "https://i.postimg.cc/ZRZrjYGJ/1.png" },
+  //   { name: "Rice, Atta & Dal", img: "https://i.postimg.cc/tTKPMT9r/2.png" },
+  //   { name: "Masalas & Dry Fruits", img: "https://i.postimg.cc/XYx9nSg4/3.png" },
+  //   { name: "Edible Oil & Ghee", img: "https://i.postimg.cc/VvRP8yS8/4.png" },
+  //   { name: "Chips & Namkeens", img: "https://i.postimg.cc/L4wpJ17d/5.png" },
+  //   { name: "Drinks & Juices", img: "https://i.postimg.cc/GhMY3VVq/6.png" },
+  //   { name: "Sweets & Chocolates", img: "https://i.postimg.cc/VNtnQh33/7.png" },
+  //   { name: "Bakery & Biscuits", img: "https://i.postimg.cc/kXKcLrwB/8.png" },
+  //   { name: "Instant & Frozen", img: "https://i.postimg.cc/jd8Q8mPS/9.png" },
+  //   { name: "Batter & Breakfast", img: "https://i.postimg.cc/hPy0bSH3/10.png" },
+  //   { name: "Mayonnaise & Sauces", img: "https://i.postimg.cc/fWPfMZbN/11.png" },
+  //   { name: "Tea, Coffee & More", img: "https://i.postimg.cc/nLKcYS02/12.png" },
+  //   { name: "Cleaning Essentials", img: "https://i.postimg.cc/jdXP14k0/13.png" },
+  //   { name: "Personal Care", img: "https://i.postimg.cc/gjyHfH56/14.png" },
+  //   { name: "Health & Pharma", img: "https://i.postimg.cc/T1VS4GJK/15.png" },
+  //   { name: "Stationery & Party Needs", img: "https://i.postimg.cc/XJDbHj6V/16.png" },
+  //   { name: "Baby Care", img: "https://i.postimg.cc/T1PdJGW3/17.png" },
+  //   { name: "Home Needs", img: "https://i.postimg.cc/ZnmwJNCf/18.png" },
+  // ];
+
+const fetchCategory = async () => {
+  try {
+    const response = await axios.post(
+      "http://localhost:5000/product/allcatedetails",
+      {mode_fetchorall :0}
+    );
+
+    const formatted = formatCategories(response.data.data);
+
+    setCategories(formatted);
+
+    console.log("Formatted Categories:", formatted);
+  } catch (error) {
+    console.error("Category fetch error:", error);
+  }
+};
+
+const formatCategories = (items) => {
+  return items.map((item) => ({
+    cat_id: item.categories_id || 0,
+    name: item.categories_name || "",
+    img: item.cat_img
+  }));
+};
+
+
+useEffect(() => {
+  fetchCategory();
+}, []);
+
+
+const handleCateitm =(category)=>{
+
+  console.log(category ,'categorycategorycategory');
+
+  if(!category.cat_id){
+   alert("Undefinded Categories");
+   return;
+  }
+
+    navigate("/category", {
+    state: {
+      id: category.cat_id,
+      name: category.name,
+      img: category.img
+    }
+  });
+
+};
 
   return (
     // MAIN WRAPPER
@@ -306,26 +359,60 @@ function GroceriesPage() {
           
           <div className="h-[1px] bg-gray-100 mb-6 md:hidden" />
 
-          {/* GRID LAYOUT */}
-          <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 md:gap-8">
-            {categories.map((item, index) => (
-              <div key={index} className="flex flex-col items-center text-center cursor-pointer group">
-                
-                {/* Image Container */}
-                <div className={`bg-gray-50 md:bg-white md:border md:border-gray-100 rounded-xl p-2 w-full aspect-square flex items-center justify-center transition-all duration-300 group-hover:${theme.accent} md:group-hover:shadow-lg md:group-hover:${theme.border} md:group-hover:-translate-y-1`}>
-                  <img
-                    src={item.img}
-                    alt={item.name}
-                    className="w-full h-full object-contain rounded-lg mix-blend-multiply md:mix-blend-normal"
-                  />
-                </div>
-                
-                <p className={`text-xs md:text-sm mt-3 font-medium leading-tight text-gray-700 md:text-gray-800 group-hover:${theme.primaryText} transition-colors`}>
-                    {item.name}
-                </p>
-              </div>
-            ))}
-          </div>
+{/* GRID LAYOUT */}
+<div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 md:gap-8">
+  {categories.map((item, index) => (
+    <div
+      key={index}
+      className="group flex flex-col items-center text-center cursor-pointer"
+    >
+
+      {/* Image Card */}
+      <div
+        className="
+          relative w-full aspect-square
+          rounded-2xl
+          bg-white
+          border border-gray-100
+          flex items-center justify-center
+          overflow-hidden
+          transition-all duration-300 ease-out
+          group-hover:shadow-lg
+          group-hover:-translate-y-1
+        "
+        onClick={()=>{ handleCateitm(item) }}
+      >
+        <img
+          src={item.img}
+          alt={item.name}
+          className="
+            max-w-[70%]
+            max-h-[70%]
+            object-contain
+            transition-transform duration-300
+            group-hover:scale-105
+          "
+        />
+      </div>
+
+      {/* Category Name */}
+      <p
+        className="
+          mt-3
+          text-xs md:text-sm
+          font-medium
+          text-gray-700
+          leading-tight
+          transition-colors
+          group-hover:text-gray-900
+        "
+      >
+        {item.name}
+      </p>
+    </div>
+  ))}
+</div>
+
 
         </div>
       </div>
