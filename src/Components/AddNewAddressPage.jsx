@@ -1,11 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import API from "../api/auth";
-import {
-  ArrowLeft,
-  Home,
-  Briefcase,
-  Navigation,
-} from "lucide-react";
+import { ArrowLeft, Home, Briefcase, Navigation } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 /* ---------------- SEASON CONFIG ---------------- */
@@ -63,13 +58,12 @@ const AddNewAddressPage = () => {
   const mapInstanceRef = useRef(null);
   const searchInputRef = useRef(null);
 
-  const handleChange = (k, v) =>
-    setAddress((p) => ({ ...p, [k]: v }));
+  const handleChange = (k, v) => setAddress((p) => ({ ...p, [k]: v }));
 
   /* ---------------- AUTOFILL ---------------- */
   const fetchAutofill = async (lat, lng) => {
     const res = await fetch(
-      `https://api.sribalajistores.com/auser/autofill-location?lat=${lat}&lng=${lng}`
+      `http://localhost:5000/auser/autofill-location?lat=${lat}&lng=${lng}`
     );
     const data = await res.json();
     if (data.status === 1) {
@@ -122,10 +116,7 @@ const AddNewAddressPage = () => {
       if (!p.geometry) return;
       markerRef.current.setPosition(p.geometry.location);
       mapInstanceRef.current.setCenter(p.geometry.location);
-      fetchAutofill(
-        p.geometry.location.lat(),
-        p.geometry.location.lng()
-      );
+      fetchAutofill(p.geometry.location.lat(), p.geometry.location.lng());
     });
   }, []);
 
@@ -159,11 +150,13 @@ const AddNewAddressPage = () => {
 
   return (
     <div className={`min-h-screen ${theme.gradient} pb-20`}>
-
       {/* HEADER */}
       <div className="bg-white sticky top-0 z-20 shadow-sm">
         <div className="max-w-6xl mx-auto px-4 h-16 flex items-center gap-3">
-          <button onClick={() => navigate(-1)} className="p-2 rounded-full hover:bg-slate-100">
+          <button
+            onClick={() => navigate(-1)}
+            className="p-2 rounded-full hover:bg-slate-100"
+          >
             <ArrowLeft size={20} />
           </button>
           <h1 className="font-bold text-lg">Add New Address</h1>
@@ -172,17 +165,15 @@ const AddNewAddressPage = () => {
 
       {/* CONTENT */}
       <div className="max-w-6xl mx-auto px-4 py-6 grid grid-cols-1 md:grid-cols-12 gap-6">
-
         {/* LEFT */}
         <div className="md:col-span-7 space-y-6">
-
           {/* MAP */}
           <div className="bg-white/80 backdrop-blur rounded-3xl shadow-lg p-4">
             <div className="flex justify-between items-center mb-3">
               <h3 className="font-bold text-lg">Choose Location</h3>
               <button
-  onClick={getCurrentLocation}
-  className="
+                onClick={getCurrentLocation}
+                className="
     text-xs font-medium
     px-4 py-3
     rounded-xl
@@ -194,9 +185,9 @@ const AddNewAddressPage = () => {
     hover:shadow-md
     transition-all
   "
->
-  📍 Use Current Location
-</button>
+              >
+                📍 Use Current Location
+              </button>
             </div>
 
             <input
@@ -244,7 +235,6 @@ const AddNewAddressPage = () => {
         {/* RIGHT */}
         <div className="md:col-span-5">
           <div className="bg-white/80 backdrop-blur rounded-3xl shadow-xl p-6 sticky top-24">
-
             <h3 className="font-bold text-lg mb-4">Address Type</h3>
 
             <div className="grid grid-cols-3 gap-4 mb-6">
@@ -259,15 +249,14 @@ const AddNewAddressPage = () => {
                     key={item.label}
                     onClick={() => handleChange("type", item.label)}
                     className={`flex flex-col items-center gap-2 p-4 rounded-2xl border transition
-                      ${active
-                        ? `${theme.primary} text-white shadow-xl scale-105`
-                        : "bg-white hover:bg-slate-50 text-slate-600"
+                      ${
+                        active
+                          ? `${theme.primary} text-white shadow-xl scale-105`
+                          : "bg-white hover:bg-slate-50 text-slate-600"
                       }`}
                   >
                     <item.icon className="w-6 h-6" />
-                    <span className="text-xs font-semibold">
-                      {item.label}
-                    </span>
+                    <span className="text-xs font-semibold">{item.label}</span>
                   </button>
                 );
               })}
@@ -281,7 +270,6 @@ const AddNewAddressPage = () => {
             </button>
           </div>
         </div>
-
       </div>
     </div>
   );

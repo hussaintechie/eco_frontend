@@ -84,7 +84,7 @@ export default function LoginForm() {
   const [loading, setLoading] = useState(false);
 
   // Backend URL
-  const API_URL = "https://api.sribalajistores.com/auth/login";
+  const API_URL = "http://localhost:5000/auth/login";
 
   // ================= SEND OTP =================
   const handleSendOtp = async () => {
@@ -223,7 +223,9 @@ export default function LoginForm() {
           }}
         >
           <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 3 }}>
-            <Box sx={{ p: 1, borderRadius: "12px", bgcolor: `${theme.primary}20` }}>
+            <Box
+              sx={{ p: 1, borderRadius: "12px", bgcolor: `${theme.primary}20` }}
+            >
               <ShoppingBag color={theme.primary} size={24} />
             </Box>
             <Typography variant="h5" fontWeight={700}>
