@@ -8,51 +8,52 @@ import {
   Bell, AlertCircle, Package, // Added AlertCircle, Package
   Route
 } from "lucide-react";
+import axios from "axios";
 import { useNavigate, BrowserRouter } from "react-router-dom";
 import { SEASON_CONFIG, getSeason, SeasonalParticles} from '../SEASON_CONFIG.jsx';
 
 // --- MOCK DATA ---
-const CATEGORIES = [
-  { title: "Price Drop", subtitle: "VIEW ALL", icon: <Star size={20} className="text-yellow-500" />, color: "bg-yellow-50" },
-  { title: "Groceries", subtitle: "FROM ₹25", icon: <ShoppingBasket size={20} className="text-blue-500" />, color: "bg-blue-50" },
-  { title: "Local Veg", subtitle: "FROM ₹15", icon: <Carrot size={20} className="text-orange-500" />, color: "bg-orange-50" },
-  { title: "Fruits", subtitle: "FROM ₹38", icon: <Apple size={20} className="text-red-500" />, color: "bg-red-50" },
-  { title: "Exotic", subtitle: "FROM ₹33", icon: <Citrus size={20} className="text-purple-500" />, color: "bg-purple-50" },
-  { title: "Greens", subtitle: "FROM ₹9", icon: <Salad size={20} className="text-green-500" />, color: "bg-green-50" },
-  { title: "Roots", subtitle: "FROM ₹26", icon: <Leaf size={20} className="text-emerald-500" />, color: "bg-emerald-50" },
-];
+// const CATEGORIES = [
+//   { title: "Price Drop", subtitle: "VIEW ALL", icon: <Star size={20} className="text-yellow-500" />, color: "bg-yellow-50" },
+//   { title: "Daily Picks", subtitle: "FROM ₹25", icon: <ShoppingBasket size={20} className="text-blue-500" />, color: "bg-blue-50" },
+//   { title: "Local Veg", subtitle: "FROM ₹15", icon: <Carrot size={20} className="text-orange-500" />, color: "bg-orange-50" },
+//   { title: "Fruits", subtitle: "FROM ₹38", icon: <Apple size={20} className="text-red-500" />, color: "bg-red-50" },
+//   { title: "Exotic", subtitle: "FROM ₹33", icon: <Citrus size={20} className="text-purple-500" />, color: "bg-purple-50" },
+//   { title: "Greens", subtitle: "FROM ₹9", icon: <Salad size={20} className="text-green-500" />, color: "bg-green-50" },
+//   { title: "Roots", subtitle: "FROM ₹26", icon: <Leaf size={20} className="text-emerald-500" />, color: "bg-emerald-50" },
+// ];
 
-const FRUITS_DATA = [
-    { name: "Shimla Apples", weight: "4pcs", price: 120, oldPrice: 150, img: "https://images.unsplash.com/photo-1560806887-1e4cd0b6cbd6?auto=format&fit=crop&w=300&q=80", discount: "20%" },
-    { name: "Robusta Banana", weight: "1kg", price: 45, oldPrice: 60, img: "https://images.unsplash.com/photo-1528825871115-3581a5387919?auto=format&fit=crop&w=300&q=80", discount: "25%" },
-    { name: "Pomegranate", weight: "3pcs", price: 89, oldPrice: 110, img: "https://images.unsplash.com/photo-1596386461350-326ea7750550?auto=format&fit=crop&w=300&q=80", discount: "18%" },
-    { name: "Kiwi Green", weight: "3pcs", price: 99, oldPrice: 140, img: "https://images.unsplash.com/photo-1585059895524-72359e06138a?auto=format&fit=crop&w=300&q=80", discount: "30%" },
-    { name: "Dragon Fruit", weight: "1pc", price: 75, oldPrice: 100, img: "https://images.unsplash.com/photo-1527357416398-1e4e554907a4?auto=format&fit=crop&w=300&q=80", discount: "25%" },
-];
+// const FRUITS_DATA = [
+//     { name: "Shimla Apples", weight: "4pcs", price: 120, oldPrice: 150, img: "https://images.unsplash.com/photo-1560806887-1e4cd0b6cbd6?auto=format&fit=crop&w=300&q=80", discount: "20%" },
+//     { name: "Robusta Banana", weight: "1kg", price: 45, oldPrice: 60, img: "https://images.unsplash.com/photo-1528825871115-3581a5387919?auto=format&fit=crop&w=300&q=80", discount: "25%" },
+//     { name: "Pomegranate", weight: "3pcs", price: 89, oldPrice: 110, img: "https://images.unsplash.com/photo-1596386461350-326ea7750550?auto=format&fit=crop&w=300&q=80", discount: "18%" },
+//     { name: "Kiwi Green", weight: "3pcs", price: 99, oldPrice: 140, img: "https://images.unsplash.com/photo-1585059895524-72359e06138a?auto=format&fit=crop&w=300&q=80", discount: "30%" },
+//     { name: "Dragon Fruit", weight: "1pc", price: 75, oldPrice: 100, img: "https://images.unsplash.com/photo-1527357416398-1e4e554907a4?auto=format&fit=crop&w=300&q=80", discount: "25%" },
+// ];
 
-const VEG_DATA = [
-    { name: "Fresh Broccoli", weight: "250g", price: 45, oldPrice: 65, img: "https://images.unsplash.com/photo-1459411621453-7fb8db8feaa2?auto=format&fit=crop&w=300&q=80", discount: "30%" },
-    { name: "Red Bell Pepper", weight: "2pcs", price: 55, oldPrice: 80, img: "https://images.unsplash.com/photo-1563565375-f3fdf5dbc240?auto=format&fit=crop&w=300&q=80", discount: "31%" },
-    { name: "Button Mushroom", weight: "200g", price: 40, oldPrice: 55, img: "https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=300&q=80", discount: "27%" },
-    { name: "Cherry Tomato", weight: "250g", price: 35, oldPrice: 50, img: "https://images.unsplash.com/photo-1518977956812-cd3dbadaaf31?auto=format&fit=crop&w=300&q=80", discount: "30%" },
-    { name: "Sweet Corn", weight: "2pcs", price: 25, oldPrice: 40, img: "https://images.unsplash.com/photo-1551754655-cd27e38d2076?auto=format&fit=crop&w=300&q=80", discount: "37%" },
-];
+// const VEG_DATA = [
+//     { name: "Fresh Broccoli", weight: "250g", price: 45, oldPrice: 65, img: "https://images.unsplash.com/photo-1459411621453-7fb8db8feaa2?auto=format&fit=crop&w=300&q=80", discount: "30%" },
+//     { name: "Red Bell Pepper", weight: "2pcs", price: 55, oldPrice: 80, img: "https://images.unsplash.com/photo-1563565375-f3fdf5dbc240?auto=format&fit=crop&w=300&q=80", discount: "31%" },
+//     { name: "Button Mushroom", weight: "200g", price: 40, oldPrice: 55, img: "https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=300&q=80", discount: "27%" },
+//     { name: "Cherry Tomato", weight: "250g", price: 35, oldPrice: 50, img: "https://images.unsplash.com/photo-1518977956812-cd3dbadaaf31?auto=format&fit=crop&w=300&q=80", discount: "30%" },
+//     { name: "Sweet Corn", weight: "2pcs", price: 25, oldPrice: 40, img: "https://images.unsplash.com/photo-1551754655-cd27e38d2076?auto=format&fit=crop&w=300&q=80", discount: "37%" },
+// ];
 
-const SUPER_DEALS_DATA = [
-    { name: "Fortune Oil", weight: "1L", price: 105, oldPrice: 145, img: "https://images.unsplash.com/photo-1474979266404-7cadd259d3cf?auto=format&fit=crop&w=300&q=80", discount: "40%" },
-    { name: "Basmati Rice", weight: "5kg", price: 399, oldPrice: 650, img: "https://images.unsplash.com/photo-1586201375761-83865001e31c?auto=format&fit=crop&w=300&q=80", discount: "45%" },
-    { name: "Tata Salt", weight: "1kg", price: 20, oldPrice: 28, img: "https://images.unsplash.com/photo-1518110925495-569698eb4667?auto=format&fit=crop&w=300&q=80", discount: "30%" },
-    { name: "Sugar", weight: "1kg", price: 38, oldPrice: 55, img: "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?auto=format&fit=crop&w=300&q=80", discount: "35%" },
-];
+// const SUPER_DEALS_DATA = [
+//     { name: "Fortune Oil", weight: "1L", price: 105, oldPrice: 145, img: "https://images.unsplash.com/photo-1474979266404-7cadd259d3cf?auto=format&fit=crop&w=300&q=80", discount: "40%" },
+//     { name: "Basmati Rice", weight: "5kg", price: 399, oldPrice: 650, img: "https://images.unsplash.com/photo-1586201375761-83865001e31c?auto=format&fit=crop&w=300&q=80", discount: "45%" },
+//     { name: "Tata Salt", weight: "1kg", price: 20, oldPrice: 28, img: "https://images.unsplash.com/photo-1518110925495-569698eb4667?auto=format&fit=crop&w=300&q=80", discount: "30%" },
+//     { name: "Sugar", weight: "1kg", price: 38, oldPrice: 55, img: "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?auto=format&fit=crop&w=300&q=80", discount: "35%" },
+// ];
 
-const FEED_PRODUCTS = Array(8).fill({
-  name: "Fresh Premium Avocados",
-  weight: "500g",
-  price: 120,
-  oldPrice: 160,
-  discount: "25%",
-  img: "https://images.unsplash.com/photo-1523049673856-6468baca292f?auto=format&fit=crop&w=300&q=80"
-});
+// const FEED_PRODUCTS = Array(8).fill({
+//   name: "Fresh Premium Avocados",
+//   weight: "500g",
+//   price: 120,
+//   oldPrice: 160,
+//   discount: "25%",
+//   img: "https://images.unsplash.com/photo-1523049673856-6468baca292f?auto=format&fit=crop&w=300&q=80"
+// });
 
 const NOTIFICATIONS = [
   { id: 1, type: 'order', title: 'Order Delivered', msg: 'Your order #12345 has been delivered successfully.', time: '2 mins ago', icon: Package, color: 'text-green-600', bg: 'bg-green-50' },
@@ -367,6 +368,12 @@ const MainContent = () => {
 
   const [slideIndex, setSlideIndex] = useState(0);
   const banners = [1, 2, 3];
+ const [CATEGORIES, setCategories] = useState([]);
+ const [SUPER_DEALS_DATA, setDealdata] = useState([]);
+ const [FRUITS_DATA, setFruitdata] = useState([]);
+ const [VEG_DATA, setVegdata] = useState([]);
+ const [FEED_PRODUCTS, setRecomentdata] = useState([]);
+   const navigate = useNavigate();
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -374,6 +381,75 @@ const MainContent = () => {
     }, 4000);
     return () => clearInterval(interval);
   }, []);
+
+const fetchCategory = async () => {
+  try {
+    const response = await axios.post(
+      "http://localhost:5000/product/allcatedetails",
+      {mode_fetchorall :0}
+    );
+
+    const formatted = formatCategories(response.data.data);
+
+    setCategories(formatted);
+
+    console.log("Formatted Categories:", formatted);
+  } catch (error) {
+    console.error("Category fetch error:", error);
+  }
+};
+const fetchDeals = async () => {
+  try {
+    const response = await axios.post(
+      "http://localhost:5000/product/superdealsdata"
+    );
+      const { deals, veg, fruit ,reco} = response.data.data;
+
+    setDealdata(deals);
+    setFruitdata(fruit);
+    setVegdata(veg);
+    setRecomentdata(reco);
+
+    console.log("Deals data:", response.data.data);
+  } catch (error) {
+    console.error("Deals data fetch error:", error);
+  }
+};
+
+const formatCategories = (items) => {
+  return items.map((item) => ({
+    cat_id: item.categories_id || 0,
+    title: item.categories_name || "",
+    subtitle:  "",
+    img: item.cat_img
+  }));
+};
+
+
+useEffect(() => {
+  fetchCategory();
+  fetchDeals();
+}, []);
+
+const handleCateitm =(category)=>{
+
+  console.log(category ,'categorycategorycategory');
+
+  if(!category.cat_id){
+   alert("Undefinded Categories");
+   return;
+  }
+
+    navigate("/category", {
+    state: {
+      id: category.cat_id,
+      name: category.name,
+      img: category.img
+    }
+  });
+
+};
+
 
   return (
     <div className={`min-h-screen ${theme.gradient} transition-colors duration-700 font-sans pb-28 md:pb-0 relative`}>
@@ -434,21 +510,75 @@ const MainContent = () => {
         </div>
 
         {/* --- 2. CATEGORIES --- */}
-        <div className="mb-10">
-          <SectionHeader title="Categories" action="See All" theme={theme} />
-          <div className="flex gap-4 overflow-x-auto no-scrollbar pb-4 pl-1">
-            {CATEGORIES.map((cat, i) => (
-               <div key={i} className="flex flex-col items-center gap-2 min-w-[80px] cursor-pointer group">
-                  <div className={`w-20 h-20 rounded-full flex items-center justify-center shadow-lg transition-transform duration-300 group-hover:-translate-y-2 bg-white border-2 border-white`}>
-                     <div className={`w-full h-full rounded-full ${cat.color} opacity-80 flex items-center justify-center group-hover:opacity-100`}>{cat.icon}</div>
-                  </div>
-                  <span className="text-xs font-semibold text-gray-600 group-hover:text-gray-900">{cat.title}</span>
-               </div>
-            ))}
-          </div>
+{/* --- CATEGORIES SECTION --- */}
+<div className="mb-8">
+  
+  {/* Section Header (NOT scrollable) */}
+  <div className="flex items-center justify-between mb-4 px-1">
+    <h3 className="text-lg md:text-xl font-bold text-gray-800">
+      Categories
+    </h3>
+
+    <button className="text-sm font-semibold text-green-600 hover:underline">
+      See all
+    </button>
+  </div>
+
+  {/* Scrollable Categories */}
+  <div className="flex gap-5 overflow-x-auto no-scrollbar pb-2">
+    {CATEGORIES.map((cat, i) => (
+      <div
+        key={i}
+        className="min-w-[90px] flex flex-col items-center text-center cursor-pointer group"
+        onClick={()=>{ handleCateitm(cat) }}
+      >
+        {/* Image Circle */}
+        <div
+          className="
+            w-20 h-20
+            rounded-full
+            overflow-hidden
+            bg-white
+            shadow-sm
+            ring-1 ring-gray-100
+            transition-all duration-300
+            group-hover:shadow-md
+            group-hover:-translate-y-1
+          "
+        >
+          <img
+            src={cat.img}
+            alt={cat.title}
+            className="
+              w-full h-full
+              object-cover
+              transition-transform duration-300
+              group-hover:scale-110
+            "
+            onError={(e) =>
+              (e.currentTarget.src = "/images/category-placeholder.png")
+            }
+          />
         </div>
 
+        {/* Text */}
+        <p className="mt-2 text-xs font-semibold text-gray-800 leading-tight">
+          {cat.title}
+        </p>
+
+        {cat.subtitle && (
+          <span className="text-[11px] text-gray-500">
+            {cat.subtitle}
+          </span>
+        )}
+      </div>
+    ))}
+  </div>
+</div>
+
+
         {/* --- 3. SUPER DISCOUNT ROW (New) --- */}
+        {SUPER_DEALS_DATA.length  > 0 && (
         <div className="mb-12">
             <div className="flex items-center justify-between mb-4 bg-red-50 p-3 rounded-xl border border-red-100">
                 <div className="flex items-center gap-2 text-red-600">
@@ -462,6 +592,7 @@ const MainContent = () => {
             <HorizontalScrollRow data={SUPER_DEALS_DATA} theme={{...theme, accent: 'bg-red-50', primaryText: 'text-red-600', primary: 'bg-red-600'}} />
         </div>
 
+        )}
         {/* --- 4. AD BANNER 1 (New) --- */}
         <ParallaxAdBanner theme={theme} />
 

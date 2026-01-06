@@ -69,7 +69,7 @@ const AddNewAddressPage = () => {
   /* ---------------- AUTOFILL ---------------- */
   const fetchAutofill = async (lat, lng) => {
     const res = await fetch(
-      `http://localhost:5000/auser/autofill-location?lat=${lat}&lng=${lng}`
+      `https://api.sribalajistores.com/auser/autofill-location?lat=${lat}&lng=${lng}`
     );
     const data = await res.json();
     if (data.status === 1) {

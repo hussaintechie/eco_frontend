@@ -140,7 +140,7 @@ const MyOrdersPage = () => {
               </button>
               <h1 className="font-bold text-lg">My Orders</h1>
             </div>
-            <Search className="w-5 h-5 text-slate-500" />
+           
           </div>
 
           {/* TABS */}
