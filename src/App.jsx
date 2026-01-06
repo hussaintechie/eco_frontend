@@ -27,7 +27,7 @@ function App() {
       <Routes>
 
         {/* Home Route */}
-        {/* <Route path="/" element={<MainContent />} />  */}
+        <Route path="/home" element={<MainContent />} /> 
         {/* OR your home page of choice */}
 
         {/* Auth Routes */}
