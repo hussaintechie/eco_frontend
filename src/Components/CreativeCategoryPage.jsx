@@ -4,73 +4,75 @@ import {
   Home, User, Star, Filter, ArrowLeft, X, ChevronDown,
   Snowflake, Sun, Flower2, CloudRain
 } from "lucide-react";
+import axios from "axios";
+import { useLocation, useNavigate } from "react-router-dom";
 
 // --- 1. MOCK DATA ---
-const CATEGORIES = [
-  { id: "curd", name: "Curd & Yogurt", icon: "🥣" },
-  { id: "paneer", name: "Paneer & Cream", icon: "🧀" },
-  { id: "milk", name: "Fresh Milk", icon: "🥛" },
-  { id: "butter", name: "Butter & Cheese", icon: "🧈" },
-  { id: "bread", name: "Bread & Buns", icon: "🍞" },
-  { id: "eggs", name: "Farm Eggs", icon: "🥚" },
-];
+// const CATEGORIES = [
+//   { id: "curd", name: "Curd & Yogurt", icon: "🥣" },
+//   { id: "paneer", name: "Paneer & Cream", icon: "🧀" },
+//   { id: "milk", name: "Fresh Milk", icon: "🥛" },
+//   { id: "butter", name: "Butter & Cheese", icon: "🧈" },
+//   { id: "bread", name: "Bread & Buns", icon: "🍞" },
+//   { id: "eggs", name: "Farm Eggs", icon: "🥚" },
+// ];
 
-const PRODUCTS = [
-  { 
-    id: 1, 
-    category: "Butter & Cheese", 
-    name: "Amul Pasteurized Butter", 
-    rating: 4.8, 
-    img: "https://images.unsplash.com/photo-1589985270826-4b7bb135bc9d?auto=format&fit=crop&w=300&q=80",
-    desc: "Amul Butter is a tasty spread for bread, a key ingredient in baking, and it makes food even tastier.",
-    variants: [
-        { weight: "100 g", price: 52, mrp: 58 },
-        { weight: "500 g", price: 266, mrp: 295 }
-    ]
-  },
-  { 
-    id: 2, 
-    category: "Curd & Yogurt", 
-    name: "Creamy Fresh Curd", 
-    rating: 4.8, 
-    img: "https://images.unsplash.com/photo-1628088062854-d1870b4553da?auto=format&fit=crop&w=300&q=80",
-    desc: "Thick and creamy curd made from pure pasteurized milk.",
-    variants: [
-        { weight: "200 g", price: 20, mrp: 25 },
-        { weight: "400 g", price: 38, mrp: 45 }
-    ]
-  },
-  { 
-    id: 3, category: "Paneer & Cream", name: "Malai Paneer Cubes", rating: 4.5, img: "https://images.unsplash.com/photo-1631451095765-2c91616fc9e6?auto=format&fit=crop&w=300&q=80", 
-    desc: "Soft and fresh paneer cubes, perfect for curries and grills.",
-    variants: [{ weight: "200 g", price: 204, mrp: 325 }] 
-  },
-  { 
-    id: 4, category: "Farm Eggs", name: "White Farm Eggs", rating: 4.2, img: "https://images.unsplash.com/photo-1582722878654-02fd235dd7c2?auto=format&fit=crop&w=300&q=80", 
-    desc: "High protein farm fresh eggs.",
-    variants: [{ weight: "30 pcs", price: 225, mrp: 288 }] 
-  },
-  { 
-    id: 5, category: "Butter & Cheese", name: "Cheddar Cheese Slice", rating: 4.6, img: "https://images.unsplash.com/photo-1618160702438-9b02ab6515c9?auto=format&fit=crop&w=300&q=80",
-    desc: "Processed cheddar cheese slices for burgers and sandwiches.",
-    variants: [{ weight: "200 g", price: 75, mrp: 90 }]
-  },
-  { 
-    id: 6, category: "Paneer & Cream", name: "Heavy Whipping Cream", rating: 4.3, img: "https://images.unsplash.com/photo-1624536737505-14eb0e46f6f9?auto=format&fit=crop&w=300&q=80",
-    desc: "Rich heavy cream for desserts and cooking.",
-    variants: [{ weight: "200 ml", price: 36, mrp: 50 }]
-  },
-  { 
-    id: 7, category: "Fresh Milk", name: "Full Cream Milk", rating: 4.7, img: "https://images.unsplash.com/photo-1550583724-b2692b85b150?auto=format&fit=crop&w=300&q=80",
-    desc: "Farm fresh full cream milk, pasteurized and homogenized.",
-    variants: [{ weight: "1 L", price: 60, mrp: 70 }]
-  },
-  { 
-    id: 8, category: "Curd & Yogurt", name: "Greek Yogurt Berry", rating: 4.8, img: "https://images.unsplash.com/photo-1488477181946-6428a0291777?auto=format&fit=crop&w=300&q=80",
-    desc: "High protein greek yogurt with real berry extracts.",
-    variants: [{ weight: "150 g", price: 55, mrp: 70 }]
-  },
-];
+// const PRODUCTS = [
+//   { 
+//     id: 1, 
+//     category: "Butter & Cheese", 
+//     name: "Amul Pasteurized Butter", 
+//     rating: 4.8, 
+//     img: "https://images.unsplash.com/photo-1589985270826-4b7bb135bc9d?auto=format&fit=crop&w=300&q=80",
+//     desc: "Amul Butter is a tasty spread for bread, a key ingredient in baking, and it makes food even tastier.",
+//     variants: [
+//         { weight: "100 g", price: 52, mrp: 58 },
+//         { weight: "500 g", price: 266, mrp: 295 }
+//     ]
+//   },
+//   { 
+//     id: 2, 
+//     category: "Curd & Yogurt", 
+//     name: "Creamy Fresh Curd", 
+//     rating: 4.8, 
+//     img: "https://images.unsplash.com/photo-1628088062854-d1870b4553da?auto=format&fit=crop&w=300&q=80",
+//     desc: "Thick and creamy curd made from pure pasteurized milk.",
+//     variants: [
+//         { weight: "200 g", price: 20, mrp: 25 },
+//         { weight: "400 g", price: 38, mrp: 45 }
+//     ]
+//   },
+//   { 
+//     id: 3, category: "Paneer & Cream", name: "Malai Paneer Cubes", rating: 4.5, img: "https://images.unsplash.com/photo-1631451095765-2c91616fc9e6?auto=format&fit=crop&w=300&q=80", 
+//     desc: "Soft and fresh paneer cubes, perfect for curries and grills.",
+//     variants: [{ weight: "200 g", price: 204, mrp: 325 }] 
+//   },
+//   { 
+//     id: 4, category: "Farm Eggs", name: "White Farm Eggs", rating: 4.2, img: "https://images.unsplash.com/photo-1582722878654-02fd235dd7c2?auto=format&fit=crop&w=300&q=80", 
+//     desc: "High protein farm fresh eggs.",
+//     variants: [{ weight: "30 pcs", price: 225, mrp: 288 }] 
+//   },
+//   { 
+//     id: 5, category: "Butter & Cheese", name: "Cheddar Cheese Slice", rating: 4.6, img: "https://images.unsplash.com/photo-1618160702438-9b02ab6515c9?auto=format&fit=crop&w=300&q=80",
+//     desc: "Processed cheddar cheese slices for burgers and sandwiches.",
+//     variants: [{ weight: "200 g", price: 75, mrp: 90 }]
+//   },
+//   { 
+//     id: 6, category: "Paneer & Cream", name: "Heavy Whipping Cream", rating: 4.3, img: "https://images.unsplash.com/photo-1624536737505-14eb0e46f6f9?auto=format&fit=crop&w=300&q=80",
+//     desc: "Rich heavy cream for desserts and cooking.",
+//     variants: [{ weight: "200 ml", price: 36, mrp: 50 }]
+//   },
+//   { 
+//     id: 7, category: "Fresh Milk", name: "Full Cream Milk", rating: 4.7, img: "https://images.unsplash.com/photo-1550583724-b2692b85b150?auto=format&fit=crop&w=300&q=80",
+//     desc: "Farm fresh full cream milk, pasteurized and homogenized.",
+//     variants: [{ weight: "1 L", price: 60, mrp: 70 }]
+//   },
+//   { 
+//     id: 8, category: "Curd & Yogurt", name: "Greek Yogurt Berry", rating: 4.8, img: "https://images.unsplash.com/photo-1488477181946-6428a0291777?auto=format&fit=crop&w=300&q=80",
+//     desc: "High protein greek yogurt with real berry extracts.",
+//     variants: [{ weight: "150 g", price: 55, mrp: 70 }]
+//   },
+// ];
 
 // --- 2. SEASONAL CONFIG ---
 const SEASON_CONFIG = {
@@ -328,15 +330,69 @@ export default function CreativeCategoryPage() {
   // State for selected product for modal
   const [selectedProduct, setSelectedProduct] = useState(null);
 
+  
+const [PRODUCTS, setProducts] = useState([]);
+const [CATEGORIES, setCate] = useState([]);
+
+  const { state } = useLocation();
+  const { id, name, img } = state;
+
   useEffect(() => {
     setCurrentSeason(getSeason());
   }, []);
 
+
+  const fetchCategoryItems = async () => {
+  try {
+    const response = await axios.post(
+      "https://api.sribalajistores.com/product/catitems",
+      { cate_id: id }
+    );
+
+  //  const formatted = formatProducts(response.data.data);
+    const formatted = formatProducts(response.data.data);
+
+    setProducts(formatted);
+    setCate(formatted);
+
+    console.log("Formatted Products:", formatted);
+
+  } catch (error) {
+    console.error(error);
+  }
+};
+
+useEffect(() => {
+  fetchCategoryItems();
+}, []);
+
+const formatProducts = (items) => {
+
+  console.log(items ,'items');
+  return items.map((item) => ({
+    id: item.product_id,
+    category: "", // API does not provide category name
+    name: item.title || "",
+    rating: "", // no rating in API
+    img: item.image || "",
+    desc: item.description || "",
+    variants: [
+      {
+        weight: "", // API does not give weight
+        price: Number(item.price) || 0,
+        mrp: Number(item.mrp) || 0,
+      }
+    ]
+  }));
+};
+
   const theme = SEASON_CONFIG[currentSeason];
 
   const filteredProducts = useMemo(() => {
+    console.log(activeCategory ,'activeCategory');
+    console.log(PRODUCTS ,'PRODUCTS');
     return PRODUCTS.filter(p => {
-      const matchesCategory = p.category === activeCategory;
+      const matchesCategory = p.name === activeCategory;
       const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase());
       return matchesCategory && matchesSearch;
     });

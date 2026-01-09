@@ -548,7 +548,7 @@ coupon_discount: appliedCoupon?.discount || 0,
 
       };
 
-      const res = await API.post("/product/submitorder", payload);
+      const res = await API.post("/order/submitorder", payload);
 
       if (res.data?.status === 1) {
         await clearCartAPI();

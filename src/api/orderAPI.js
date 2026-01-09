@@ -3,16 +3,16 @@ import API from "./auth"
 
 export const getUserOrdersAPI = ()=>
 {
-    return API.post("/product/getuserorders")
+    return API.post("/order/getuserorders")
 };
 
 export const getSingleOrderAPI = (orderid) => {
-  return API.post("/product/singleorddetail", { orderid });
+  return API.post("/order/singleorddetail", { orderid });
   
 };
 
 export const getSingleOrderDetailAPI = (orderid) => {
-  return API.post("/product/singleorddetail", {
+  return API.post("/order/singleorddetail", {
     orderid
   });
 };

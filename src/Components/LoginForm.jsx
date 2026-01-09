@@ -223,7 +223,9 @@ export default function LoginForm() {
           }}
         >
           <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 3 }}>
-            <Box sx={{ p: 1, borderRadius: "12px", bgcolor: `${theme.primary}20` }}>
+            <Box
+              sx={{ p: 1, borderRadius: "12px", bgcolor: `${theme.primary}20` }}
+            >
               <ShoppingBag color={theme.primary} size={24} />
             </Box>
             <Typography variant="h5" fontWeight={700}>
