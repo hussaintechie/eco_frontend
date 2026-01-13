@@ -115,7 +115,8 @@ export default function LoginForm() {
       const res = await axios.post(API_URL, { phone, otp });
 
       if (res.data.status === 1) {
-        localStorage.setItem("user", JSON.stringify(res.data));
+       localStorage.setItem("token", res.data.token);
+      localStorage.setItem("user", JSON.stringify(res.data.user));
         navigate("/dashboard");
       }
     } catch (err) {

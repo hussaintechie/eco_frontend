@@ -17,6 +17,7 @@
     "@react-google-maps/api": "^2.20.7",
     "axios": "^1.13.2",
     "clsx": "^2.1.1",
+    "dotenv": "^17.2.3",
     "lucide-react": "^0.555.0",
     "mui-one-time-password-input": "^5.0.0",
     "react": "^19.2.0",
