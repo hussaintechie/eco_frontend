@@ -113,12 +113,12 @@ export default function LoginForm() {
     try {
       setLoading(true);
       const res = await axios.post(API_URL, { phone, otp });
-
+     const user = res.data.user;
       if (res.data.status === 1) {
        localStorage.setItem("token", res.data.token);
       localStorage.setItem("user", JSON.stringify(res.data.user));
       if(user.role === 'admin'){
-        window.location.href = "https://admin.sribalajistores.com";
+        window.location.href = "https://admin.sribalajistores.com/Dashboard";
       }
        else{
         navigate("/home");

@@ -4,7 +4,7 @@ import {
   Home, User, Star, Filter, ArrowLeft, X, ChevronDown,
   Snowflake, Sun, Flower2, CloudRain
 } from "lucide-react";
-import axios from "axios";
+import API from "../api/auth";
 import { useLocation, useNavigate } from "react-router-dom";
 
 // --- 1. MOCK DATA ---
@@ -344,8 +344,8 @@ const [CATEGORIES, setCate] = useState([]);
 
   const fetchCategoryItems = async () => {
   try {
-    const response = await axios.post(
-      "https://api.sribalajistores.com/product/catitems",
+    const response = await API.post(
+      "product/catitems",
       { cate_id: id }
     );
 

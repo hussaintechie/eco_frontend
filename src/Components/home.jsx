@@ -38,7 +38,7 @@ import {
   Package, // Added AlertCircle, Package
   Route,
 } from "lucide-react";
-import axios from "axios";
+import API from "../api/auth";
 import { useNavigate, BrowserRouter } from "react-router-dom";
 import {
   SEASON_CONFIG,
@@ -550,8 +550,8 @@ const MainContent = () => {
 
   const fetchCategory = async () => {
     try {
-      const response = await axios.post(
-        "https://api.sribalajistores.com/product/allcatedetails",
+      const response = await API.post(
+        "product/allcatedetails",
         { mode_fetchorall: 0 }
       );
 
@@ -566,8 +566,8 @@ const MainContent = () => {
   };
   const fetchDeals = async () => {
     try {
-      const response = await axios.post(
-        "https://api.sribalajistores.com/product/superdealsdata"
+      const response = await API.post(
+        "product/superdealsdata"
       );
       const { deals, veg, fruit, reco } = response.data.data;
 
