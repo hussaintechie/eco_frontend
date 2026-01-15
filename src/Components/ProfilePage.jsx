@@ -118,10 +118,12 @@ const ProfilePage = () => {
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
-const handleremove =()=>{
-  localStorage.removeItem("token")
-  navigate("/")
-}
+const handleremove = () => {
+  localStorage.removeItem("token");
+  localStorage.removeItem("user");
+  navigate("/", { replace: true });
+};
+
   const menuItems = [
     { icon: ShoppingBag, label: "My Orders", sub: "Check order status", route: "/orders" },
     { icon: MapPin, label: "Saved Addresses", sub: "Home, Office", route: "/addresses" },

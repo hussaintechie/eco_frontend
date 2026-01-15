@@ -117,7 +117,12 @@ export default function LoginForm() {
       if (res.data.status === 1) {
        localStorage.setItem("token", res.data.token);
       localStorage.setItem("user", JSON.stringify(res.data.user));
-        navigate("/dashboard");
+      if(user.role === 'admin'){
+        window.location.href = "https://admin.sribalajistores.com";
+      }
+       else{
+        navigate("/home");
+       }
       }
     } catch (err) {
       alert(err.response?.data?.message || "Invalid OTP");

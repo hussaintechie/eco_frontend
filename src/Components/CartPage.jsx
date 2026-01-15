@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import API from "../api/auth";
+import { toast } from "react-toastify";
 
 import { SEASON_CONFIG, getSeason } from "../SEASON_CONFIG.jsx";
 import {
@@ -417,6 +418,19 @@ const toPay = Math.max(
 
   const placeOrder = async () => {
     if (!canPlaceOrder) return;
+    
+if (!selectedAddress) {
+  toast.error("Please add or select a delivery address", {
+    position: "bottom-center",
+    autoClose: 3000,
+    hideProgressBar: true,
+    pauseOnHover: true,
+  });
+
+  setShowAddressModal(true);
+  return;
+}
+
 
     if (!selectedPayment) {
       alert("Select payment method");
