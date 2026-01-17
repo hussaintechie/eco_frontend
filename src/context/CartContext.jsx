@@ -17,9 +17,20 @@ export const CartProvider = ({ children }) => {
   const decrementCartCount = () =>
     setCartCount((prev) => Math.max(prev - 1, 0));
 
+  // ✅ NEW: reset cart completely
+  const resetCart = () => {
+    setCartCount(0);
+    localStorage.removeItem("cartCount");
+  };
+
   return (
     <CartContext.Provider
-      value={{ cartCount, incrementCartCount, decrementCartCount }}
+      value={{
+        cartCount,
+        incrementCartCount,
+        decrementCartCount,
+        resetCart, // 👈 expose this
+      }}
     >
       {children}
     </CartContext.Provider>

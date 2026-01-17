@@ -9,7 +9,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import API from "../api/auth";
 import { toast } from "react-toastify";
-
+import { useCart } from "../context/CartContext.jsx";
 import { SEASON_CONFIG, getSeason } from "../SEASON_CONFIG.jsx";
 import {
   getCartAPI,
@@ -374,7 +374,7 @@ const isSlotInFuture = (slotLabel) => {
 
       await loadCart();
       await loadBill();
-
+resetCart();
     } catch (error) {
       console.error("Error clearing cart:", error);
     }
@@ -429,7 +429,7 @@ const toPay = Math.max(
   const MIN_ORDER_VALUE = bill?.minimum_order || 200;
   const amountNeeded = bill?.remaining_amount || 0;
   const canPlaceOrder = amountNeeded === 0;
-
+const { resetCart } = useCart();
   const placeOrder = async () => {
     if (!canPlaceOrder) return;
     
@@ -580,6 +580,7 @@ coupon_discount: appliedCoupon?.discount || 0,
 
       if (res.data?.status === 1) {
         await clearCartAPI();
+         resetCart();
         navigate("/PostPaymentDeliveryFlow");
       } else {
         alert(res.data?.message || "Order failed after payment");
@@ -616,7 +617,9 @@ const getCouponLabel = (coupon) => {
         <div className="max-w-6xl mx-auto px-4 md:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center gap-4">
-              <ArrowLeft className="w-6 h-6 text-slate-700 cursor-pointer" />
+              <ArrowLeft 
+               onClick={() => navigate(-1)}
+               className="w-6 h-6 text-slate-700 cursor-pointer" />
               <div>
                 <h1 className="font-bold text-lg text-slate-800 leading-tight">Checkout</h1>
 
