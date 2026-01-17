@@ -328,7 +328,8 @@ const handleRemoveFromCart = async (product_id) => {
        onAdd={() => handleAddToCart(selectedProduct.id)}
        
 
-        cartQty={selectedProduct ? (cart[selectedProduct.id] || 0) : 0}
+        cartQty={0}
+
         theme={theme}
       />
 
