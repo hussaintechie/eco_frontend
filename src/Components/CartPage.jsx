@@ -127,9 +127,9 @@ const instructionOptions = [
 ];
 
 const paymentOptions = [
-  { id: "cod", name: "Pay on delivery", desc: "Cash or UPI upon delivery", icon: Wallet },
-  { id: "upi", name: "UPI", desc: "Google Pay, PhonePe, Paytm", icon: Smartphone },
-  { id: "card", name: "Credit / Debit Card", desc: "Visa, Mastercard, Rupay", icon: CreditCard },
+   { id: "upi", name: "UPI", desc: "Google Pay, PhonePe, Paytm", icon: Smartphone },
+   { id: "cod", name: "Pay on delivery", desc: "Cash or UPI upon delivery", icon: Wallet },
+  
 ];
 
 // ------------------------------------------------
@@ -304,30 +304,44 @@ const loadCoupons = async () => {
       console.error("Error loading bill:", err);
     }
   };
+const isSlotInFuture = (slotLabel) => {
+  if (!slotLabel || slotLabel === "Deliver Immediately") return true;
 
-  const loadSlots = async () => {
-    try {
-      const res = await getDeliverySlotsAPI();
+  const match = slotLabel.match(/(\d{1,2}):(\d{2})\s*(am|pm)/i);
+  if (!match) return true;
 
-      let today = res.data.today || [];
-      let tomorrow = res.data.tomorrow || [];
+  let hour = Number(match[1]);
+  const minute = Number(match[2]);
+  const meridian = match[3].toLowerCase();
 
-      // 🔥 BLOCK TODAY SLOTS AFTER 8 PM
-      const now = new Date();
-      const currentHour = now.getHours();
+  if (meridian === "pm" && hour !== 12) hour += 12;
+  if (meridian === "am" && hour === 12) hour = 0;
 
-      if (currentHour >= 20) {
-        today = [];
-      }
+  const now = new Date();
+  const slotTime = new Date();
+  slotTime.setHours(hour, minute, 0, 0);
 
-      setTodaySlots(today);
-      setTomorrowSlots(tomorrow);
-      setSlotMessage(res.data.message || "");
+  return slotTime > now;
+};
 
-    } catch (err) {
-      console.error("Error loading slots:", err);
-    }
-  };
+ const loadSlots = async () => {
+  try {
+    const res = await getDeliverySlotsAPI();
+
+    let today = res.data.today || [];
+    let tomorrow = res.data.tomorrow || [];
+
+    // ✅ REMOVE PAST SLOTS FOR TODAY
+    today = today.filter(slot => isSlotInFuture(slot.label));
+
+    setTodaySlots(today);
+    setTomorrowSlots(tomorrow);
+    setSlotMessage(res.data.message || "");
+  } catch (err) {
+    console.error("Error loading slots:", err);
+  }
+};
+
 
   useEffect(() => {
     if (selectedDate === "Today") {

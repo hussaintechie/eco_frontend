@@ -45,49 +45,11 @@ import {
   getSeason,
   SeasonalParticles,
 } from "../SEASON_CONFIG.jsx";
+import { addToCartAPI } from "../api/cartapi";
 
-// --- MOCK DATA ---
-// const CATEGORIES = [
-//   { title: "Price Drop", subtitle: "VIEW ALL", icon: <Star size={20} className="text-yellow-500" />, color: "bg-yellow-50" },
-//   { title: "Daily Picks", subtitle: "FROM ₹25", icon: <ShoppingBasket size={20} className="text-blue-500" />, color: "bg-blue-50" },
-//   { title: "Local Veg", subtitle: "FROM ₹15", icon: <Carrot size={20} className="text-orange-500" />, color: "bg-orange-50" },
-//   { title: "Fruits", subtitle: "FROM ₹38", icon: <Apple size={20} className="text-red-500" />, color: "bg-red-50" },
-//   { title: "Exotic", subtitle: "FROM ₹33", icon: <Citrus size={20} className="text-purple-500" />, color: "bg-purple-50" },
-//   { title: "Greens", subtitle: "FROM ₹9", icon: <Salad size={20} className="text-green-500" />, color: "bg-green-50" },
-//   { title: "Roots", subtitle: "FROM ₹26", icon: <Leaf size={20} className="text-emerald-500" />, color: "bg-emerald-50" },
-// ];
+import { useCart } from "../context/CartContext.jsx";
 
-// const FRUITS_DATA = [
-//     { name: "Shimla Apples", weight: "4pcs", price: 120, oldPrice: 150, img: "https://images.unsplash.com/photo-1560806887-1e4cd0b6cbd6?auto=format&fit=crop&w=300&q=80", discount: "20%" },
-//     { name: "Robusta Banana", weight: "1kg", price: 45, oldPrice: 60, img: "https://images.unsplash.com/photo-1528825871115-3581a5387919?auto=format&fit=crop&w=300&q=80", discount: "25%" },
-//     { name: "Pomegranate", weight: "3pcs", price: 89, oldPrice: 110, img: "https://images.unsplash.com/photo-1596386461350-326ea7750550?auto=format&fit=crop&w=300&q=80", discount: "18%" },
-//     { name: "Kiwi Green", weight: "3pcs", price: 99, oldPrice: 140, img: "https://images.unsplash.com/photo-1585059895524-72359e06138a?auto=format&fit=crop&w=300&q=80", discount: "30%" },
-//     { name: "Dragon Fruit", weight: "1pc", price: 75, oldPrice: 100, img: "https://images.unsplash.com/photo-1527357416398-1e4e554907a4?auto=format&fit=crop&w=300&q=80", discount: "25%" },
-// ];
 
-// const VEG_DATA = [
-//     { name: "Fresh Broccoli", weight: "250g", price: 45, oldPrice: 65, img: "https://images.unsplash.com/photo-1459411621453-7fb8db8feaa2?auto=format&fit=crop&w=300&q=80", discount: "30%" },
-//     { name: "Red Bell Pepper", weight: "2pcs", price: 55, oldPrice: 80, img: "https://images.unsplash.com/photo-1563565375-f3fdf5dbc240?auto=format&fit=crop&w=300&q=80", discount: "31%" },
-//     { name: "Button Mushroom", weight: "200g", price: 40, oldPrice: 55, img: "https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=300&q=80", discount: "27%" },
-//     { name: "Cherry Tomato", weight: "250g", price: 35, oldPrice: 50, img: "https://images.unsplash.com/photo-1518977956812-cd3dbadaaf31?auto=format&fit=crop&w=300&q=80", discount: "30%" },
-//     { name: "Sweet Corn", weight: "2pcs", price: 25, oldPrice: 40, img: "https://images.unsplash.com/photo-1551754655-cd27e38d2076?auto=format&fit=crop&w=300&q=80", discount: "37%" },
-// ];
-
-// const SUPER_DEALS_DATA = [
-//     { name: "Fortune Oil", weight: "1L", price: 105, oldPrice: 145, img: "https://images.unsplash.com/photo-1474979266404-7cadd259d3cf?auto=format&fit=crop&w=300&q=80", discount: "40%" },
-//     { name: "Basmati Rice", weight: "5kg", price: 399, oldPrice: 650, img: "https://images.unsplash.com/photo-1586201375761-83865001e31c?auto=format&fit=crop&w=300&q=80", discount: "45%" },
-//     { name: "Tata Salt", weight: "1kg", price: 20, oldPrice: 28, img: "https://images.unsplash.com/photo-1518110925495-569698eb4667?auto=format&fit=crop&w=300&q=80", discount: "30%" },
-//     { name: "Sugar", weight: "1kg", price: 38, oldPrice: 55, img: "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?auto=format&fit=crop&w=300&q=80", discount: "35%" },
-// ];
-
-// const FEED_PRODUCTS = Array(8).fill({
-//   name: "Fresh Premium Avocados",
-//   weight: "500g",
-//   price: 120,
-//   oldPrice: 160,
-//   discount: "25%",
-//   img: "https://images.unsplash.com/photo-1523049673856-6468baca292f?auto=format&fit=crop&w=300&q=80"
-// });
 
 const NOTIFICATIONS = [
   {
@@ -148,7 +110,7 @@ const SectionHeader = ({ title, action = "See All", icon: Icon, theme }) => (
   </div>
 );
 
-const ProductCardVertical = ({ product, theme }) => (
+const ProductCardVertical = ({ product, theme, onAddToCart }) => (
   <div className="min-w-[150px] md:min-w-[180px] bg-white rounded-xl p-3 shadow-sm border border-gray-100 hover:shadow-lg transition-all group">
     <div className="h-28 md:h-36 bg-gray-50 rounded-lg mb-3 relative overflow-hidden">
       <img
@@ -181,20 +143,22 @@ const ProductCardVertical = ({ product, theme }) => (
             ₹{product.price}
           </span>
         </div>
-        <button
-          className={`${theme.accent} ${theme.primaryText} p-2 rounded-lg hover:scale-105 transition`}
-        >
-          <Plus size={16} strokeWidth={3} />
-        </button>
+       <button
+  onClick={() => onAddToCart(product.product_id)}
+  className={`${theme.accent} ${theme.primaryText} p-2 rounded-lg hover:scale-105 transition`}
+>
+  <Plus size={16} strokeWidth={3} />
+</button>
+
       </div>
     </div>
   </div>
 );
 
-const HorizontalScrollRow = ({ data, theme }) => (
+const HorizontalScrollRow = ({ data, theme,onAddToCart  }) => (
   <div className="flex gap-4 overflow-x-auto no-scrollbar pb-6 pl-1 scroll-smooth">
     {data.map((item, i) => (
-      <ProductCardVertical key={i} product={item} theme={theme} />
+      <ProductCardVertical key={i} product={item} theme={theme} onAddToCart={onAddToCart} />
     ))}
     <div className="min-w-[100px] flex flex-col items-center justify-center text-gray-400 cursor-pointer group">
       <div
@@ -350,7 +314,7 @@ const GridAd = ({ theme }) => (
   </div>
 );
 
-const Header = ({ theme, setMenuOpen, onOpenNotifications }) => {
+const Header = ({ theme, setMenuOpen, onOpenNotifications,cartCount }) => {
   const [isScrolled, setIsScrolled] = useState(false);
 
   useEffect(() => {
@@ -424,7 +388,15 @@ const Header = ({ theme, setMenuOpen, onOpenNotifications }) => {
               onClick={() => navigate("/cart")}
               className={`hidden md:flex items-center gap-2 px-4 py-2 rounded-full ${theme.accent} ${theme.accentText} cursor-pointer hover:shadow-lg hover:scale-105 transition-all`}
             >
-              <ShoppingBasket size={18} />
+              <div className="relative">
+  <ShoppingBasket size={18} />
+  {cartCount > 0 && (
+    <span className="absolute -top-1 -right-1 bg-white text-black text-[9px] font-bold rounded-full w-4 h-4 flex items-center justify-center">
+      {cartCount}
+    </span>
+  )}
+</div>
+
               <span className="text-xs font-bold">My Cart</span>
             </div>
 
@@ -457,7 +429,7 @@ const Header = ({ theme, setMenuOpen, onOpenNotifications }) => {
   );
 };
 
-const BottomNav = ({ theme }) => {
+const BottomNav = ({ theme,cartCount  }) => {
   const [active, setActive] = useState("home");
   const navigate = useNavigate();
 
@@ -491,9 +463,24 @@ const BottomNav = ({ theme }) => {
                 className={`relative -top-8 ${theme.primary} text-white p-4 rounded-full shadow-lg hover:scale-105 transition-transform`}
               >
                 <item.icon size={24} />
-                <span className="absolute top-0 right-0 w-3.5 h-3.5 bg-white border-2 border-transparent rounded-full box-content text-[9px] font-bold text-black flex items-center justify-center">
-                  3
-                </span>
+              
+{cartCount > 0 && (
+  <span className="
+    absolute -top-1 -right-1
+    min-w-[20px] h-5
+    px-1
+    bg-red-600
+    text-white
+    text-xs
+    font-black
+    rounded-full
+    flex items-center justify-center
+    shadow-lg
+  ">
+    {cartCount}
+  </span>
+)}
+
               </button>
             );
           }
@@ -522,6 +509,28 @@ const BottomNav = ({ theme }) => {
 
 // 3. MAIN PAGE CONTENT
 const MainContent = () => {
+
+const { cartCount, incrementCartCount } = useCart();
+
+ const handleAddToCart = async (product_id) => {
+  // ✅ Optimistic update (instant UI)
+  incrementCartCount();
+
+  try {
+    const res = await addToCartAPI(product_id, 1);
+
+    if (!res.data.status) {
+      // rollback if API fails
+      setCartCount((prev) => prev - 1);
+      alert("Failed to add item");
+    }
+  } catch (err) {
+    console.error("Add to cart error", err);
+    setCartCount((prev) => prev - 1);
+    alert("Please login to add items");
+  }
+};
+
   const [currentSeason, setCurrentSeason] = useState("winter");
   const [menuOpen, setMenuOpen] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false); // State for notifications
@@ -624,6 +633,7 @@ const MainContent = () => {
         theme={theme}
         setMenuOpen={setMenuOpen}
         onOpenNotifications={() => setShowNotifications(true)}
+        cartCount={cartCount}
       />
 
       {/* Notification Drawer */}
@@ -819,6 +829,7 @@ const MainContent = () => {
             </div>
             <HorizontalScrollRow
               data={SUPER_DEALS_DATA}
+              onAddToCart={handleAddToCart}
               theme={{
                 ...theme,
                 accent: "bg-red-50",
@@ -831,67 +842,12 @@ const MainContent = () => {
         {/* --- 4. AD BANNER 1 (New) --- */}
         <ParallaxAdBanner theme={theme} />
 
-        {/* --- 5. FLASH SALE --- */}
-        <div
-          className={`rounded-2xl p-5 mb-10 shadow-xl shadow-gray-200 relative overflow-hidden text-white ${theme.primary}`}
-        >
-          <div className="absolute top-0 right-0 p-10 opacity-10 rotate-12 transform scale-150">
-            <Flame size={200} fill="currentColor" />
-          </div>
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-6 relative z-10 gap-4">
-            <div>
-              <div className="flex items-center gap-2 mb-1">
-                <span className="bg-white/20 backdrop-blur px-2 py-0.5 rounded text-[10px] font-bold border border-white/30 animate-pulse">
-                  HURRY UP
-                </span>
-              </div>
-              <h2 className="text-2xl font-black">Flash Sale</h2>
-              <p className="text-white/80 text-sm">
-                Grab the best deals before they melt away!
-              </p>
-            </div>
-            <div className="flex items-center gap-3 bg-black/20 p-2 rounded-lg backdrop-blur-sm">
-              <Clock size={16} />
-              <div className="flex gap-1 font-mono font-bold text-lg">
-                <span>02</span>:<span>45</span>:<span>12</span>
-              </div>
-            </div>
-          </div>
-          <div className="flex gap-4 overflow-x-auto no-scrollbar relative z-10 pb-2">
-            {[1, 2, 3, 4, 5].map((item, i) => (
-              <div
-                key={i}
-                className="min-w-[160px] bg-white text-gray-800 rounded-xl p-3 shadow-md"
-              >
-                <div className="h-28 bg-gray-100 rounded-lg mb-2 relative overflow-hidden group">
-                  <img
-                    src={`https://images.unsplash.com/photo-1596040033229-a9821ebd058d?auto=format&fit=crop&w=200&q=80`}
-                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                    alt="product"
-                  />
-                  <span className="absolute top-2 left-2 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded">
-                    -40%
-                  </span>
-                </div>
-                <h4 className="font-bold text-sm truncate">Organic Cashews</h4>
-                <p className="text-xs text-gray-500 mb-2">200g Pack</p>
-                <div className="flex justify-between items-center">
-                  <span className="font-bold">₹240</span>
-                  <button
-                    className={`${theme.primary} text-white p-1.5 rounded-full hover:scale-110 transition`}
-                  >
-                    <Plus size={14} />
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
+        
 
         {/* --- 6. VEGETABLES ROW (New) --- */}
         <div className="mb-10">
           <SectionHeader title="Fresh Vegetables" icon={Carrot} theme={theme} />
-          <HorizontalScrollRow data={VEG_DATA} theme={theme} />
+          <HorizontalScrollRow data={VEG_DATA} theme={theme} onAddToCart={handleAddToCart} />
         </div>
 
         {/* --- 7. BENTO GRID --- */}
@@ -966,7 +922,7 @@ const MainContent = () => {
         {/* --- 9. FRUITS ROW (New) --- */}
         <div className="mb-12">
           <SectionHeader title="Seasonal Fruits" icon={Apple} theme={theme} />
-          <HorizontalScrollRow data={FRUITS_DATA} theme={theme} />
+          <HorizontalScrollRow data={FRUITS_DATA} theme={theme} onAddToCart={handleAddToCart} />
         </div>
 
         {/* --- 10. PRODUCT FEED --- */}
@@ -1013,6 +969,7 @@ const MainContent = () => {
                     </span>
                   </div>
                   <button
+                  onClick={() => handleAddToCart(prod.product_id)}
                     className={`w-full mt-3 py-2 rounded-xl text-xs font-bold border ${theme.cardBg.replace(
                       "bg-white/80",
                       "bg-transparent"
@@ -1034,7 +991,8 @@ const MainContent = () => {
         </div>
       </main>
 
-      <BottomNav theme={theme} />
+      <BottomNav theme={theme} cartCount={cartCount} />
+
     </div>
   );
 };

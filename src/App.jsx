@@ -20,11 +20,12 @@ import TrackOrderPage from "./Components/TrackOrderPage.jsx";
 import OrderDetailPage from "./Components/OrderDetailPage.jsx";
 import EditAddressPage from "./Components/EditAddressPage.jsx";
 import PostPaymentDeliveryFlow from "./Components/PostPaymentDeliveryFlow.jsx";
-
+import {CartProvider} from "../src/context/CartContext.jsx";
 import ProtectedRoute from "./Components/ProtectedRoute";
 
 function App() {
   return (
+    <CartProvider>
     <BrowserRouter>
       <Routes>
 
@@ -58,6 +59,7 @@ function App() {
 
       </Routes>
     </BrowserRouter>
+    </CartProvider>
   );
 }
 
