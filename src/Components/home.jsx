@@ -110,52 +110,88 @@ const SectionHeader = ({ title, action = "See All", icon: Icon, theme }) => (
   </div>
 );
 
-const ProductCardVertical = ({ product, theme, onAddToCart }) => (
-  <div className="min-w-[150px] md:min-w-[180px] bg-white rounded-xl p-3 shadow-sm border border-gray-100 hover:shadow-lg transition-all group">
-    <div className="h-28 md:h-36 bg-gray-50 rounded-lg mb-3 relative overflow-hidden">
-      <img
-        src={product.img}
-        className="w-full h-full object-cover mix-blend-multiply group-hover:scale-110 transition-transform duration-500"
-        alt={product.name}
-      />
-      {product.discount && (
-        <span className="absolute top-2 left-2 bg-blue-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-md shadow-sm">
-          {product.discount} OFF
-        </span>
-      )}
-      <button className="absolute top-2 right-2 bg-white/80 p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-sm hover:text-red-500">
-        <Heart size={14} />
-      </button>
-    </div>
-    <div className="space-y-1">
-      <p className="text-[10px] text-gray-400 font-bold uppercase">
-        {product.weight}
-      </p>
-      <h4 className="font-bold text-gray-800 text-sm line-clamp-2 h-10">
-        {product.name}
-      </h4>
-      <div className="flex justify-between items-center mt-2">
-        <div className="flex flex-col">
-          <span className="text-xs text-gray-400 line-through">
-            ₹{product.oldPrice}
-          </span>
-          <span className="text-sm font-black text-gray-900">
-            ₹{product.price}
-          </span>
-        </div>
-       <button
-  onClick={() => onAddToCart(product.product_id)}
-  className={`${theme.accent} ${theme.primaryText} p-2 rounded-lg hover:scale-105 transition`}
->
-  <Plus size={16} strokeWidth={3} />
-</button>
+const ProductCardVertical = ({ product, theme, onAddToCart }) => {
+  const curstk = Number(product?.current_stock) || 0;
+  const isOutOfStock = curstk <= 0;
+  // const isOutOfStock =true;
 
+  return (
+    <div
+      className={`min-w-[150px] md:min-w-[180px] bg-white rounded-xl p-3 shadow-sm border border-gray-100 
+      ${isOutOfStock ? "opacity-70" : "hover:shadow-lg"} transition-all group`}
+    >
+      {/* IMAGE */}
+      <div className="h-28 md:h-36 bg-gray-50 rounded-lg mb-3 relative overflow-hidden">
+        <img
+          src={product.img}
+          alt={product.name}
+          className={`w-full h-full object-cover mix-blend-multiply transition-transform duration-500
+          ${isOutOfStock ? "blur-sm grayscale" : "group-hover:scale-110"}`}
+        />
+
+        {/* DISCOUNT */}
+        {product.discount && !isOutOfStock && (
+          <span className="absolute top-2 left-2 bg-blue-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-md shadow-sm">
+            {product.discount} OFF
+          </span>
+        )}
+
+        {/* OUT OF STOCK BADGE */}
+        {isOutOfStock && (
+          <span className="absolute inset-0 flex items-center justify-center bg-black/40 text-white text-xs font-bold">
+            OUT OF STOCK
+          </span>
+        )}
+
+        {/* WISHLIST */}
+        {!isOutOfStock && (
+          <button className="absolute top-2 right-2 bg-white/80 p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-sm hover:text-red-500">
+            <Heart size={14} />
+          </button>
+        )}
+      </div>
+
+      {/* CONTENT */}
+      <div className="space-y-1">
+        <p className="text-[10px] text-gray-400 font-bold uppercase">
+          {product.weight}
+        </p>
+
+        <h4 className="font-bold text-gray-800 text-sm line-clamp-2 h-10">
+          {product.name}
+        </h4>
+
+        <div className="flex justify-between items-center mt-2">
+          <div className="flex flex-col">
+            <span className="text-xs text-gray-400 line-through">
+              ₹{product.oldPrice}
+            </span>
+            <span className="text-sm font-black text-gray-900">
+              ₹{product.price}
+            </span>
+          </div>
+
+          {/* ADD TO CART */}
+          <button
+            disabled={isOutOfStock}
+            onClick={() => !isOutOfStock && onAddToCart(product.product_id)}
+            className={`p-2 rounded-lg transition
+              ${isOutOfStock
+                ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                : `${theme.accent} ${theme.primaryText} hover:scale-105`
+              }
+            `}
+          >
+            <Plus size={16} strokeWidth={3} />
+          </button>
+        </div>
       </div>
     </div>
-  </div>
-);
+  );
+};
 
-const HorizontalScrollRow = ({ data, theme,onAddToCart  }) => (
+
+const HorizontalScrollRow = ({ data, theme, onAddToCart }) => (
   <div className="flex gap-4 overflow-x-auto no-scrollbar pb-6 pl-1 scroll-smooth">
     {data.map((item, i) => (
       <ProductCardVertical key={i} product={item} theme={theme} onAddToCart={onAddToCart} />
@@ -179,18 +215,16 @@ const NotificationDrawer = ({ isOpen, onClose, theme }) => {
     <>
       {/* Backdrop */}
       <div
-        className={`fixed inset-0 bg-black/40 backdrop-blur-sm z-[60] transition-opacity duration-300 ${
-          isOpen
-            ? "opacity-100 pointer-events-auto"
-            : "opacity-0 pointer-events-none"
-        }`}
+        className={`fixed inset-0 bg-black/40 backdrop-blur-sm z-[60] transition-opacity duration-300 ${isOpen
+          ? "opacity-100 pointer-events-auto"
+          : "opacity-0 pointer-events-none"
+          }`}
         onClick={onClose}
       />
       {/* Drawer */}
       <div
-        className={`fixed top-0 right-0 h-full w-[85%] md:w-[400px] bg-white z-[70] shadow-2xl transform transition-transform duration-300 ease-out ${
-          isOpen ? "translate-x-0" : "translate-x-full"
-        }`}
+        className={`fixed top-0 right-0 h-full w-[85%] md:w-[400px] bg-white z-[70] shadow-2xl transform transition-transform duration-300 ease-out ${isOpen ? "translate-x-0" : "translate-x-full"
+          }`}
       >
         <div
           className={`p-4 border-b border-gray-100 flex justify-between items-center ${theme.gradient}`}
@@ -314,7 +348,7 @@ const GridAd = ({ theme }) => (
   </div>
 );
 
-const Header = ({ theme, setMenuOpen, onOpenNotifications,cartCount }) => {
+const Header = ({ theme, setMenuOpen, onOpenNotifications, cartCount }) => {
   const [isScrolled, setIsScrolled] = useState(false);
 
   useEffect(() => {
@@ -327,11 +361,10 @@ const Header = ({ theme, setMenuOpen, onOpenNotifications,cartCount }) => {
   const navigate = useNavigate();
   return (
     <header
-      className={`sticky top-0 z-50 w-full font-sans transition-all duration-300 ${
-        isScrolled
-          ? "bg-white/80 backdrop-blur-xl shadow-md py-1"
-          : "bg-transparent py-2"
-      }`}
+      className={`sticky top-0 z-50 w-full font-sans transition-all duration-300 ${isScrolled
+        ? "bg-white/80 backdrop-blur-xl shadow-md py-1"
+        : "bg-transparent py-2"
+        }`}
     >
       <div className="max-w-7xl mx-auto px-4 md:px-6">
         {/* TOP ROW: Logo + Actions */}
@@ -389,13 +422,13 @@ const Header = ({ theme, setMenuOpen, onOpenNotifications,cartCount }) => {
               className={`hidden md:flex items-center gap-2 px-4 py-2 rounded-full ${theme.accent} ${theme.accentText} cursor-pointer hover:shadow-lg hover:scale-105 transition-all`}
             >
               <div className="relative">
-  <ShoppingBasket size={18} />
-  {cartCount > 0 && (
-    <span className="absolute -top-1 -right-1 bg-white text-black text-[9px] font-bold rounded-full w-4 h-4 flex items-center justify-center">
-      {cartCount}
-    </span>
-  )}
-</div>
+                <ShoppingBasket size={18} />
+                {cartCount > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-white text-black text-[9px] font-bold rounded-full w-4 h-4 flex items-center justify-center">
+                    {cartCount}
+                  </span>
+                )}
+              </div>
 
               <span className="text-xs font-bold">My Cart</span>
             </div>
@@ -429,7 +462,7 @@ const Header = ({ theme, setMenuOpen, onOpenNotifications,cartCount }) => {
   );
 };
 
-const BottomNav = ({ theme,cartCount  }) => {
+const BottomNav = ({ theme, cartCount }) => {
   const [active, setActive] = useState("home");
   const navigate = useNavigate();
 
@@ -463,9 +496,9 @@ const BottomNav = ({ theme,cartCount  }) => {
                 className={`relative -top-8 ${theme.primary} text-white p-4 rounded-full shadow-lg hover:scale-105 transition-transform`}
               >
                 <item.icon size={24} />
-              
-{cartCount > 0 && (
-  <span className="
+
+                {cartCount > 0 && (
+                  <span className="
     absolute -top-1 -right-1
     min-w-[20px] h-5
     px-1
@@ -477,9 +510,9 @@ const BottomNav = ({ theme,cartCount  }) => {
     flex items-center justify-center
     shadow-lg
   ">
-    {cartCount}
-  </span>
-)}
+                    {cartCount}
+                  </span>
+                )}
 
               </button>
             );
@@ -491,9 +524,8 @@ const BottomNav = ({ theme,cartCount  }) => {
                 setActive(item.id);
                 navigate(item.route);
               }}
-              className={`flex flex-col items-center justify-center w-12 gap-1 transition-all ${
-                isActive ? theme.primaryText : "text-gray-400"
-              }`}
+              className={`flex flex-col items-center justify-center w-12 gap-1 transition-all ${isActive ? theme.primaryText : "text-gray-400"
+                }`}
             >
               <item.icon size={20} strokeWidth={isActive ? 2.5 : 2} />
               {isActive && (
@@ -510,26 +542,26 @@ const BottomNav = ({ theme,cartCount  }) => {
 // 3. MAIN PAGE CONTENT
 const MainContent = () => {
 
-const { cartCount, incrementCartCount } = useCart();
+  const { cartCount, incrementCartCount } = useCart();
 
- const handleAddToCart = async (product_id) => {
-  // ✅ Optimistic update (instant UI)
-  incrementCartCount();
+  const handleAddToCart = async (product_id) => {
+    // ✅ Optimistic update (instant UI)
+    incrementCartCount();
 
-  try {
-    const res = await addToCartAPI(product_id, 1);
+    try {
+      const res = await addToCartAPI(product_id, 1);
 
-    if (!res.data.status) {
-      // rollback if API fails
+      if (!res.data.status) {
+        // rollback if API fails
+        setCartCount((prev) => prev - 1);
+        alert("Failed to add item");
+      }
+    } catch (err) {
+      console.error("Add to cart error", err);
       setCartCount((prev) => prev - 1);
-      alert("Failed to add item");
+      alert("Please login to add items");
     }
-  } catch (err) {
-    console.error("Add to cart error", err);
-    setCartCount((prev) => prev - 1);
-    alert("Please login to add items");
-  }
-};
+  };
 
   const [currentSeason, setCurrentSeason] = useState("winter");
   const [menuOpen, setMenuOpen] = useState(false);
@@ -660,9 +692,8 @@ const { cartCount, incrementCartCount } = useCart();
             {banners.map((_, i) => (
               <div
                 key={i}
-                className={`absolute inset-0 transition-opacity duration-1000 ${
-                  i === slideIndex ? "opacity-100 z-10" : "opacity-0 z-0"
-                }`}
+                className={`absolute inset-0 transition-opacity duration-1000 ${i === slideIndex ? "opacity-100 z-10" : "opacity-0 z-0"
+                  }`}
               >
                 <img
                   src={`https://picsum.photos/1200/600?random=${i + 10}`}
@@ -691,21 +722,19 @@ const { cartCount, incrementCartCount } = useCart();
               {banners.map((_, i) => (
                 <div
                   key={i}
-                  className={`h-1.5 rounded-full transition-all duration-300 ${
-                    i === slideIndex ? "w-6 bg-white" : "w-1.5 bg-white/50"
-                  }`}
+                  className={`h-1.5 rounded-full transition-all duration-300 ${i === slideIndex ? "w-6 bg-white" : "w-1.5 bg-white/50"
+                    }`}
                 />
               ))}
             </div>
           </div>
           <div className="w-full md:w-1/3 lg:w-1/4 flex flex-col gap-3">
             <div
-              className={`flex items-center gap-3 p-4 rounded-2xl ${
-                theme.cardBg
-              } shadow-sm border ${theme.accent.replace(
-                "bg-",
-                "border-"
-              )} cursor-pointer hover:shadow-lg transition-all`}
+              className={`flex items-center gap-3 p-4 rounded-2xl ${theme.cardBg
+                } shadow-sm border ${theme.accent.replace(
+                  "bg-",
+                  "border-"
+                )} cursor-pointer hover:shadow-lg transition-all`}
             >
               <div
                 className={`p-3 rounded-full ${theme.accent} ${theme.primaryText}`}
@@ -842,7 +871,7 @@ const { cartCount, incrementCartCount } = useCart();
         {/* --- 4. AD BANNER 1 (New) --- */}
         <ParallaxAdBanner theme={theme} />
 
-        
+
 
         {/* --- 6. VEGETABLES ROW (New) --- */}
         <div className="mb-10">
@@ -933,55 +962,90 @@ const { cartCount, incrementCartCount } = useCart();
             theme={theme}
           />
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {FEED_PRODUCTS.map((prod, idx) => (
-              <div
-                key={idx}
-                className="bg-white rounded-2xl p-3 shadow-sm border border-gray-100 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group"
-              >
-                <div className="relative h-32 md:h-40 mb-3 rounded-xl overflow-hidden bg-gray-50">
-                  <img
-                    src={prod.img}
-                    className="w-full h-full object-cover mix-blend-multiply"
-                    alt={prod.name}
-                  />
-                  <button className="absolute top-2 right-2 bg-white/80 backdrop-blur p-1.5 rounded-full text-gray-400 hover:text-red-500 transition shadow-sm">
-                    <Heart size={14} />
-                  </button>
-                  {idx % 3 === 0 && (
-                    <span className="absolute bottom-0 left-0 bg-green-500 text-white text-[9px] font-bold px-2 py-0.5 rounded-tr-lg">
-                      ORGANIC
-                    </span>
-                  )}
-                </div>
-                <div className="space-y-1">
-                  <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">
-                    {prod.weight}
-                  </p>
-                  <h4 className="font-bold text-gray-800 text-sm leading-tight line-clamp-2 min-h-[2.5em]">
-                    {prod.name}
-                  </h4>
-                  <div className="flex items-center gap-2 mt-2">
-                    <span className="text-lg font-black text-gray-900">
-                      ₹{prod.price}
-                    </span>
-                    <span className="text-xs text-gray-400 line-through">
-                      ₹{prod.oldPrice}
-                    </span>
+            {FEED_PRODUCTS.map((prod, idx) => {
+              const curstk = Number(prod?.current_stock) || 0;
+              const isOutOfStock = curstk <= 0;
+
+              return (
+                <div
+                  key={idx}
+                  className={`bg-white rounded-2xl p-3 shadow-sm border border-gray-100 transition-all duration-300 group
+      ${isOutOfStock ? "opacity-70" : "hover:shadow-xl hover:-translate-y-1"}`}
+                >
+                  {/* IMAGE */}
+                  <div className="relative h-32 md:h-40 mb-3 rounded-xl overflow-hidden bg-gray-50">
+                    <img
+                      src={prod.img}
+                      alt={prod.name}
+                      className={`w-full h-full object-cover mix-blend-multiply
+          ${isOutOfStock ? "blur-sm grayscale" : ""}`}
+                    />
+
+                    {/* WISHLIST */}
+                    {!isOutOfStock && (
+                      <button className="absolute top-2 right-2 bg-white/80 backdrop-blur p-1.5 rounded-full text-gray-400 hover:text-red-500 transition shadow-sm">
+                        <Heart size={14} />
+                      </button>
+                    )}
+
+                    {/* ORGANIC */}
+                    {idx % 3 === 0 && !isOutOfStock && (
+                      <span className="absolute bottom-0 left-0 bg-green-500 text-white text-[9px] font-bold px-2 py-0.5 rounded-tr-lg">
+                        ORGANIC
+                      </span>
+                    )}
+
+                    {/* OUT OF STOCK OVERLAY */}
+                    {isOutOfStock && (
+                      <span className="absolute inset-0 flex items-center justify-center bg-black/40 text-white text-xs font-bold tracking-widest">
+                        OUT OF STOCK
+                      </span>
+                    )}
                   </div>
-                  <button
-                  onClick={() => handleAddToCart(prod.product_id)}
-                    className={`w-full mt-3 py-2 rounded-xl text-xs font-bold border ${theme.cardBg.replace(
-                      "bg-white/80",
-                      "bg-transparent"
-                    )} ${theme.primaryText} hover:${
-                      theme.primary
-                    } hover:text-white transition-colors flex items-center justify-center gap-2`}
-                  >
-                    ADD <Plus size={14} strokeWidth={3} />
-                  </button>
+
+                  {/* CONTENT */}
+                  <div className="space-y-1">
+                    <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">
+                      {prod.weight}
+                    </p>
+
+                    <h4 className="font-bold text-gray-800 text-sm leading-tight line-clamp-2 min-h-[2.5em]">
+                      {prod.name}
+                    </h4>
+
+                    <div className="flex items-center gap-2 mt-2">
+                      <span className="text-lg font-black text-gray-900">
+                        ₹{prod.price}
+                      </span>
+                      <span className="text-xs text-gray-400 line-through">
+                        ₹{prod.oldPrice}
+                      </span>
+                    </div>
+
+                    {/* ADD TO CART */}
+                    <button
+                      disabled={isOutOfStock}
+                      onClick={() =>
+                        !isOutOfStock && handleAddToCart(prod.product_id)
+                      }
+                      className={`w-full mt-3 py-2 rounded-xl text-xs font-bold border transition-colors
+            ${isOutOfStock
+                          ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                          : `${theme.cardBg.replace(
+                            "bg-white/80",
+                            "bg-transparent"
+                          )} ${theme.primaryText} hover:${theme.primary} hover:text-white`
+                        }
+          flex items-center justify-center gap-2`}
+                    >
+                      {isOutOfStock ? "OUT OF STOCK" : "ADD"}
+                      {!isOutOfStock && <Plus size={14} strokeWidth={3} />}
+                    </button>
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
+
           </div>
           <div className="text-center pb-8 mt-8">
             <button className="text-gray-400 font-semibold text-sm hover:text-gray-800 transition">
