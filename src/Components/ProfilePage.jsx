@@ -74,7 +74,7 @@ const ProfilePage = () => {
   const [user, setUser] = useState({
     name: "",
     phone: "",
-    avatar: "https://i.pravatar.cc/150?img=12" // fallback avatar
+    avatar: "null" // fallback avatar
   });
 
   // Temporary Form State (for editing)
@@ -157,11 +157,17 @@ const handleremove = () => {
 
           {/* User Display Info */}
           <div className="flex flex-col items-center">
-            <img 
-              src={user.avatar}
-              alt="Profile"
-              className="w-24 h-24 rounded-full border-4 border-white shadow-md object-cover"
-            />
+           <div
+  className={`
+    w-24 h-24 rounded-full border-4 border-white shadow-md
+    flex items-center justify-center
+    ${theme.primary} text-white
+    text-3xl font-bold uppercase
+  `}
+>
+  {user.name?.charAt(0) || "?"}
+</div>
+
             <h2 className="mt-3 text-2xl font-bold text-slate-800">{user.name}</h2>
 
             <div className="flex items-center gap-2 text-slate-500 text-sm mt-1">

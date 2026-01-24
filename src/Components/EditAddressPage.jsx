@@ -1,6 +1,9 @@
 // src/pages/EditAddressPage.jsx
 import React, { useState, useRef, useEffect } from "react";
-import { ArrowLeft, Home, Briefcase, Navigation, MapPin, Search, Crosshair } from "lucide-react";
+import { 
+  ArrowLeft, Home, Briefcase, Navigation, MapPin, Search, 
+  Crosshair, Loader2 
+} from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import API from "../api/auth";
 import { editAddressAPI } from "../api/addressAPI";
@@ -12,24 +15,32 @@ const SEASON_CONFIG = {
     primary: "bg-indigo-600",
     primaryRing: "focus:ring-indigo-600",
     primaryText: "text-indigo-600",
+    border: "border-indigo-200",
+    light: "bg-indigo-50"
   },
   summer: {
     gradient: "bg-orange-50",
     primary: "bg-orange-500",
     primaryRing: "focus:ring-orange-500",
     primaryText: "text-orange-600",
+    border: "border-orange-200",
+    light: "bg-orange-50"
   },
   spring: {
     gradient: "bg-emerald-50",
     primary: "bg-emerald-600",
     primaryRing: "focus:ring-emerald-600",
     primaryText: "text-emerald-600",
+    border: "border-emerald-200",
+    light: "bg-emerald-50"
   },
   monsoon: {
     gradient: "bg-teal-50",
     primary: "bg-teal-600",
     primaryRing: "focus:ring-teal-600",
     primaryText: "text-teal-600",
+    border: "border-teal-200",
+    light: "bg-teal-50"
   },
 };
 
@@ -52,6 +63,9 @@ const EditAddressPage = () => {
     if (!original) navigate("/addresses");
   }, [original, navigate]);
 
+  // 1. Loading & Error States
+  const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState({});
   const [detectedAddress, setDetectedAddress] = useState("");
   
   // Initialize state with ORIGINAL data
@@ -77,6 +91,7 @@ const EditAddressPage = () => {
 
   /* ---------------- AUTOFILL ---------------- */
   const fetchAutofill = async (lat, lng) => {
+    setLoading(true); // Start Loading
     try {
       const { data } = await API.get("/auser/autofill-location", {
         params: { lat, lng },
@@ -97,6 +112,8 @@ const EditAddressPage = () => {
       }
     } catch (e) {
       console.error("Autofill error", e);
+    } finally {
+        setTimeout(() => setLoading(false), 500); 
     }
   };
 
@@ -144,22 +161,44 @@ const EditAddressPage = () => {
       mapInstanceRef.current.setCenter(p.geometry.location);
       fetchAutofill(p.geometry.location.lat(), p.geometry.location.lng());
     });
-  }, [original]); // Re-run if original data loads late
+  }, [original]); 
 
   /* ---------------- CURRENT LOCATION ---------------- */
   const getCurrentLocation = () => {
+    setLoading(true);
     if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition((p) => {
             const pos = { lat: p.coords.latitude, lng: p.coords.longitude };
             mapInstanceRef.current.setCenter(pos);
             markerRef.current.setPosition(pos);
             fetchAutofill(p.coords.latitude, p.coords.longitude);
+        }, (err) => {
+            console.error(err);
+            setLoading(false);
         });
+    } else {
+        setLoading(false);
     }
+  };
+
+  /* ---------------- VALIDATE ---------------- */
+  const validate = () => {
+    const e = {};
+    if (!address.name.trim()) e.name = "Full name is required";
+    if (!address.phone) {
+      e.phone = "Phone number is required";
+    } else if (!/^[0-9]{10}$/.test(address.phone)) {
+      e.phone = "Phone number must be exactly 10 digits";
+    }
+    setErrors(e);
+    return Object.keys(e).length === 0;
   };
 
   /* ---------------- SAVE (EDIT MODE) ---------------- */
   const saveEditedAddress = async () => {
+    if (!validate()) return;
+    setLoading(true);
+
     const payload = {
       address_type: address.type,
       name: address.name,
@@ -176,11 +215,13 @@ const EditAddressPage = () => {
     try {
         const { data } = await editAddressAPI(original.address_id, payload);
         if (data.status === 1) {
-            // alert("Address updated successfully!"); // Optional: prefer toast or direct nav
-            navigate("/addresses");
-        }
+  navigate("/cart", { state: { addressEdited: true } });
+}
+
     } catch (e) {
         console.error("Save error", e);
+    } finally {
+        setLoading(false);
     }
   };
 
@@ -231,24 +272,36 @@ const EditAddressPage = () => {
               </div>
 
               {/* Map Container */}
-              <div ref={mapRef} className="h-[450px] w-full rounded-2xl bg-slate-100" />
+              <div ref={mapRef} className="h-[400px] w-full rounded-2xl bg-slate-100" />
 
-              {/* Current Location Button */}
-              <button
-                onClick={getCurrentLocation}
-                className="absolute bottom-4 right-4 bg-white p-3 rounded-full shadow-lg text-slate-700 hover:text-indigo-600 hover:scale-110 transition-all z-10"
-                title="Use Current Location"
-              >
-                <Crosshair size={22} />
-              </button>
-
-               {/* Center Pin Indicator */}
-               <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none z-0 opacity-0 group-hover:opacity-50 transition-opacity">
+              {/* Center Pin Indicator */}
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none z-0 opacity-0 group-hover:opacity-50 transition-opacity">
                  <MapPin size={40} className={`fill-current ${theme.primaryText} mb-8`} />
               </div>
             </div>
+
+            {/* SEPARATE CURRENT LOCATION BUTTON */}
+            <button
+              onClick={getCurrentLocation}
+              disabled={loading}
+              className={`
+                w-full py-3 px-4 rounded-xl flex items-center justify-center gap-2 
+                border-2 font-semibold transition-all duration-200
+                ${loading 
+                    ? "bg-slate-50 border-slate-200 text-slate-400 cursor-not-allowed" 
+                    : `bg-white ${theme.border} ${theme.primaryText} hover:${theme.light} hover:border-transparent shadow-sm`
+                }
+              `}
+            >
+              {loading ? (
+                <Loader2 size={18} className="animate-spin" />
+              ) : (
+                <Crosshair size={18} />
+              )}
+              {loading ? "Detecting location..." : "Use Current Location"}
+            </button>
             
-            {/* Show detected address if map moved */}
+            {/* Show detected address */}
             {detectedAddress && (
                 <div className="bg-white/60 backdrop-blur border border-slate-200 p-4 rounded-xl text-sm text-slate-600 flex gap-3 items-start">
                   <MapPin className={`shrink-0 mt-0.5 ${theme.primaryText}`} size={16} />
@@ -259,11 +312,19 @@ const EditAddressPage = () => {
 
           {/* RIGHT COLUMN: FORM */}
           <div className="lg:col-span-7 space-y-6">
-            <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-6 md:p-8">
+            <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-6 md:p-8 relative overflow-hidden">
               
+              {/* ---------------- LOADING OVERLAY ---------------- */}
+              {loading && (
+                <div className="absolute inset-0 z-20 bg-white/60 backdrop-blur-[2px] flex flex-col items-center justify-center text-slate-500 rounded-3xl">
+                   <Loader2 size={40} className={`animate-spin mb-2 ${theme.primaryText}`} />
+                   <p className="text-sm font-medium animate-pulse">Updating location details...</p>
+                </div>
+              )}
+
               <div className="flex items-center justify-between mb-6">
                  <h2 className="text-lg font-bold text-slate-800">Edit Details</h2>
-                 <span className="text-xs font-medium px-2 py-1 bg-slate-100 rounded text-slate-500">Editing Mode</span>
+                 <span className={`text-xs font-medium px-2 py-1 rounded ${theme.light} ${theme.primaryText}`}>Editing Mode</span>
               </div>
 
               {/* Address Type Selector */}
@@ -302,18 +363,34 @@ const EditAddressPage = () => {
                   <div key={key} className={colSpan}>
                     <label className="block text-xs font-semibold text-slate-500 mb-1.5 ml-1">
                       {label}
+                      {(key === "name" || key === "phone") && (
+                        <span className="text-red-500 ml-1">*</span>
+                      )}
                     </label>
                     <input
-                      value={address[key] || ""} // Controlled Input
-                      onChange={(e) => handleChange(key, e.target.value)}
+                      disabled={loading}
+                      value={address[key] || ""} 
+                      onChange={(e) => {
+                         handleChange(key, e.target.value);
+                         setErrors((p) => ({ ...p, [key]: "" }));
+                      }}
                       className={`
-                        w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 
-                        text-slate-700 text-sm font-medium transition-all
-                        focus:bg-white focus:border-transparent focus:outline-none focus:ring-2 ${theme.primaryRing}
-                        placeholder:text-slate-400
+                        w-full px-4 py-3 rounded-xl border
+                        ${loading ? "bg-slate-100 text-slate-400" : "bg-slate-50 text-slate-700"}
+                        ${errors[key] ? "border-red-400 ring-2 ring-red-200" : "border-slate-200"}
+                        text-sm font-medium transition-all
+                        focus:bg-white focus:outline-none focus:ring-2
+                        ${errors[key] ? "focus:ring-red-300" : theme.primaryRing}
                       `}
                       placeholder={`Enter ${label.toLowerCase()}`}
+                      inputMode={key === "phone" ? "numeric" : "text"}
+                      maxLength={key === "phone" ? 10 : undefined}
                     />
+                    {errors[key] && (
+                      <p className="mt-1 text-xs text-red-500 font-medium ml-1">
+                        {errors[key]}
+                      </p>
+                    )}
                   </div>
                 ))}
               </div>
@@ -322,12 +399,19 @@ const EditAddressPage = () => {
               <div className="mt-8 pt-6 border-t border-slate-100">
                 <button
                     onClick={saveEditedAddress}
+                    disabled={loading}
                     className={`
                         w-full py-4 rounded-xl text-white font-bold text-lg shadow-xl shadow-indigo-100 
-                        ${theme.primary} hover:opacity-90 active:scale-[0.98] transition-all
+                        ${loading ? "bg-slate-400 cursor-wait" : `${theme.primary} hover:opacity-90 active:scale-[0.98]`}
+                        transition-all flex justify-center items-center gap-2
                     `}
                 >
-                    Save Changes
+                    {loading ? (
+                        <>
+                           <Loader2 size={20} className="animate-spin" />
+                           <span>Saving...</span>
+                        </>
+                    ) : "Save Changes"}
                 </button>
               </div>
 

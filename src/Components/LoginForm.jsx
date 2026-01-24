@@ -23,7 +23,7 @@ import {
 
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-
+import toast from "react-hot-toast";
 // ================= SEASON CONFIG ==================
 const SEASON_CONFIG = {
   winter: {
@@ -89,7 +89,7 @@ export default function LoginForm() {
   // ================= SEND OTP =================
   const handleSendOtp = async () => {
     if (!/^[0-9]{10}$/.test(phone)) {
-      alert("Enter a valid 10-digit phone number");
+      toast.error("Enter a valid 10-digit phone number");
       return;
     }
 
@@ -98,7 +98,7 @@ export default function LoginForm() {
       await axios.post(API_URL, { phone, sendOtp: true });
 
       setOtpSent(true);
-      alert("OTP Sent!");
+      toast.success("OTP Sent!");
     } catch (err) {
       alert(err.response?.data?.message || "Failed to send OTP");
     } finally {
@@ -114,16 +114,24 @@ export default function LoginForm() {
       setLoading(true);
       const res = await axios.post(API_URL, { phone, otp });
      const user = res.data.user;
-      if (res.data.status === 1) {
-       localStorage.setItem("token", res.data.token);
-      localStorage.setItem("user", JSON.stringify(res.data.user));
-      if(user.role === 'admin'){
-        window.location.href = "https://admin.sribalajistores.com/Dashboard";
-      }
-       else{
-        navigate("/home");
-       }
-      }
+     if (res.data.status === 1) {
+  localStorage.setItem("token", res.data.token);
+  localStorage.setItem("user", JSON.stringify(res.data.user));
+
+  // ✅ Admin redirect (unchanged)
+  if (res.data.user.role === "admin") {
+    window.location.href = "https://admin.sribalajistores.com/Dashboard";
+    return;
+  }
+
+  // ✅ NORMAL USER REDIRECT (IMPORTANT PART)
+  const redirectPath =
+    sessionStorage.getItem("redirectAfterLogin") || "/home";
+
+  sessionStorage.removeItem("redirectAfterLogin");
+  navigate(redirectPath);
+}
+
     } catch (err) {
       alert(err.response?.data?.message || "Invalid OTP");
     } finally {
