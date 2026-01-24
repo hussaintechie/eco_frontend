@@ -350,7 +350,9 @@ const GridAd = ({ theme }) => (
 
 const Header = ({ theme, setMenuOpen, onOpenNotifications, cartCount }) => {
   const [isScrolled, setIsScrolled] = useState(false);
-
+  const [search, setSearch] = useState("");
+  const [results, setResults] = useState([]);
+  const [show, setShow] = useState(false);
   useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 10);
@@ -359,6 +361,31 @@ const Header = ({ theme, setMenuOpen, onOpenNotifications, cartCount }) => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
   const navigate = useNavigate();
+
+    const handleSearch = async (text) => {
+    setSearch(text);
+
+    if (text.length < 2) {
+      setResults([]);
+      setShow(false);
+      return;
+    }
+
+    try {
+      const response = await API.post(
+        "product/Searchdata",
+        { searchtxt: text }
+      );
+
+      setResults(response.data.data);
+      setShow(true);
+
+      console.log("Searchdata Categories:", formatted);
+    } catch (error) {
+      console.error("Searchdata fetch error:", error);
+    }
+
+  };
   return (
     <header
       className={`sticky top-0 z-50 w-full font-sans transition-all duration-300 ${isScrolled
@@ -395,6 +422,8 @@ const Header = ({ theme, setMenuOpen, onOpenNotifications, cartCount }) => {
             <input
               type="text"
               placeholder="Search for fresh groceries..."
+              value={search}
+              onChange={(e) => handleSearch(e.target.value)}
               className={`w-full bg-gray-100/50 border-2 border-transparent hover:bg-white hover:border-gray-100 focus:bg-white focus:border-${theme.primary.replace(
                 "bg-",
                 ""
@@ -407,6 +436,20 @@ const Header = ({ theme, setMenuOpen, onOpenNotifications, cartCount }) => {
               size={18}
               className="absolute left-4 top-3 text-gray-400 group-hover:text-gray-600 transition-colors"
             />
+            {show && results.length > 0 && (
+              <ul className="absolute top-12 left-0 w-full bg-white shadow-lg rounded-xl z-50 max-h-64 overflow-auto">
+                {results.map((item) => (
+                  <li
+                    key={`${item.nav}-${item.id}`}
+                    onClick={() => handleSelect(item)}
+                    className="px-4 py-2 hover:bg-gray-100 cursor-pointer text-sm"
+                  >
+                    {item.name}
+                  </li>
+                ))}
+              </ul>
+            )}
+
           </div>
 
           {/* Right Icons */}
@@ -580,6 +623,7 @@ const MainContent = () => {
   const [FRUITS_DATA, setFruitdata] = useState([]);
   const [VEG_DATA, setVegdata] = useState([]);
   const [FEED_PRODUCTS, setRecomentdata] = useState([]);
+
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -605,6 +649,8 @@ const MainContent = () => {
       console.error("Category fetch error:", error);
     }
   };
+
+
   const fetchDeals = async () => {
     try {
       const response = await API.post(
