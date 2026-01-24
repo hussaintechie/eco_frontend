@@ -79,54 +79,185 @@ const SeasonalParticles = ({ season }) => {
 // --- 3. SUB-COMPONENTS ---
 
 // A. Product Card
+// const ProductCard = ({ data, cartQty, onAdd, onRemove, onClick, theme }) => {
+//   const displayVariant = data.variants[0];
+//   const discount = displayVariant.mrp > 0 ? Math.round(((displayVariant.mrp - displayVariant.price) / displayVariant.mrp) * 100) : 0;
+
+//   return (
+//     <div 
+//       onClick={onClick} 
+//       className={`group bg-white rounded-xl p-2 md:p-4 border border-transparent hover:${theme.border} shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col relative overflow-hidden cursor-pointer`}
+//     >
+//       {discount > 0 && (
+//         <div className={`absolute top-0 left-0 ${theme.primary} text-white text-[9px] md:text-[10px] font-bold px-1.5 py-0.5 md:px-2 md:py-1 rounded-br-lg z-10`}>
+//           {discount}% OFF
+//         </div>
+//       )}
+//       <div className="relative w-full h-24 md:h-40 mb-2 md:mb-3 flex items-center justify-center overflow-hidden">
+//         <img src={data.img} alt={data.name} className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-110" />
+//       </div>
+//       <div className="flex flex-col flex-1">
+//         <div className="flex items-center gap-1 mb-1">
+//            {data.rating && (
+//              <div className={`bg-gray-100 px-1.5 py-0.5 rounded flex items-center gap-1`}>
+//                 <Star size={8} className="text-gray-500 fill-gray-500" />
+//                 <span className="text-[9px] md:text-[10px] font-bold text-gray-600">{data.rating}</span>
+//              </div>
+//            )}
+//            {displayVariant.weight && (
+//              <span className="text-[9px] md:text-[10px] text-gray-400 font-medium bg-gray-50 px-1.5 py-0.5 rounded">{displayVariant.weight}</span>
+//            )}
+//         </div>
+//         <h3 className={`font-bold text-gray-800 text-xs md:text-sm line-clamp-2 leading-relaxed mb-1 group-hover:${theme.primaryText} transition-colors min-h-[2.5em]`}>
+//           {data.name}
+//         </h3>
+//         <div className="mt-auto pt-2 md:pt-3 flex flex-col md:flex-row md:items-center justify-between gap-2 md:gap-0">
+//           <div className="flex flex-col">
+//             {displayVariant.mrp > displayVariant.price && (
+//                 <span className="text-[9px] md:text-xs text-gray-400 line-through">₹{displayVariant.mrp}</span>
+//             )}
+//             <span className="text-sm md:text-base font-black text-gray-900">₹{displayVariant.price}</span>
+//           </div>
+//           {cartQty === 0 ? (
+//             <button onClick={onAdd} className={`${theme.accent} border ${theme.border} ${theme.primaryText} hover:${theme.primary} hover:text-white text-xs font-bold px-3 py-1.5 md:px-4 md:py-2 rounded-lg transition-all active:scale-95 uppercase tracking-wide w-full md:w-auto`}>
+//               Add
+//             </button>
+//           ) : (
+//             <div className={`flex items-center ${theme.primary} rounded-lg h-7 md:h-9 shadow-md overflow-hidden w-full md:w-auto`}>
+//                <button onClick={onRemove} className="flex-1 md:w-9 h-full flex items-center justify-center text-white hover:brightness-110 active:brightness-90 transition"><Minus size={14} /></button>
+//                <span className="text-white text-xs md:text-sm font-bold min-w-[20px] text-center">{cartQty}</span>
+//                <button onClick={onAdd} className="flex-1 md:w-9 h-full flex items-center justify-center text-white hover:brightness-110 active:brightness-90 transition"><Plus size={14} /></button>
+//             </div>
+//           )}
+//         </div>
+//       </div>
+//     </div>
+//   );
+// };
+
 const ProductCard = ({ data, cartQty, onAdd, onRemove, onClick, theme }) => {
-  const displayVariant = data.variants[0];
-  const discount = displayVariant.mrp > 0 ? Math.round(((displayVariant.mrp - displayVariant.price) / displayVariant.mrp) * 100) : 0;
+  const displayVariant = data?.variants?.[0] || {};
+
+  // ✅ SAFE STOCK CHECK
+  const curstk = Number(displayVariant?.current_stock) || 0;
+  const isOutOfStock = curstk <= 0;
+
+  const discount =
+    displayVariant.mrp > 0
+      ? Math.round(
+          ((displayVariant.mrp - displayVariant.price) /
+            displayVariant.mrp) *
+            100
+        )
+      : 0;
 
   return (
-    <div 
-      onClick={onClick} 
-      className={`group bg-white rounded-xl p-2 md:p-4 border border-transparent hover:${theme.border} shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col relative overflow-hidden cursor-pointer`}
+    <div
+      onClick={!isOutOfStock ? onClick : undefined}
+      className={`group bg-white rounded-xl p-2 md:p-4 border border-transparent shadow-sm transition-all duration-300 flex flex-col relative overflow-hidden
+      ${isOutOfStock ? "opacity-70 cursor-not-allowed" : `hover:${theme.border} hover:shadow-xl cursor-pointer`}`}
     >
-      {discount > 0 && (
+      {/* DISCOUNT */}
+      {discount > 0 && !isOutOfStock && (
         <div className={`absolute top-0 left-0 ${theme.primary} text-white text-[9px] md:text-[10px] font-bold px-1.5 py-0.5 md:px-2 md:py-1 rounded-br-lg z-10`}>
           {discount}% OFF
         </div>
       )}
+
+      {/* IMAGE */}
       <div className="relative w-full h-24 md:h-40 mb-2 md:mb-3 flex items-center justify-center overflow-hidden">
-        <img src={data.img} alt={data.name} className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-110" />
+        <img
+          src={data.img}
+          alt={data.name}
+          className={`w-full h-full object-contain transition-transform duration-500
+          ${isOutOfStock ? "blur-sm grayscale" : "group-hover:scale-110"}`}
+        />
+
+        {/* OUT OF STOCK OVERLAY */}
+        {isOutOfStock && (
+          <div className="absolute inset-0 bg-black/40 flex items-center justify-center text-white text-xs md:text-sm font-bold tracking-widest">
+            OUT OF STOCK
+          </div>
+        )}
       </div>
+
+      {/* CONTENT */}
       <div className="flex flex-col flex-1">
         <div className="flex items-center gap-1 mb-1">
-           {data.rating && (
-             <div className={`bg-gray-100 px-1.5 py-0.5 rounded flex items-center gap-1`}>
-                <Star size={8} className="text-gray-500 fill-gray-500" />
-                <span className="text-[9px] md:text-[10px] font-bold text-gray-600">{data.rating}</span>
-             </div>
-           )}
-           {displayVariant.weight && (
-             <span className="text-[9px] md:text-[10px] text-gray-400 font-medium bg-gray-50 px-1.5 py-0.5 rounded">{displayVariant.weight}</span>
-           )}
+          {data.rating && (
+            <div className="bg-gray-100 px-1.5 py-0.5 rounded flex items-center gap-1">
+              <Star size={8} className="text-gray-500 fill-gray-500" />
+              <span className="text-[9px] md:text-[10px] font-bold text-gray-600">
+                {data.rating}
+              </span>
+            </div>
+          )}
+
+          {displayVariant.weight && (
+            <span className="text-[9px] md:text-[10px] text-gray-400 font-medium bg-gray-50 px-1.5 py-0.5 rounded">
+              {displayVariant.weight}
+            </span>
+          )}
         </div>
-        <h3 className={`font-bold text-gray-800 text-xs md:text-sm line-clamp-2 leading-relaxed mb-1 group-hover:${theme.primaryText} transition-colors min-h-[2.5em]`}>
+
+        <h3
+          className={`font-bold text-gray-800 text-xs md:text-sm line-clamp-2 leading-relaxed mb-1 transition-colors min-h-[2.5em]
+          ${!isOutOfStock && `group-hover:${theme.primaryText}`}`}
+        >
           {data.name}
         </h3>
+
+        {/* PRICE + CART */}
         <div className="mt-auto pt-2 md:pt-3 flex flex-col md:flex-row md:items-center justify-between gap-2 md:gap-0">
           <div className="flex flex-col">
             {displayVariant.mrp > displayVariant.price && (
-                <span className="text-[9px] md:text-xs text-gray-400 line-through">₹{displayVariant.mrp}</span>
+              <span className="text-[9px] md:text-xs text-gray-400 line-through">
+                ₹{displayVariant.mrp}
+              </span>
             )}
-            <span className="text-sm md:text-base font-black text-gray-900">₹{displayVariant.price}</span>
+            <span className="text-sm md:text-base font-black text-gray-900">
+              ₹{displayVariant.price}
+            </span>
           </div>
-          {cartQty === 0 ? (
-            <button onClick={onAdd} className={`${theme.accent} border ${theme.border} ${theme.primaryText} hover:${theme.primary} hover:text-white text-xs font-bold px-3 py-1.5 md:px-4 md:py-2 rounded-lg transition-all active:scale-95 uppercase tracking-wide w-full md:w-auto`}>
+
+          {/* CART CONTROLS */}
+          {isOutOfStock ? (
+            <button
+              disabled
+              className="bg-gray-200 text-gray-400 text-xs font-bold px-3 py-2 rounded-lg w-full md:w-auto cursor-not-allowed"
+            >
+              OUT OF STOCK
+            </button>
+          ) : cartQty === 0 ? (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onAdd();
+              }}
+              className={`${theme.accent} border ${theme.border} ${theme.primaryText} hover:${theme.primary} hover:text-white text-xs font-bold px-3 py-1.5 md:px-4 md:py-2 rounded-lg transition-all active:scale-95 uppercase tracking-wide w-full md:w-auto`}
+            >
               Add
             </button>
           ) : (
-            <div className={`flex items-center ${theme.primary} rounded-lg h-7 md:h-9 shadow-md overflow-hidden w-full md:w-auto`}>
-               <button onClick={onRemove} className="flex-1 md:w-9 h-full flex items-center justify-center text-white hover:brightness-110 active:brightness-90 transition"><Minus size={14} /></button>
-               <span className="text-white text-xs md:text-sm font-bold min-w-[20px] text-center">{cartQty}</span>
-               <button onClick={onAdd} className="flex-1 md:w-9 h-full flex items-center justify-center text-white hover:brightness-110 active:brightness-90 transition"><Plus size={14} /></button>
+            <div
+              onClick={(e) => e.stopPropagation()}
+              className={`flex items-center ${theme.primary} rounded-lg h-7 md:h-9 shadow-md overflow-hidden w-full md:w-auto`}
+            >
+              <button
+                onClick={onRemove}
+                className="flex-1 md:w-9 h-full flex items-center justify-center text-white hover:brightness-110 active:brightness-90 transition"
+              >
+                <Minus size={14} />
+              </button>
+              <span className="text-white text-xs md:text-sm font-bold min-w-[20px] text-center">
+                {cartQty}
+              </span>
+              <button
+                onClick={onAdd}
+                className="flex-1 md:w-9 h-full flex items-center justify-center text-white hover:brightness-110 active:brightness-90 transition"
+              >
+                <Plus size={14} />
+              </button>
             </div>
           )}
         </div>
@@ -281,6 +412,8 @@ export default function CreativeCategoryPage() {
           weight: item.unit || "1 pc", 
           price: Number(item.price) || 0,
           mrp: Number(item.mrp) || 0,
+          current_stock: Number(item.current_stock) || 0,
+          
         }
       ]
     }));

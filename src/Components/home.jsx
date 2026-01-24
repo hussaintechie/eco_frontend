@@ -198,10 +198,9 @@ const ProductCardVertical = ({
               disabled={isOutOfStock}
               onClick={handleIncrement}
               className={`p-2 rounded-lg transition
-                ${
-                  isOutOfStock
-                    ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                    : `${theme.accent} ${theme.primaryText} hover:scale-105`
+                ${isOutOfStock
+                  ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                  : `${theme.accent} ${theme.primaryText} hover:scale-105`
                 }
               `}
             >
@@ -268,9 +267,9 @@ const RecommendedProductCard = ({
     >
       {/* IMAGE */}
       <div className="relative h-32 md:h-40 mb-3 rounded-xl overflow-hidden bg-gray-50">
-        
+
         {/* 🔥 FIXED IMAGE LOADING FOR PRODUCTS 🔥 */}
-       
+
 
         {/* WISHLIST */}
         {!isOutOfStock && (
@@ -391,18 +390,16 @@ const NotificationDrawer = ({ isOpen, onClose, theme }) => {
     <>
       {/* Backdrop */}
       <div
-        className={`fixed inset-0 bg-black/40 backdrop-blur-sm z-[60] transition-opacity duration-300 ${
-          isOpen
-            ? "opacity-100 pointer-events-auto"
-            : "opacity-0 pointer-events-none"
-        }`}
+        className={`fixed inset-0 bg-black/40 backdrop-blur-sm z-[60] transition-opacity duration-300 ${isOpen
+          ? "opacity-100 pointer-events-auto"
+          : "opacity-0 pointer-events-none"
+          }`}
         onClick={onClose}
       />
       {/* Drawer */}
       <div
-        className={`fixed top-0 right-0 h-full w-[85%] md:w-[400px] bg-white z-[70] shadow-2xl transform transition-transform duration-300 ease-out ${
-          isOpen ? "translate-x-0" : "translate-x-full"
-        }`}
+        className={`fixed top-0 right-0 h-full w-[85%] md:w-[400px] bg-white z-[70] shadow-2xl transform transition-transform duration-300 ease-out ${isOpen ? "translate-x-0" : "translate-x-full"
+          }`}
       >
         <div
           className={`p-4 border-b border-gray-100 flex justify-between items-center ${theme.gradient}`}
@@ -533,9 +530,8 @@ const ParallaxAdBanner = ({ theme }) => {
         {BANNER_IMAGES.map((_, index) => (
           <div
             key={index}
-            className={`h-1.5 rounded-full transition-all duration-300 shadow-sm ${
-              index === currentImage ? "w-6 bg-white" : "w-1.5 bg-white/50"
-            }`}
+            className={`h-1.5 rounded-full transition-all duration-300 shadow-sm ${index === currentImage ? "w-6 bg-white" : "w-1.5 bg-white/50"
+              }`}
           />
         ))}
       </div>
@@ -582,7 +578,9 @@ const GridAd = ({ theme }) => (
 
 const Header = ({ theme, setMenuOpen, onOpenNotifications, cartCount }) => {
   const [isScrolled, setIsScrolled] = useState(false);
-
+  const [search, setSearch] = useState("");
+  const [results, setResults] = useState([]);
+  const [show, setShow] = useState(false);
   useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 10);
@@ -592,13 +590,51 @@ const Header = ({ theme, setMenuOpen, onOpenNotifications, cartCount }) => {
   }, []);
   const navigate = useNavigate();
    const token = localStorage.getItem("token");
+
+  const handleSearch = async (text) => {
+    setSearch(text);
+
+    if (text.length < 2) {
+      setResults([]);
+      setShow(false);
+      return;
+    }
+
+    try {
+      const response = await API.post(
+        "product/Searchdata",
+        { searchtxt: text }
+      );
+
+      setResults(response.data.data);
+      setShow(true);
+
+      console.log("Searchdata Categories:", formatted);
+    } catch (error) {
+      console.error("Searchdata fetch error:", error);
+    }
+
+  };
+
+  const handleSelect = (serchdata) => {
+    if (!serchdata?.url) return;
+
+    navigate(`/${serchdata.url}`, {
+      state: {
+        id: serchdata.id,
+        name: serchdata.name,
+        img: serchdata.img || "",
+      },
+    });
+  };
+
+
   return (
     <header
-      className={`sticky top-0 z-50 w-full font-sans transition-all duration-300 ${
-        isScrolled
-          ? "bg-white/80 backdrop-blur-xl shadow-md py-1"
-          : "bg-transparent py-2"
-      }`}
+      className={`sticky top-0 z-50 w-full font-sans transition-all duration-300 ${isScrolled
+        ? "bg-white/80 backdrop-blur-xl shadow-md py-1"
+        : "bg-transparent py-2"
+        }`}
     >
       <div className="max-w-7xl mx-auto px-4 md:px-6">
         {/* TOP ROW: Logo + Actions */}
@@ -627,6 +663,8 @@ const Header = ({ theme, setMenuOpen, onOpenNotifications, cartCount }) => {
             <input
               type="text"
               placeholder="Search for fresh groceries..."
+              value={search}
+              onChange={(e) => handleSearch(e.target.value)}
               className={`w-full bg-gray-100/50 border-2 border-transparent hover:bg-white hover:border-gray-100 focus:bg-white focus:border-${theme.primary.replace(
                 "bg-",
                 ""
@@ -639,6 +677,20 @@ const Header = ({ theme, setMenuOpen, onOpenNotifications, cartCount }) => {
               size={18}
               className="absolute left-4 top-3 text-gray-400 group-hover:text-gray-600 transition-colors"
             />
+            {show && results.length > 0 && (
+              <ul className="absolute top-12 left-0 w-full bg-white shadow-lg rounded-xl z-50 max-h-64 overflow-auto">
+                {results.map((item) => (
+                  <li
+                    key={`${item.nav}-${item.id}`}
+                    onClick={() => handleSelect(item)}
+                    className="px-4 py-2 hover:bg-gray-100 cursor-pointer text-sm"
+                  >
+                    {item.name}
+                  </li>
+                ))}
+              </ul>
+            )}
+
           </div>
 
           {/* Right Icons */}
@@ -776,9 +828,8 @@ const handleNavClick = (item) => {
                 setActive(item.id);
                 handleNavClick(item);
               }}
-              className={`flex flex-col items-center justify-center w-12 gap-1 transition-all ${
-                isActive ? theme.primaryText : "text-gray-400"
-              }`}
+              className={`flex flex-col items-center justify-center w-12 gap-1 transition-all ${isActive ? theme.primaryText : "text-gray-400"
+                }`}
             >
               {/* UPDATED: Thicker icons (strokeWidth) */}
               <item.icon size={24} strokeWidth={isActive ? 3 : 2.5} />
@@ -969,9 +1020,8 @@ const handleRemoveFromCart = async (product_id) => {
             {BANNERS.map((_, i) => (
               <div
                 key={i}
-                className={`absolute inset-0 transition-opacity duration-1000 ${
-                  i === slideIndex ? "opacity-100 z-10" : "opacity-0 z-0"
-                }`}
+                className={`absolute inset-0 transition-opacity duration-1000 ${i === slideIndex ? "opacity-100 z-10" : "opacity-0 z-0"
+                  }`}
               >
                 <img
                   src={BANNERS[i]}
@@ -992,9 +1042,8 @@ const handleRemoveFromCart = async (product_id) => {
               {BANNERS.map((_, i) => (
                 <div
                   key={i}
-                  className={`h-1.5 rounded-full transition-all duration-300 ${
-                    i === slideIndex ? "w-6 bg-white" : "w-1.5 bg-white/50"
-                  }`}
+                  className={`h-1.5 rounded-full transition-all duration-300 ${i === slideIndex ? "w-6 bg-white" : "w-1.5 bg-white/50"
+                    }`}
                 />
               ))}
             </div>
