@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Search, X, Clock, ArrowUpRight, Filter, ShoppingCart, 
-  Snowflake, Sun, Flower2, CloudRain, Gift, Thermometer, Leaf 
+import {
+  Search, X, Clock, ArrowUpRight, Filter, ShoppingCart,
+  Snowflake, Sun, Flower2, CloudRain, Gift, Thermometer, Leaf
 } from 'lucide-react';
-
+import API from "../api/auth";
+import { useLocation, useNavigate } from "react-router-dom";
 // --- SEASONAL CONFIG (Reused) ---
 const SEASON_CONFIG = {
   winter: {
@@ -53,7 +54,7 @@ const SEASON_CONFIG = {
 };
 
 const getSeason = () => {
-  const month = new Date().getMonth(); 
+  const month = new Date().getMonth();
   if (month === 10 || month === 11 || month === 0) return "winter";
   if (month === 1 || month === 2) return "spring";
   if (month >= 3 && month <= 5) return "summer";
@@ -61,17 +62,17 @@ const getSeason = () => {
 };
 
 // --- MOCK DATA ---
-const ALL_PRODUCTS = [
-  { id: 1, name: "Organic Bananas", category: "Fruits", price: 40, image: "https://placehold.co/150?text=Bananas" },
-  { id: 2, name: "Fresh Milk", category: "Dairy", price: 32, image: "https://placehold.co/150?text=Milk" },
-  { id: 3, name: "Dark Chocolate", category: "Snacks", price: 120, image: "https://placehold.co/150?text=Choco" },
-  { id: 4, name: "Green Tea", category: "Beverage", price: 250, image: "https://placehold.co/150?text=Tea" },
-  { id: 5, name: "Avocado", category: "Fruits", price: 80, image: "https://placehold.co/150?text=Avocado" },
-  { id: 6, name: "Almonds", category: "Nuts", price: 450, image: "https://placehold.co/150?text=Almonds" },
-];
+// const ALL_PRODUCTS = [
+//   { id: 1, name: "Organic Bananas", category: "Fruits", price: 40, image: "https://placehold.co/150?text=Bananas" },
+//   { id: 2, name: "Fresh Milk", category: "Dairy", price: 32, image: "https://placehold.co/150?text=Milk" },
+//   { id: 3, name: "Dark Chocolate", category: "Snacks", price: 120, image: "https://placehold.co/150?text=Choco" },
+//   { id: 4, name: "Green Tea", category: "Beverage", price: 250, image: "https://placehold.co/150?text=Tea" },
+//   { id: 5, name: "Avocado", category: "Fruits", price: 80, image: "https://placehold.co/150?text=Avocado" },
+//   { id: 6, name: "Almonds", category: "Nuts", price: 450, image: "https://placehold.co/150?text=Almonds" },
+// ];
 
-const RECENT_SEARCHES = ["Milk", "Green Tea", "Sugar free"];
-const POPULAR_TAGS = ["Fresh Fruits", "Dairy", "Winter Snacks", "Hot Coffee", "Nuts"];
+// const RECENT_SEARCHES = ["Milk", "Green Tea", "Sugar free"];
+//const POPULAR_TAGS = ["Fresh Fruits", "Dairy", "Winter Snacks", "Hot Coffee", "Nuts"];
 
 const SearchPage = () => {
   const currentKey = getSeason();
@@ -81,23 +82,66 @@ const SearchPage = () => {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState([]);
   const [isFocused, setIsFocused] = useState(false);
+  const [ALL_PRODUCTS, setAllproduct] = useState([]);
+  const [POPULAR_TAGS, setpopTags] = useState([]);
 
-  // Instant Search Logic
+  const { state } = useLocation();
+  const { id, name, img } = state || { id: 0, name: "", img: "" };
+
+  // ✅ Set query from navigation state
   useEffect(() => {
-    if (query.trim() === "") {
-      setResults([]);
+    const cleanQuery = cleanSearchText(name);
+    if (cleanQuery) {
+      setQuery(cleanQuery);
+    }
+  }, [name]);
+
+  // ✅ Fetch from API
+  useEffect(() => {
+    if (query.trim().length >= 2) {
+      handledataprocess();
     } else {
-      const filtered = ALL_PRODUCTS.filter(p => 
-        p.name.toLowerCase().includes(query.toLowerCase()) || 
-        p.category.toLowerCase().includes(query.toLowerCase())
-      );
-      setResults(filtered);
+      setAllproduct([]);
+      setpopTags([]);
     }
   }, [query]);
+  // ✅ Fetch from API
+  useEffect(() => {
+    handledataprocess(2);
+  }, []);
+
+  const handledataprocess = async (mode = 1) => {
+    const cleanQuery = cleanSearchText(query);
+
+    console.log(cleanQuery, "cleanQuery");
+    try {
+      const response = await API.post(
+        "product/SearchItems",
+        {
+          searchtxt: cleanQuery,
+          mode: mode,
+        }
+      );
+
+      setAllproduct(response.data.data || []);
+      setpopTags(response.data.popularTags || []);
+    } catch (error) {
+      console.error("Searchdata fetch error:", error);
+      setAllproduct([]);
+      setpopTags([]);
+    }
+  };
+  const cleanSearchText = (text = "") => {
+    return text
+      .replace(/\s*--\s*\(.*?\)/g, "") // remove --(...)
+      .trim();
+  };
+  // ✅ Instant client-side filter
+  useEffect(() => { if (query.trim() === "") { setResults([]); } else { const filtered = ALL_PRODUCTS.filter(p => p.name.toLowerCase().includes(query.toLowerCase()) || p.category.toLowerCase().includes(query.toLowerCase())); setResults(filtered); } }, [query]);
 
   return (
     <div className={`min-h-screen transition-colors duration-500 ${theme.gradient}`}>
-      
+
       {/* --- 1. Sticky Search Header --- */}
       <div className="sticky top-0 z-50 p-4 bg-white/80 backdrop-blur-md shadow-sm">
         <div className="max-w-md mx-auto relative">
@@ -105,7 +149,7 @@ const SearchPage = () => {
             type="text"
             placeholder={`Search for ${theme.name} specials...`}
             className={`w-full pl-12 pr-10 py-3.5 rounded-xl border-none ring-1 outline-none transition-all shadow-sm
-              ${isFocused 
+              ${isFocused
                 ? `ring-2 ring-offset-2 ${theme.accent} ring-${theme.primaryText.split('-')[1]}-400` // Dynamic focus ring
                 : 'ring-gray-200 bg-gray-50'
               }
@@ -114,15 +158,15 @@ const SearchPage = () => {
             onChange={(e) => setQuery(e.target.value)}
             onFocus={() => setIsFocused(true)}
           />
-          
+
           {/* Search Icon (Left) */}
-          <Search 
-            className={`absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 ${isFocused ? theme.primaryText : 'text-gray-400'}`} 
+          <Search
+            className={`absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 ${isFocused ? theme.primaryText : 'text-gray-400'}`}
           />
 
           {/* Clear Button (Right) - Only shows when typing */}
           {query && (
-            <button 
+            <button
               onClick={() => setQuery("")}
               className="absolute right-4 top-1/2 -translate-y-1/2 bg-gray-200 rounded-full p-1 hover:bg-gray-300"
             >
@@ -133,7 +177,7 @@ const SearchPage = () => {
       </div>
 
       <div className="max-w-md mx-auto p-4 pb-20">
-        
+
         {/* --- 2. State: User is Searching (Showing Results) --- */}
         {query ? (
           <div>
@@ -151,14 +195,14 @@ const SearchPage = () => {
                 {results.map(item => (
                   <div key={item.id} className={`${theme.cardBg} p-3 rounded-xl border shadow-sm`}>
                     <div className={`aspect-square rounded-lg bg-gray-100 mb-3 overflow-hidden ${theme.bannerTone}`}>
-                       <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+                      <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
                     </div>
                     <h3 className="font-medium text-gray-800 text-sm line-clamp-1">{item.name}</h3>
                     <div className="flex justify-between items-center mt-2">
-                       <span className={`font-bold ${theme.primaryText}`}>₹{item.price}</span>
-                       <button className={`${theme.accent} p-1.5 rounded-lg ${theme.primaryText}`}>
-                          <ShoppingCart size={16} />
-                       </button>
+                      <span className={`font-bold ${theme.primaryText}`}>₹{item.price}</span>
+                      <button className={`${theme.accent} p-1.5 rounded-lg ${theme.primaryText}`}>
+                        <ShoppingCart size={16} />
+                      </button>
                     </div>
                   </div>
                 ))}
@@ -173,9 +217,9 @@ const SearchPage = () => {
         ) : (
           /* --- 3. State: Default (History & Trending) --- */
           <div className="space-y-8 animate-fade-in">
-            
+
             {/* Recent Searches */}
-            <section>
+            {/* <section>
               <div className="flex justify-between items-center mb-3">
                 <h3 className="font-bold text-gray-800 text-sm uppercase tracking-wide">Recent</h3>
                 <button className="text-xs text-gray-400 hover:text-red-500">Clear</button>
@@ -193,16 +237,16 @@ const SearchPage = () => {
                   </button>
                 ))}
               </div>
-            </section>
+            </section> */}
 
             {/* Popular/Trending Categories */}
             <section>
               <h3 className="font-bold text-gray-800 text-sm uppercase tracking-wide mb-3 flex items-center gap-2">
-                 Trending {theme.name} <SeasonIcon size={14} className={theme.primaryText}/>
+                Trending {theme.name} <SeasonIcon size={14} className={theme.primaryText} />
               </h3>
               <div className="flex flex-wrap gap-2">
                 {POPULAR_TAGS.map((tag, index) => (
-                  <button 
+                  <button
                     key={index}
                     onClick={() => setQuery(tag)}
                     className={`px-4 py-2 rounded-full text-sm font-medium transition active:scale-95

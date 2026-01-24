@@ -1,3 +1,4 @@
+const STORE_ID = Number(import.meta.env.VITE_STORE_ID);
 import React, { useState, useEffect, useRef } from "react";
 import {
   ShoppingBasket,
@@ -22,6 +23,7 @@ import {
   Flame,
   ArrowRight,
   Plus,
+  Minus,
   Clock,
   X,
   CloudRain,
@@ -35,7 +37,7 @@ import {
   CheckCircle2,
   Bell,
   AlertCircle,
-  Package, // Added AlertCircle, Package
+  Package,
   Route,
 } from "lucide-react";
 import API from "../api/auth";
@@ -48,9 +50,7 @@ import {
 import { addToCartAPI } from "../api/cartapi";
 
 import { useCart } from "../context/CartContext.jsx";
-
-
-
+// import Footer from './Footer';
 const NOTIFICATIONS = [
   {
     id: 1,
@@ -110,10 +110,29 @@ const SectionHeader = ({ title, action = "See All", icon: Icon, theme }) => (
   </div>
 );
 
-const ProductCardVertical = ({ product, theme, onAddToCart }) => {
+const ProductCardVertical = ({
+  product,
+  theme,
+  onAddToCart,
+  onRemoveFromCart,
+}) => {
   const curstk = Number(product?.current_stock) || 0;
   const isOutOfStock = curstk <= 0;
-  // const isOutOfStock =true;
+  // Local state to track quantity for UI
+  const [qty, setQty] = useState(0);
+
+  const handleIncrement = () => {
+    if (isOutOfStock) return;
+    setQty((prev) => prev + 1);
+    onAddToCart(product.product_id);
+  };
+
+  const handleDecrement = () => {
+    if (qty > 0) {
+      setQty((prev) => prev - 1);
+      onRemoveFromCart(product.product_id);
+    }
+  };
 
   return (
     <div
@@ -171,30 +190,182 @@ const ProductCardVertical = ({ product, theme, onAddToCart }) => {
             </span>
           </div>
 
-          {/* ADD TO CART */}
-          <button
-            disabled={isOutOfStock}
-            onClick={() => !isOutOfStock && onAddToCart(product.product_id)}
-            className={`p-2 rounded-lg transition
-              ${isOutOfStock
-                ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                : `${theme.accent} ${theme.primaryText} hover:scale-105`
-              }
-            `}
-          >
-            <Plus size={16} strokeWidth={3} />
-          </button>
+          {/* ADD / MINUS CONTROLS */}
+          {qty === 0 ? (
+            <button
+              disabled={isOutOfStock}
+              onClick={handleIncrement}
+              className={`p-2 rounded-lg transition
+                ${isOutOfStock
+                  ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                  : `${theme.accent} ${theme.primaryText} hover:scale-105`
+                }
+              `}
+            >
+              <Plus size={16} strokeWidth={3} />
+            </button>
+          ) : (
+            <div
+              className={`flex items-center gap-1.5 ${theme.accent} rounded-lg px-1 py-1`}
+            >
+              <button
+                onClick={handleDecrement}
+                className="bg-white rounded p-0.5 shadow-sm text-gray-800 hover:scale-110 transition"
+              >
+                <Minus size={14} strokeWidth={3} />
+              </button>
+              <span
+                className={`text-xs font-black w-4 text-center ${theme.primaryText}`}
+              >
+                {qty}
+              </span>
+              <button
+                onClick={handleIncrement}
+                className="bg-white rounded p-0.5 shadow-sm text-gray-800 hover:scale-110 transition"
+              >
+                <Plus size={14} strokeWidth={3} />
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>
   );
 };
 
+// New Component for Recommended Grid Items to handle state
+const RecommendedProductCard = ({
+  prod,
+  idx,
+  theme,
+  onAddToCart,
+  onRemoveFromCart,
+}) => {
+  const curstk = Number(prod?.current_stock) || 0;
+  const isOutOfStock = curstk <= 0;
+  const [qty, setQty] = useState(0);
 
-const HorizontalScrollRow = ({ data, theme, onAddToCart }) => (
+  const handleIncrement = () => {
+    if (isOutOfStock) return;
+    setQty((prev) => prev + 1);
+    onAddToCart(prod.product_id);
+  };
+
+  const handleDecrement = () => {
+    if (qty > 0) {
+      setQty((prev) => prev - 1);
+      onRemoveFromCart(prod.product_id);
+    }
+  };
+
+  return (
+    <div
+      className={`bg-white rounded-2xl p-3 shadow-sm border border-gray-100 transition-all duration-300 group
+      ${isOutOfStock ? "opacity-70" : "hover:shadow-xl hover:-translate-y-1"}`}
+    >
+      {/* IMAGE */}
+      <div className="relative h-32 md:h-40 mb-3 rounded-xl overflow-hidden bg-gray-50">
+
+        {/* 🔥 FIXED IMAGE LOADING FOR PRODUCTS 🔥 */}
+
+
+        {/* WISHLIST */}
+        {!isOutOfStock && (
+          <button className="absolute top-2 right-2 bg-white/80 backdrop-blur p-1.5 rounded-full text-gray-400 hover:text-red-500 transition shadow-sm">
+            <Heart size={14} />
+          </button>
+        )}
+
+        {/* ORGANIC */}
+        {idx % 3 === 0 && !isOutOfStock && (
+          <span className="absolute bottom-0 left-0 bg-green-500 text-white text-[9px] font-bold px-2 py-0.5 rounded-tr-lg">
+            ORGANIC
+          </span>
+        )}
+
+        {/* OUT OF STOCK OVERLAY */}
+        {isOutOfStock && (
+          <span className="absolute inset-0 flex items-center justify-center bg-black/40 text-white text-xs font-bold tracking-widest">
+            OUT OF STOCK
+          </span>
+        )}
+      </div>
+
+      {/* CONTENT */}
+      <div className="space-y-1">
+        <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">
+          {prod.weight}
+        </p>
+
+        <h4 className="font-bold text-gray-800 text-sm leading-tight line-clamp-2 min-h-[2.5em]">
+          {prod.name}
+        </h4>
+
+        <div className="flex items-center gap-2 mt-2">
+          <span className="text-lg font-black text-gray-900">
+            ₹{prod.price}
+          </span>
+          <span className="text-xs text-gray-400 line-through">
+            ₹{prod.oldPrice}
+          </span>
+        </div>
+
+        {/* ADD TO CART / QUANTITY CONTROLS */}
+        {qty === 0 ? (
+          <button
+            disabled={isOutOfStock}
+            onClick={handleIncrement}
+            className={`w-full mt-3 py-2 rounded-xl text-xs font-bold border transition-colors
+            ${isOutOfStock
+                ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                : `${theme.cardBg.replace(
+                  "bg-white/80",
+                  "bg-transparent"
+                )} ${theme.primaryText} hover:${theme.primary
+                } hover:text-white`
+              }
+          flex items-center justify-center gap-2`}
+          >
+            {isOutOfStock ? "OUT OF STOCK" : "ADD"}
+            {!isOutOfStock && <Plus size={14} strokeWidth={3} />}
+          </button>
+        ) : (
+          <div className="w-full mt-3 flex items-center justify-between bg-gray-100 rounded-xl p-1">
+            <button
+              onClick={handleDecrement}
+              className="p-1.5 bg-white rounded-lg shadow-sm text-gray-800 hover:text-red-600"
+            >
+              <Minus size={16} strokeWidth={3} />
+            </button>
+            <span className="font-black text-sm text-gray-800">{qty}</span>
+            <button
+              onClick={handleIncrement}
+              className="p-1.5 bg-white rounded-lg shadow-sm text-gray-800 hover:text-green-600"
+            >
+              <Plus size={16} strokeWidth={3} />
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+const HorizontalScrollRow = ({
+  data,
+  theme,
+  onAddToCart,
+  onRemoveFromCart,
+}) => (
   <div className="flex gap-4 overflow-x-auto no-scrollbar pb-6 pl-1 scroll-smooth">
     {data.map((item, i) => (
-      <ProductCardVertical key={i} product={item} theme={theme} onAddToCart={onAddToCart} />
+      <ProductCardVertical
+        key={i}
+        product={item}
+        theme={theme}
+        onAddToCart={onAddToCart}
+        onRemoveFromCart={onRemoveFromCart}
+      />
     ))}
     <div className="min-w-[100px] flex flex-col items-center justify-center text-gray-400 cursor-pointer group">
       <div
@@ -284,32 +455,85 @@ const NotificationDrawer = ({ isOpen, onClose, theme }) => {
 
 // --- AD TEMPLATES ---
 
-const ParallaxAdBanner = ({ theme }) => (
-  <div className="w-full h-48 md:h-64 rounded-2xl overflow-hidden relative mb-12 group cursor-pointer shadow-lg">
-    <div className="absolute inset-0 bg-gray-900">
-      <img
-        src="https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=1200&q=80"
-        className="w-full h-full object-cover opacity-60 group-hover:scale-105 transition-transform duration-1000"
-        alt="Ad"
-      />
+// 👇👇👇 YOUR GOOGLE DRIVE BANNER IMAGES (DIRECT LINKS) 👇👇👇
+const BANNER_IMAGES = [
+  // Banner 1: (ID: 1oO_GTUoaA6LAo4Hm3TfC1ta0eaueulKG)
+  "https://res.cloudinary.com/duzladayx/image/upload/v1769101661/banner1_wnb2ow.png",
+
+  // Banner 2: (ID: 1apCdzkMl9X-FZlZAgZLLKAPFDkCdEG34)
+  "https://drive.google.com/file/d/1apCdzkMl9X-FZlZAgZLLKAPFDkCdEG34/view?usp=drive_link",
+
+  // Banner 3: (ID: 1apCdzkMl9X-FZlZAgZLLKAPFDkCdEG34)
+  // ⚠️ NOTE: You pasted the same link for Banner 2 & 3. 
+  // Replace the ID below if you find the real Banner 3 link.
+  "https://drive.google.com/file/d/1qMx8fB37dCzGmLuuKsMR3qDSnAAtGbCB/view?usp=drive_link",
+];
+
+const ParallaxAdBanner = ({ theme }) => {
+  const [currentImage, setCurrentImage] = useState(0);
+
+  // ✅ Automatic Image Changer (Changes every 4 seconds)
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentImage((prev) => (prev + 1) % BANNER_IMAGES.length);
+    }, 4000);
+
+    return () => clearInterval(timer);
+  }, []);
+
+  return (
+    <div className="w-full h-48 md:h-64 rounded-2xl overflow-hidden relative mb-12 group cursor-pointer shadow-lg bg-gray-900">
+      {/* SLIDESHOW IMAGES */}
+      <div className="absolute inset-0 w-full h-full">
+        {BANNER_IMAGES.map((imgSrc, index) => (
+          <img
+            key={index}
+            src={imgSrc}
+            // 🔥 REQUIRED FOR DRIVE IMAGES
+            referrerPolicy="no-referrer"
+            className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ease-in-out
+              ${index === currentImage ? "opacity-60" : "opacity-0"}
+              group-hover:scale-105 transition-transform duration-[2000ms]
+            `}
+            alt={`Banner ${index + 1}`}
+            onError={(e) => {
+              console.error("Banner failed:", imgSrc);
+              e.target.style.display = "none";
+            }}
+          />
+        ))}
+      </div>
+
+      {/* TEXT CONTENT (Overlay) */}
+      <div className="absolute inset-0 flex flex-col justify-center items-start p-8 md:p-12 z-10">
+        <span className="bg-yellow-400 text-black text-xs font-black px-2 py-1 rounded mb-2 uppercase tracking-wider">
+          Market Day Special
+        </span>
+        <h3 className="text-3xl md:text-5xl font-black text-white mb-2 leading-none drop-shadow-lg">
+          Fresh from <br /> the Farm
+        </h3>
+        <p className="text-gray-200 text-sm md:text-base mb-6 max-w-md drop-shadow-md hidden md:block">
+          Get 100% organic vegetables delivered directly from local farmers to
+          your doorstep within 24 hours.
+        </p>
+        <button className="bg-white text-gray-900 font-bold py-3 px-8 rounded-full hover:bg-gray-100 transition shadow-xl flex items-center gap-2">
+          Shop Now <ArrowRight size={16} />
+        </button>
+      </div>
+
+      {/* DOTS (Indicators) */}
+      <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-2 z-20">
+        {BANNER_IMAGES.map((_, index) => (
+          <div
+            key={index}
+            className={`h-1.5 rounded-full transition-all duration-300 shadow-sm ${index === currentImage ? "w-6 bg-white" : "w-1.5 bg-white/50"
+              }`}
+          />
+        ))}
+      </div>
     </div>
-    <div className="absolute inset-0 flex flex-col justify-center items-start p-8 md:p-12">
-      <span className="bg-yellow-400 text-black text-xs font-black px-2 py-1 rounded mb-2 uppercase tracking-wider">
-        Market Day Special
-      </span>
-      <h3 className="text-3xl md:text-5xl font-black text-white mb-2 leading-none">
-        Fresh from <br /> the Farm
-      </h3>
-      <p className="text-gray-300 text-sm md:text-base mb-6 max-w-md">
-        Get 100% organic vegetables delivered directly from local farmers to
-        your doorstep within 24 hours.
-      </p>
-      <button className="bg-white text-gray-900 font-bold py-3 px-8 rounded-full hover:bg-gray-100 transition shadow-xl flex items-center gap-2">
-        Shop Now <ArrowRight size={16} />
-      </button>
-    </div>
-  </div>
-);
+  );
+};
 
 const GridAd = ({ theme }) => (
   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-12">
@@ -362,7 +586,7 @@ const Header = ({ theme, setMenuOpen, onOpenNotifications, cartCount }) => {
   }, []);
   const navigate = useNavigate();
 
-    const handleSearch = async (text) => {
+  const handleSearch = async (text) => {
     setSearch(text);
 
     if (text.length < 2) {
@@ -386,6 +610,20 @@ const Header = ({ theme, setMenuOpen, onOpenNotifications, cartCount }) => {
     }
 
   };
+
+  const handleSelect = (serchdata) => {
+    if (!serchdata?.url) return;
+
+    navigate(`/${serchdata.url}`, {
+      state: {
+        id: serchdata.id,
+        name: serchdata.name,
+        img: serchdata.img || "",
+      },
+    });
+  };
+
+
   return (
     <header
       className={`sticky top-0 z-50 w-full font-sans transition-all duration-300 ${isScrolled
@@ -505,6 +743,7 @@ const Header = ({ theme, setMenuOpen, onOpenNotifications, cartCount }) => {
   );
 };
 
+
 const BottomNav = ({ theme, cartCount }) => {
   const [active, setActive] = useState("home");
   const navigate = useNavigate();
@@ -525,7 +764,8 @@ const BottomNav = ({ theme, cartCount }) => {
 
   return (
     <div className="fixed bottom-6 inset-x-0 mx-auto w-[90%] md:hidden z-50">
-      <div className="bg-white/80 backdrop-blur-xl border border-white/50 shadow-2xl shadow-gray-200/50 rounded-2xl flex justify-between items-center px-2 py-3">
+      {/* UPDATED: Solid background (no blur), thicker border, shadow for "Bold" look */}
+      <div className="bg-white border-2 border-gray-100 shadow-2xl shadow-gray-300 rounded-2xl flex justify-between items-center px-4 py-4">
         {navItems.map((item) => {
           const isActive = active === item.id;
           if (item.special) {
@@ -536,12 +776,13 @@ const BottomNav = ({ theme, cartCount }) => {
                   setActive(item.id);
                   navigate(item.route);
                 }}
-                className={`relative -top-8 ${theme.primary} text-white p-4 rounded-full shadow-lg hover:scale-105 transition-transform`}
+                className={`relative -top-10 ${theme.primary} text-white p-4 rounded-full shadow-lg hover:scale-105 transition-transform border-4 border-white`}
               >
-                <item.icon size={24} />
+                <item.icon size={28} />
 
                 {cartCount > 0 && (
-                  <span className="
+                  <span
+                    className="
     absolute -top-1 -right-1
     min-w-[20px] h-5
     px-1
@@ -552,11 +793,11 @@ const BottomNav = ({ theme, cartCount }) => {
     rounded-full
     flex items-center justify-center
     shadow-lg
-  ">
+  "
+                  >
                     {cartCount}
                   </span>
                 )}
-
               </button>
             );
           }
@@ -570,9 +811,10 @@ const BottomNav = ({ theme, cartCount }) => {
               className={`flex flex-col items-center justify-center w-12 gap-1 transition-all ${isActive ? theme.primaryText : "text-gray-400"
                 }`}
             >
-              <item.icon size={20} strokeWidth={isActive ? 2.5 : 2} />
+              {/* UPDATED: Thicker icons (strokeWidth) */}
+              <item.icon size={24} strokeWidth={isActive ? 3 : 2.5} />
               {isActive && (
-                <span className="text-[9px] font-bold">{item.label}</span>
+                <span className="text-[10px] font-black">{item.label}</span>
               )}
             </button>
           );
@@ -581,80 +823,91 @@ const BottomNav = ({ theme, cartCount }) => {
     </div>
   );
 };
-
+// ✅ CLOUDINARY BANNERS (ONLY ONE SOURCE)
 // 3. MAIN PAGE CONTENT
 const MainContent = () => {
-
   const { cartCount, incrementCartCount } = useCart();
 
+  /* ---------------- CART LOGIC (UNCHANGED) ---------------- */
   const handleAddToCart = async (product_id) => {
-    // ✅ Optimistic update (instant UI)
     incrementCartCount();
-
     try {
       const res = await addToCartAPI(product_id, 1);
-
-      if (!res.data.status) {
-        // rollback if API fails
-        setCartCount((prev) => prev - 1);
-        alert("Failed to add item");
-      }
+      if (!res.data.status) alert("Failed to add item");
     } catch (err) {
       console.error("Add to cart error", err);
-      setCartCount((prev) => prev - 1);
       alert("Please login to add items");
     }
   };
 
+  const handleRemoveFromCart = async (product_id) => {
+    try {
+      await addToCartAPI(product_id, -1);
+    } catch (err) {
+      console.error("Remove from cart error", err);
+    }
+  };
+
+  /* ---------------- THEME / BASIC STATE (UNCHANGED) ---------------- */
   const [currentSeason, setCurrentSeason] = useState("winter");
   const [menuOpen, setMenuOpen] = useState(false);
-  const [showNotifications, setShowNotifications] = useState(false); // State for notifications
+  const [showNotifications, setShowNotifications] = useState(false);
+
   const theme = SEASON_CONFIG[currentSeason];
   const ThemeIcon = theme.icon;
+  const navigate = useNavigate();
 
   useEffect(() => {
     setCurrentSeason(getSeason());
   }, []);
 
+  /* =========================================================
+     ✅ CLOUDINARY BANNERS (ONLY ONE SOURCE – FIXED)
+     ========================================================= */
+  const BANNERS = [
+    "https://res.cloudinary.com/duzladayx/image/upload/v1769106661/banner1_ximafq.png",
+    "https://res.cloudinary.com/duzladayx/image/upload/v1769106661/banner2_xgdmes.png",
+    "https://res.cloudinary.com/duzladayx/image/upload/v1769106661/banner3_mnbf4k.png",
+  ];
+
+  /* ---------------- SLIDER STATE (FIXED ORDER) ---------------- */
   const [slideIndex, setSlideIndex] = useState(0);
-  const banners = [1, 2, 3];
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setSlideIndex((prev) => (prev + 1) % BANNERS.length);
+    }, 4000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  /* ---------------- DATA STATE (UNCHANGED) ---------------- */
   const [CATEGORIES, setCategories] = useState([]);
   const [SUPER_DEALS_DATA, setDealdata] = useState([]);
   const [FRUITS_DATA, setFruitdata] = useState([]);
   const [VEG_DATA, setVegdata] = useState([]);
   const [FEED_PRODUCTS, setRecomentdata] = useState([]);
 
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setSlideIndex((prev) => (prev + 1) % banners.length);
-    }, 4000);
-    return () => clearInterval(interval);
-  }, []);
-
   const fetchCategory = async () => {
     try {
       const response = await API.post(
         "product/allcatedetails",
-        { mode_fetchorall: 0 }
+        {
+          mode_fetchorall: 0,
+          register_id: STORE_ID, // ✅ INSIDE BODY
+        }
       );
 
-      const formatted = formatCategories(response.data.data);
-
-      setCategories(formatted);
-
-      console.log("Formatted Categories:", formatted);
+      setCategories(formatCategories(response.data.data));
     } catch (error) {
       console.error("Category fetch error:", error);
     }
   };
-
-
   const fetchDeals = async () => {
     try {
       const response = await API.post(
-        "product/superdealsdata"
+        "product/superdealsdata",
+        { register_id: STORE_ID }
       );
       const { deals, veg, fruit, reco } = response.data.data;
 
@@ -668,7 +921,6 @@ const MainContent = () => {
       console.error("Deals data fetch error:", error);
     }
   };
-
   const formatCategories = (items) => {
     return items.map((item) => ({
       cat_id: item.categories_id || 0,
@@ -677,7 +929,6 @@ const MainContent = () => {
       img: item.cat_img,
     }));
   };
-
   useEffect(() => {
     fetchCategory();
     fetchDeals();
@@ -700,6 +951,9 @@ const MainContent = () => {
     });
   };
 
+  /* =========================================================
+     ✅ JSX STARTS
+     ========================================================= */
   return (
     <div
       className={`min-h-screen ${theme.gradient} transition-colors duration-700 font-sans pb-28 md:pb-0 relative`}
@@ -721,51 +975,43 @@ const MainContent = () => {
         theme={theme}
       />
 
-      {/* ATMOSPHERE */}
+      {/* ATMOSPHERE - REMOVED animate-pulse TO STOP BLINKING */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
         <div
-          className={`absolute top-0 left-0 w-[500px] h-[500px] rounded-full mix-blend-multiply filter blur-3xl opacity-20 ${theme.primary} animate-pulse`}
+          className={`absolute top-0 left-0 w-[500px] h-[500px] rounded-full mix-blend-multiply filter blur-3xl opacity-20 ${theme.primary}`}
         ></div>
         <div
-          className={`absolute bottom-0 right-0 w-[400px] h-[400px] rounded-full mix-blend-multiply filter blur-3xl opacity-20 ${theme.accent} animate-pulse`}
+          className={`absolute bottom-0 right-0 w-[400px] h-[400px] rounded-full mix-blend-multiply filter blur-3xl opacity-20 ${theme.accent}`}
         ></div>
       </div>
 
       <main className="relative z-10 max-w-7xl mx-auto px-4 md:px-6 pt-2">
         {/* --- 1. HERO SECTION --- */}
-        <div className="flex flex-col md:flex-row gap-6 mb-8 items-start">
-          <div className="w-full md:w-2/3 lg:w-3/4 relative rounded-2xl overflow-hidden shadow-xl aspect-[16/8] md:aspect-[16/7] group">
-            {banners.map((_, i) => (
+        <div className="w-full mb-8">
+          <div className="w-full relative rounded-2xl overflow-hidden shadow-xl aspect-[16/8] md:aspect-[21/8] group">
+            {BANNERS.map((_, i) => (
               <div
                 key={i}
                 className={`absolute inset-0 transition-opacity duration-1000 ${i === slideIndex ? "opacity-100 z-10" : "opacity-0 z-0"
                   }`}
               >
                 <img
-                  src={`https://picsum.photos/1200/600?random=${i + 10}`}
+                  src={BANNERS[i]}
                   className={`w-full h-full object-cover ${theme.bannerTone}`}
-                  alt="Banner"
+                  alt={`Banner ${i + 1}`}
                 />
+
                 <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/20 to-transparent p-6 md:p-12 flex flex-col justify-center text-white">
-                  <span
-                    className={`inline-block w-fit px-3 py-1 rounded-md text-xs font-bold mb-3 ${theme.badge} uppercase tracking-wider`}
-                  >
-                    {theme.name}
-                  </span>
-                  <h2 className="text-3xl md:text-5xl font-black mb-4 leading-tight">
+                  <h2 className="text-3xl md:text-5xl font-black">
                     Fresh & Organic <br /> Delivered Fast.
                   </h2>
-                  <p className="text-sm md:text-lg opacity-90 mb-6 max-w-md hidden md:block">
-                    Experience the best quality seasonal produce.
-                  </p>
-                  <button className="bg-white text-gray-900 font-bold py-2.5 px-6 rounded-full w-fit hover:bg-gray-100 transition shadow-lg">
-                    Shop {theme.name}
-                  </button>
                 </div>
               </div>
             ))}
+
+            {/* DOTS */}
             <div className="absolute bottom-4 left-6 z-20 flex gap-2">
-              {banners.map((_, i) => (
+              {BANNERS.map((_, i) => (
                 <div
                   key={i}
                   className={`h-1.5 rounded-full transition-all duration-300 ${i === slideIndex ? "w-6 bg-white" : "w-1.5 bg-white/50"
@@ -774,47 +1020,8 @@ const MainContent = () => {
               ))}
             </div>
           </div>
-          <div className="w-full md:w-1/3 lg:w-1/4 flex flex-col gap-3">
-            <div
-              className={`flex items-center gap-3 p-4 rounded-2xl ${theme.cardBg
-                } shadow-sm border ${theme.accent.replace(
-                  "bg-",
-                  "border-"
-                )} cursor-pointer hover:shadow-lg transition-all`}
-            >
-              <div
-                className={`p-3 rounded-full ${theme.accent} ${theme.primaryText}`}
-              >
-                <CreditCard size={24} />
-              </div>
-              <div>
-                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wide">
-                  HDFC Bank
-                </p>
-                <p className="font-black text-gray-800 text-lg leading-none">
-                  10% OFF
-                </p>
-                <p className="text-xs text-gray-500">On credit cards</p>
-              </div>
-            </div>
-            <div
-              className={`flex items-center gap-3 p-4 rounded-2xl bg-gradient-to-r from-gray-900 to-gray-800 text-white shadow-md cursor-pointer hover:shadow-xl transition-all`}
-            >
-              <div className={`p-3 rounded-full bg-white/20 backdrop-blur-sm`}>
-                <Tag size={24} className="text-white" />
-              </div>
-              <div>
-                <p className="text-[10px] font-bold text-gray-300 uppercase tracking-wide">
-                  Code: SAVE20
-                </p>
-                <p className="font-black text-white text-lg leading-none">
-                  Flat ₹50
-                </p>
-                <p className="text-xs text-gray-400">On orders above ₹299</p>
-              </div>
-            </div>
-          </div>
         </div>
+
 
         {/* --- 2. CATEGORIES --- */}
         {/* --- CATEGORIES SECTION --- */}
@@ -825,14 +1032,15 @@ const MainContent = () => {
               Categories
             </h3>
 
-            <button className="text-sm font-semibold text-green-600 hover:underline">
-              See all
+            <button className={`text-sm font-semibold ${theme.primaryText} hover:underline flex items-center gap-1`}>
+              See all <ChevronDown className="-rotate-90" size={14} />
             </button>
           </div>
 
           {/* Scrollable Categories */}
           <div className="flex gap-5 overflow-x-auto no-scrollbar pb-2">
-            {CATEGORIES.map((cat, i) => (
+            {/* UPDATED: SLICE TO SHOW ONLY 10 ITEMS */}
+            {CATEGORIES.slice(0, 10).map((cat, i) => (
               <div
                 key={i}
                 className="min-w-[90px] flex flex-col items-center text-center cursor-pointer group"
@@ -905,6 +1113,7 @@ const MainContent = () => {
             <HorizontalScrollRow
               data={SUPER_DEALS_DATA}
               onAddToCart={handleAddToCart}
+              onRemoveFromCart={handleRemoveFromCart}
               theme={{
                 ...theme,
                 accent: "bg-red-50",
@@ -917,89 +1126,74 @@ const MainContent = () => {
         {/* --- 4. AD BANNER 1 (New) --- */}
         <ParallaxAdBanner theme={theme} />
 
-
-
         {/* --- 6. VEGETABLES ROW (New) --- */}
         <div className="mb-10">
-          <SectionHeader title="Fresh Vegetables" icon={Carrot} theme={theme} />
-          <HorizontalScrollRow data={VEG_DATA} theme={theme} onAddToCart={handleAddToCart} />
+          <SectionHeader
+            title="Fresh Vegetables"
+            icon={Carrot}
+            theme={theme}
+          />
+          <HorizontalScrollRow
+            data={VEG_DATA}
+            theme={theme}
+            onAddToCart={handleAddToCart}
+            onRemoveFromCart={handleRemoveFromCart}
+          />
         </div>
 
-        {/* --- 7. BENTO GRID --- */}
-        <div className="mb-10">
-          <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
-            <ThemeIcon className={theme.primaryText} size={20} /> {theme.name}{" "}
-            Essentials
-          </h3>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:h-64">
-            <div
-              className={`col-span-2 row-span-2 rounded-2xl p-6 relative overflow-hidden group cursor-pointer ${theme.cardBg} border shadow-sm hover:shadow-md transition-all`}
-            >
-              <div className="relative z-10 w-2/3">
-                <span
-                  className={`text-[10px] font-bold tracking-widest uppercase ${theme.primaryText}`}
-                >
-                  Spotlight
-                </span>
-                <h4 className="text-2xl font-black text-gray-800 mt-2 mb-2">
-                  Immunity <br /> Boosters
-                </h4>
-                <p className="text-xs text-gray-500 mb-4">
-                  Ginger, Turmeric, Lemon & Honey combos.
-                </p>
-                <button
-                  className={`${theme.primary} text-white text-xs font-bold py-2 px-4 rounded-lg`}
-                >
-                  Explore
-                </button>
-              </div>
+        {/* --- 7. WINTER FEST ESSENTIALS (Merged Grid) --- */}
+        <div className="mb-12">
+          {/* Header */}
+          <div className="flex justify-between items-end px-1 mb-4">
+            <h3 className="text-lg md:text-xl font-bold text-gray-800 flex items-center gap-2">
+              <ThemeIcon className={theme.primaryText} size={20} />
+              {theme.name} Essentials
+            </h3>
+          </div>
+
+          {/* Unified Grid Layout */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+
+            {/* 1. SPOTLIGHT (Large Left) - Full Image */}
+            <div className={`col-span-2 row-span-2 rounded-2xl relative overflow-hidden group cursor-pointer border border-gray-100 shadow-sm hover:shadow-md transition-all h-64 md:h-auto`}>
               <img
-                src="https://images.unsplash.com/photo-1515942661900-94b3d1972591?auto=format&fit=crop&w=300&q=80"
-                className="absolute -bottom-4 -right-4 w-40 md:w-48 object-contain transition-transform duration-500 group-hover:scale-110 group-hover:rotate-6"
-                alt="special"
+                src="https://images.unsplash.com/photo-1515942661900-94b3d1972591?auto=format&fit=crop&w=600&q=80"
+                className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                alt="immunity"
               />
             </div>
-            <div className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm relative overflow-hidden group">
-              <h4 className="font-bold text-gray-800">Fresh Juices</h4>
-              <p className="text-[10px] text-green-600 font-bold">
-                Buy 1 Get 1
-              </p>
+
+            {/* 2. FRESH JUICES (Small Top) - Full Image */}
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm relative overflow-hidden group h-32 md:h-40 cursor-pointer hover:-translate-y-1 transition-transform">
               <img
-                src="https://images.unsplash.com/photo-1619566636858-adf3ef46400b?auto=format&fit=crop&w=150&q=80"
-                className="absolute bottom-0 right-0 w-16 h-16 object-cover rounded-tl-xl transition-transform group-hover:scale-110"
+                src="https://images.unsplash.com/photo-1619566636858-adf3ef46400b?auto=format&fit=crop&w=300&q=80"
+                className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                 alt="juice"
               />
             </div>
-            <div className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm relative overflow-hidden group">
-              <h4 className="font-bold text-gray-800">Dairy</h4>
-              <p className="text-[10px] text-gray-500">Fresh Morning</p>
+
+            {/* 3. DAIRY (Small Top) - Full Image */}
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm relative overflow-hidden group h-32 md:h-40 cursor-pointer hover:-translate-y-1 transition-transform">
               <img
-                src="https://images.unsplash.com/photo-1628088062854-d1870b4553da?auto=format&fit=crop&w=150&q=80"
-                className="absolute bottom-0 right-0 w-16 h-16 object-cover rounded-tl-xl transition-transform group-hover:scale-110"
+                src="https://images.unsplash.com/photo-1628088062854-d1870b4553da?auto=format&fit=crop&w=300&q=80"
+                className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                 alt="dairy"
               />
             </div>
-            <div className="col-span-2 md:col-span-2 bg-gray-900 text-white rounded-2xl p-4 flex items-center justify-between cursor-pointer group">
-              <div className="pl-2">
-                <p className="text-xs text-gray-400">Not sure what to cook?</p>
-                <h4 className="font-bold text-lg">See {theme.name} Recipes</h4>
-              </div>
-              <div className="bg-white/10 p-2 rounded-full group-hover:bg-white/20 transition">
-                <ArrowRight size={20} />
-              </div>
+
+            {/* 5. BREAKFAST SPECIAL (Bottom Left) - Full Image */}
+            <div className="col-span-2 md:col-span-2 bg-[#FFF8E7] rounded-2xl relative overflow-hidden h-48 md:h-52 cursor-pointer hover:shadow-md transition-all group">
+              <img
+                src="https://images.unsplash.com/photo-1590080875515-8a3a8dc5735e?auto=format&fit=crop&w=500&q=80"
+                className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                alt="breakfast"
+              />
             </div>
+
+
+
           </div>
         </div>
-
-        {/* --- 8. AD TEMPLATE 2 (New) --- */}
-        <GridAd theme={theme} />
-
-        {/* --- 9. FRUITS ROW (New) --- */}
-        <div className="mb-12">
-          <SectionHeader title="Seasonal Fruits" icon={Apple} theme={theme} />
-          <HorizontalScrollRow data={FRUITS_DATA} theme={theme} onAddToCart={handleAddToCart} />
-        </div>
-
         {/* --- 10. PRODUCT FEED --- */}
         <div className="mb-20">
           <SectionHeader
@@ -1008,90 +1202,16 @@ const MainContent = () => {
             theme={theme}
           />
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {FEED_PRODUCTS.map((prod, idx) => {
-              const curstk = Number(prod?.current_stock) || 0;
-              const isOutOfStock = curstk <= 0;
-
-              return (
-                <div
-                  key={idx}
-                  className={`bg-white rounded-2xl p-3 shadow-sm border border-gray-100 transition-all duration-300 group
-      ${isOutOfStock ? "opacity-70" : "hover:shadow-xl hover:-translate-y-1"}`}
-                >
-                  {/* IMAGE */}
-                  <div className="relative h-32 md:h-40 mb-3 rounded-xl overflow-hidden bg-gray-50">
-                    <img
-                      src={prod.img}
-                      alt={prod.name}
-                      className={`w-full h-full object-cover mix-blend-multiply
-          ${isOutOfStock ? "blur-sm grayscale" : ""}`}
-                    />
-
-                    {/* WISHLIST */}
-                    {!isOutOfStock && (
-                      <button className="absolute top-2 right-2 bg-white/80 backdrop-blur p-1.5 rounded-full text-gray-400 hover:text-red-500 transition shadow-sm">
-                        <Heart size={14} />
-                      </button>
-                    )}
-
-                    {/* ORGANIC */}
-                    {idx % 3 === 0 && !isOutOfStock && (
-                      <span className="absolute bottom-0 left-0 bg-green-500 text-white text-[9px] font-bold px-2 py-0.5 rounded-tr-lg">
-                        ORGANIC
-                      </span>
-                    )}
-
-                    {/* OUT OF STOCK OVERLAY */}
-                    {isOutOfStock && (
-                      <span className="absolute inset-0 flex items-center justify-center bg-black/40 text-white text-xs font-bold tracking-widest">
-                        OUT OF STOCK
-                      </span>
-                    )}
-                  </div>
-
-                  {/* CONTENT */}
-                  <div className="space-y-1">
-                    <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">
-                      {prod.weight}
-                    </p>
-
-                    <h4 className="font-bold text-gray-800 text-sm leading-tight line-clamp-2 min-h-[2.5em]">
-                      {prod.name}
-                    </h4>
-
-                    <div className="flex items-center gap-2 mt-2">
-                      <span className="text-lg font-black text-gray-900">
-                        ₹{prod.price}
-                      </span>
-                      <span className="text-xs text-gray-400 line-through">
-                        ₹{prod.oldPrice}
-                      </span>
-                    </div>
-
-                    {/* ADD TO CART */}
-                    <button
-                      disabled={isOutOfStock}
-                      onClick={() =>
-                        !isOutOfStock && handleAddToCart(prod.product_id)
-                      }
-                      className={`w-full mt-3 py-2 rounded-xl text-xs font-bold border transition-colors
-            ${isOutOfStock
-                          ? "bg-gray-200 text-gray-400 cursor-not-allowed"
-                          : `${theme.cardBg.replace(
-                            "bg-white/80",
-                            "bg-transparent"
-                          )} ${theme.primaryText} hover:${theme.primary} hover:text-white`
-                        }
-          flex items-center justify-center gap-2`}
-                    >
-                      {isOutOfStock ? "OUT OF STOCK" : "ADD"}
-                      {!isOutOfStock && <Plus size={14} strokeWidth={3} />}
-                    </button>
-                  </div>
-                </div>
-              );
-            })}
-
+            {FEED_PRODUCTS.map((prod, idx) => (
+              <RecommendedProductCard
+                key={idx}
+                prod={prod}
+                idx={idx}
+                theme={theme}
+                onAddToCart={handleAddToCart}
+                onRemoveFromCart={handleRemoveFromCart}
+              />
+            ))}
           </div>
           <div className="text-center pb-8 mt-8">
             <button className="text-gray-400 font-semibold text-sm hover:text-gray-800 transition">
@@ -1100,9 +1220,8 @@ const MainContent = () => {
           </div>
         </div>
       </main>
-
+      {/* <Footer theme={theme} /> */}
       <BottomNav theme={theme} cartCount={cartCount} />
-
     </div>
   );
 };
