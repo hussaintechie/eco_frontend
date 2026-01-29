@@ -116,6 +116,9 @@ const EditAddressPage = () => {
         setTimeout(() => setLoading(false), 500); 
     }
   };
+  // ✅ AUTO REDIRECT TO EDIT PAGE IF ADDRESS EXISTS
+
+
 
   /* ---------------- MAP INIT ---------------- */
   useEffect(() => {

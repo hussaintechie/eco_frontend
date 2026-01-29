@@ -30,7 +30,7 @@ import { iswebview } from "./utils/isWebView";
 import { Toaster } from "react-hot-toast";
 /* ✅ SMART LANDING COMPONENT */
 function LandingRedirect() {
-  const isApp = iswebview();
+   const isApp = new URLSearchParams(window.location.search).get("from") === "app";
   const token = localStorage.getItem("token");
 
   // ✅ Logged in → Home (app & browser)
@@ -39,10 +39,7 @@ function LandingRedirect() {
   }
 
   // ✅ React Native WebView → Login
-  if (isApp) {
-    return <Navigate to="/login" replace />;
-  }
-
+ if (isApp) return <Navigate to="/login" replace />;
   // ✅ Browser without login → Home (ProtectedRoute will decide)
   return <Navigate to="/home" replace />;
 }

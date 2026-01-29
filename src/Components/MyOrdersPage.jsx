@@ -250,7 +250,7 @@ const MyOrdersPage = () => {
     </div>
 
     <div className="text-right">
-      <p className="text-xs text-slate-400 font-semibold">ORDER ID</p>
+      <p className="text-xs text-slate-400 font-semibold">ORDER NO </p>
       <p className="font-bold text-slate-800">
         #{order.id.replace(/\D/g, "")}
       </p>

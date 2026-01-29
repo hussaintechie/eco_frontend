@@ -6,7 +6,7 @@ import {
   Briefcase, MapPin, PlusCircle, CheckCircle2,
   AwardIcon, TicketPercent, Tag
 } from "lucide-react";
-import { useNavigate,useLocation  } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import API from "../api/auth";
 import { toast } from "react-toastify";
 import { useCart } from "../context/CartContext.jsx";
@@ -137,7 +137,6 @@ const paymentOptions = [
 // ------------------------------------------------
 const cartpage = () => {
   const navigate = useNavigate();
-const location = useLocation();
 
   // ---------------- DISPLAY HELPERS (UI ONLY) ----------------
   const formatDateToReadable = (dateObj) => {
@@ -221,14 +220,6 @@ const location = useLocation();
 
   // Coupon States
   const [appliedCoupon, setAppliedCoupon] = useState(null);
-useEffect(() => {
-  if (location.state?.addressAdded || location.state?.addressEdited) {
-    loadAddresses();
-    setShowAddressModal(false);
-
-    navigate(location.pathname, { replace: true });
-  }
-}, [location.state, navigate]);
 
   // On mount: season + load data
   useEffect(() => {

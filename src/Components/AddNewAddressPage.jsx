@@ -57,6 +57,7 @@ const AddNewAddressPage = () => {
   // 1. Loading State
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
+const [apiError, setApiError] = useState("");
 
   const [detectedAddress, setDetectedAddress] = useState("");
   const [address, setAddress] = useState({
@@ -107,6 +108,29 @@ const AddNewAddressPage = () => {
       setTimeout(() => setLoading(false), 500); 
     }
   };
+  useEffect(() => {
+    const checkExistingAddress = async () => {
+      try {
+        setLoading(true);
+  
+        const { data } = await API.get("/auser/list");
+  
+        if (Array.isArray(data) && data.length > 0) {
+          // Redirect with existing address
+          navigate("/edit-address", {
+            state: { address: data[0] },
+            replace: true,
+          });
+        }
+      } catch (err) {
+        console.log("Address check error:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+  
+    checkExistingAddress();
+  }, [navigate]);
 
   /* ---------------- MAP INIT ---------------- */
   useEffect(() => {
@@ -180,34 +204,52 @@ const AddNewAddressPage = () => {
   };
 
   /* ---------------- SAVE ---------------- */
-  const saveAddress = async () => {
-    if (!validate()) return;
+ const saveAddress = async () => {
+  setApiError(""); // ✅ clear previous errors
 
-    const payload = {
-      name: address.name.trim(),
-      phone: address.phone,
-      Building: address.line1,
-      street: address.line2,
-      landmark: address.landmark,
-      city: address.city,
-      pincode: address.pin,
-      address_type: address.type,
-      lat: address.lat,
-      lng: address.lon,
-      is_default: false,
-      full_address: detectedAddress,
-    };
+  if (!validate()) return;
 
-    try {
-      const { data } = await API.post("/auser/add", payload);
-      if (data.status === 1) {
-  navigate("/cart", { state: { addressAdded: true } });
-}
-
-    } catch (e) {
-      console.error(e);
-    }
+  const payload = {
+    name: address.name.trim(),
+    phone: address.phone,
+    Building: address.line1,
+    street: address.line2,
+    landmark: address.landmark,
+    city: address.city,
+    pincode: address.pin,
+    address_type: address.type,
+    lat: address.lat,
+    lng: address.lon,
+    is_default: false,
+    full_address: detectedAddress,
   };
+
+  try {
+    setLoading(true);
+
+    const { data } = await API.post("/auser/add", payload);
+
+    if (data.status === 1) {
+      navigate("/cart", { state: { addressAdded: true } });
+    }
+  } catch (e) {
+    console.error(e);
+
+    const msg =
+      e?.response?.data?.message ||
+      "Something went wrong. Please try again";
+
+    if (msg.includes("unique_user_address") || msg.includes("duplicate key")) {
+      setApiError("✅ Address already added. Please edit your existing address.");
+      return;
+    }
+
+    setApiError(msg);
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   const formFields = [
     { label: "Full Name", key: "name", colSpan: "col-span-2" },
@@ -384,6 +426,12 @@ const AddNewAddressPage = () => {
 
               {/* Save Button */}
               <div className="mt-8 pt-6 border-t border-slate-100">
+                {apiError && (
+  <div className="mb-4 p-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-sm font-semibold">
+    {apiError}
+  </div>
+)}
+
                 <button
                     onClick={saveAddress}
                     disabled={loading} // Prevent save during loading

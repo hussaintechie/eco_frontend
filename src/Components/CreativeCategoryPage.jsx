@@ -1,80 +1,19 @@
+const STORE_ID = Number(import.meta.env.VITE_STORE_ID);
 import React, { useState, useMemo, useEffect } from "react";
 import { 
   Search, ShoppingBag, Plus, Minus, ChevronRight, 
   Star, ArrowLeft, X,
-  Snowflake, Sun, Flower2, CloudRain
+  Snowflake, Sun, Flower2, CloudRain,Heart
 } from "lucide-react";
 import { useLocation,useNavigate} from "react-router-dom";
 import API from "../api/auth.js";
 import { addToCartAPI, removeCartItemAPI } from "../api/cartapi";
 import { useCart } from "../context/CartContext";
+import Footer from "./Footer.jsx";
+
+import { SEASON_CONFIG, getSeason, SeasonalParticles} from './SEASON_CONFIG.jsx';
 
 
-// --- 1. CONFIG & HELPERS ---
-const SEASON_CONFIG = {
-  winter: {
-    name: "Winter Fest",
-    gradient: "bg-gradient-to-br from-blue-50 via-slate-50 to-indigo-50",
-    primary: "bg-indigo-600",
-    primaryText: "text-indigo-600",
-    accent: "bg-indigo-50",
-    border: "border-indigo-100",
-    icon: Snowflake,
-    bannerGradient: "bg-gradient-to-r from-blue-900 to-indigo-800",
-  },
-  summer: {
-    name: "Summer Chill",
-    gradient: "bg-gradient-to-br from-orange-50 via-yellow-50 to-amber-50",
-    primary: "bg-orange-500",
-    primaryText: "text-orange-600",
-    accent: "bg-orange-50",
-    border: "border-orange-100",
-    icon: Sun,
-    bannerGradient: "bg-gradient-to-r from-orange-400 to-amber-300",
-  },
-  spring: {
-    name: "Spring Bloom",
-    gradient: "bg-gradient-to-br from-emerald-50 via-green-50 to-teal-50",
-    primary: "bg-emerald-600",
-    primaryText: "text-emerald-600",
-    accent: "bg-emerald-50",
-    border: "border-emerald-100",
-    icon: Flower2,
-    bannerGradient: "bg-gradient-to-r from-emerald-500 to-teal-400",
-  },
-  monsoon: {
-    name: "Monsoon",
-    gradient: "bg-gradient-to-br from-slate-200 via-gray-100 to-slate-300",
-    primary: "bg-teal-600",
-    primaryText: "text-teal-600",
-    accent: "bg-teal-50",
-    border: "border-teal-100",
-    icon: CloudRain,
-    bannerGradient: "bg-gradient-to-r from-slate-700 to-teal-800",
-  }
-};
-
-const getSeason = () => {
-  const month = new Date().getMonth();
-  if (month === 10 || month === 11 || month === 0) return "winter";
-  if (month === 1 || month === 2) return "spring";
-  if (month >= 3 && month <= 5) return "summer";
-  return "monsoon";
-};
-
-// --- 2. PARTICLES COMPONENT ---
-const SeasonalParticles = ({ season }) => {
-  if (season === "winter") {
-    return <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">{Array.from({length:15}).map((_,i)=><div key={i} className="absolute text-indigo-200/40 animate-fall" style={{left:`${Math.random()*100}%`,top:-20,fontSize:`${Math.random()*20+10}px`,animationDuration:`${Math.random()*5+5}s`}}>❄</div>)}<style>{`@keyframes fall {0%{transform:translateY(-20px) rotate(0deg);opacity:0}20%{opacity:0.8}100%{transform:translateY(100vh) rotate(360deg);opacity:0}}.animate-fall{animation:fall linear infinite}`}</style></div>;
-  }
-  if (season === "summer") {
-    return <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden"><div className="absolute -top-20 -right-20 w-96 h-96 bg-yellow-500/10 rounded-full blur-3xl"></div></div>;
-  }
-  if (season === "monsoon") {
-    return <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden bg-slate-900/5"></div>;
-  }
-  return null;
-};
 
 // --- 3. SUB-COMPONENTS ---
 
@@ -135,37 +74,37 @@ const SeasonalParticles = ({ season }) => {
 //   );
 // };
 
-const ProductCard = ({ data, cartQty, onAdd, onRemove, onClick, theme }) => {
+const ProductCard = ({ data, theme, onAdd, onRemove, onClick }) => {
   const displayVariant = data?.variants?.[0] || {};
-
-  // ✅ SAFE STOCK CHECK
-  const curstk = Number(displayVariant?.current_stock) || 0;
+  const curstk = Number(displayVariant.current_stock) || 0;
   const isOutOfStock = curstk <= 0;
 
-  const discount =
-    displayVariant.mrp > 0
-      ? Math.round(
-          ((displayVariant.mrp - displayVariant.price) /
-            displayVariant.mrp) *
-            100
-        )
-      : 0;
+  // ✅ SAME AS HOME PAGE
+  const [qty, setQty] = useState(0);
+
+  const handleIncrement = (e) => {
+    e.stopPropagation();
+    if (isOutOfStock) return;
+    setQty((prev) => prev + 1);
+    onAdd();
+  };
+
+  const handleDecrement = (e) => {
+    e.stopPropagation();
+    if (qty > 0) {
+      setQty((prev) => prev - 1);
+      onRemove();
+    }
+  };
 
   return (
     <div
       onClick={!isOutOfStock ? onClick : undefined}
-      className={`group bg-white rounded-xl p-2 md:p-4 border border-transparent shadow-sm transition-all duration-300 flex flex-col relative overflow-hidden
-      ${isOutOfStock ? "opacity-70 cursor-not-allowed" : `hover:${theme.border} hover:shadow-xl cursor-pointer`}`}
+      className={`bg-white rounded-xl p-3 shadow-sm border border-gray-100 transition-all group
+      ${isOutOfStock ? "opacity-70" : "hover:shadow-lg cursor-pointer"}`}
     >
-      {/* DISCOUNT */}
-      {discount > 0 && !isOutOfStock && (
-        <div className={`absolute top-0 left-0 ${theme.primary} text-white text-[9px] md:text-[10px] font-bold px-1.5 py-0.5 md:px-2 md:py-1 rounded-br-lg z-10`}>
-          {discount}% OFF
-        </div>
-      )}
-
       {/* IMAGE */}
-      <div className="relative w-full h-24 md:h-40 mb-2 md:mb-3 flex items-center justify-center overflow-hidden">
+      <div className="relative h-28 md:h-36 bg-gray-50 rounded-lg mb-3 overflow-hidden">
         <img
           src={data.img}
           alt={data.name}
@@ -173,90 +112,64 @@ const ProductCard = ({ data, cartQty, onAdd, onRemove, onClick, theme }) => {
           ${isOutOfStock ? "blur-sm grayscale" : "group-hover:scale-110"}`}
         />
 
-        {/* OUT OF STOCK OVERLAY */}
+        {/* ❤️ HEART (MATCH HOME PAGE) */}
+        {!isOutOfStock && (
+          <button
+            onClick={(e) => e.stopPropagation()}
+            className="absolute top-2 right-2 bg-white/80 p-1.5 rounded-full shadow hover:text-red-500 transition"
+          >
+            <Heart size={14} />
+          </button>
+        )}
+
+        {/* OUT OF STOCK */}
         {isOutOfStock && (
-          <div className="absolute inset-0 bg-black/40 flex items-center justify-center text-white text-xs md:text-sm font-bold tracking-widest">
+          <span className="absolute inset-0 flex items-center justify-center bg-black/40 text-white text-xs font-bold">
             OUT OF STOCK
-          </div>
+          </span>
         )}
       </div>
 
       {/* CONTENT */}
-      <div className="flex flex-col flex-1">
-        <div className="flex items-center gap-1 mb-1">
-          {data.rating && (
-            <div className="bg-gray-100 px-1.5 py-0.5 rounded flex items-center gap-1">
-              <Star size={8} className="text-gray-500 fill-gray-500" />
-              <span className="text-[9px] md:text-[10px] font-bold text-gray-600">
-                {data.rating}
-              </span>
-            </div>
-          )}
+      <div className="space-y-1">
+        <p className="text-[10px] text-gray-400 font-bold uppercase">
+          {displayVariant.weight}
+        </p>
 
-          {displayVariant.weight && (
-            <span className="text-[9px] md:text-[10px] text-gray-400 font-medium bg-gray-50 px-1.5 py-0.5 rounded">
-              {displayVariant.weight}
-            </span>
-          )}
-        </div>
-
-        <h3
-          className={`font-bold text-gray-800 text-xs md:text-sm line-clamp-2 leading-relaxed mb-1 transition-colors min-h-[2.5em]
-          ${!isOutOfStock && `group-hover:${theme.primaryText}`}`}
-        >
+        <h4 className="font-bold text-gray-800 text-sm line-clamp-2 min-h-[2.5em]">
           {data.name}
-        </h3>
+        </h4>
 
-        {/* PRICE + CART */}
-        <div className="mt-auto pt-2 md:pt-3 flex flex-col md:flex-row md:items-center justify-between gap-2 md:gap-0">
-          <div className="flex flex-col">
-            {displayVariant.mrp > displayVariant.price && (
-              <span className="text-[9px] md:text-xs text-gray-400 line-through">
-                ₹{displayVariant.mrp}
-              </span>
-            )}
-            <span className="text-sm md:text-base font-black text-gray-900">
-              ₹{displayVariant.price}
-            </span>
-          </div>
+        <div className="flex justify-between items-center mt-2">
+          <span className="text-sm font-black text-gray-900">
+            ₹{displayVariant.price}
+          </span>
 
-          {/* CART CONTROLS */}
-          {isOutOfStock ? (
+          {/* ➕➖ SAME UX AS HOME */}
+          {qty === 0 ? (
             <button
-              disabled
-              className="bg-gray-200 text-gray-400 text-xs font-bold px-3 py-2 rounded-lg w-full md:w-auto cursor-not-allowed"
+              disabled={isOutOfStock}
+              onClick={handleIncrement}
+              className={`${theme.accent} ${theme.primaryText} p-2 rounded-lg hover:scale-105 transition`}
             >
-              OUT OF STOCK
-            </button>
-          ) : cartQty === 0 ? (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onAdd();
-              }}
-              className={`${theme.accent} border ${theme.border} ${theme.primaryText} hover:${theme.primary} hover:text-white text-xs font-bold px-3 py-1.5 md:px-4 md:py-2 rounded-lg transition-all active:scale-95 uppercase tracking-wide w-full md:w-auto`}
-            >
-              Add
+              <Plus size={16} strokeWidth={3} />
             </button>
           ) : (
-            <div
-              onClick={(e) => e.stopPropagation()}
-              className={`flex items-center ${theme.primary} rounded-lg h-7 md:h-9 shadow-md overflow-hidden w-full md:w-auto`}
-            >
+            <div className={`flex items-center gap-1 ${theme.accent} rounded-lg px-1 py-1`}>
               <button
-                onClick={onRemove}
-                className="flex-1 md:w-9 h-full flex items-center justify-center text-white hover:brightness-110 active:brightness-90 transition"
+                onClick={handleDecrement}
+                className="bg-white rounded p-0.5 shadow hover:scale-110 transition"
               >
-                <Minus size={14} />
+                <Minus size={14} strokeWidth={3} />
               </button>
-              <span className="text-white text-xs md:text-sm font-bold min-w-[20px] text-center">
-                {cartQty}
+              <span className={`text-xs font-black w-4 text-center ${theme.primaryText}`}>
+                {qty}
               </span>
               <button
-                onClick={onAdd}
-                className="flex-1 md:w-9 h-full flex items-center justify-center text-white hover:brightness-110 active:brightness-90 transition"
+                onClick={handleIncrement}
+                className="bg-white rounded p-0.5 shadow hover:scale-110 transition"
               >
-                <Plus size={14} />
+                <Plus size={14} strokeWidth={3} />
               </button>
             </div>
           )}
@@ -385,7 +298,9 @@ export default function CreativeCategoryPage() {
     try {
       const response = await API.post(
         "product/catitems",
-        { cate_id: id }
+        { cate_id: id,
+          register_id: STORE_ID,
+         }
       );
       const formatted = formatProducts(response.data.data);
       setProducts(formatted);
@@ -517,16 +432,7 @@ const handleRemoveFromCart = async (product_id) => {
         <main className="w-full bg-white/40 md:bg-transparent h-full overflow-y-auto md:overflow-visible pb-32 md:pb-0 px-2 md:px-0 pt-4 md:pt-0 rounded-t-3xl md:rounded-none backdrop-blur-sm md:backdrop-blur-none">
           
           {/* Banner */}
-          <div className={`relative w-full h-32 md:h-48 rounded-xl md:rounded-2xl overflow-hidden mb-6 ${theme.bannerGradient} shadow-md flex-shrink-0`}>
-              <div className="absolute inset-0 bg-black/10"></div>
-              <div className="absolute top-1/2 -translate-y-1/2 left-6 text-white z-10">
-                 <span className="bg-white/20 backdrop-blur-md px-2 py-1 rounded text-[10px] md:text-xs font-bold uppercase tracking-wider mb-2 inline-block border border-white/30">
-                   {currentSeason} Special
-                 </span>
-                 <h3 className="text-xl md:text-3xl font-black leading-tight">Fresh from Farm <br/> to Your Table</h3>
-              </div>
-          </div>
-
+          
           {/* FILTER BAR (Category buttons removed) */}
           <div className="flex justify-between items-center mb-4 px-1">
               <h2 className="font-bold text-gray-800 text-lg">All Products</h2>
@@ -535,34 +441,31 @@ const handleRemoveFromCart = async (product_id) => {
 
           {/* PRODUCTS GRID */}
           <div className="grid grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-2 md:gap-6 pb-24">
-            {filteredProducts.length > 0 ? filteredProducts.map((product) => (
-             <ProductCard
-  data={product}
-  cartQty={0} // optional (can sync later)
-  onAdd={(e) => {
-    e.stopPropagation();
-    handleAddToCart(product.id);
-  }}
-  onRemove={(e) => {
-    e.stopPropagation();
-    handleRemoveFromCart(product.id);
-  }}
-  theme={theme}
-/>
+  {filteredProducts.length > 0 ? (
+    filteredProducts.map((product) => (
+      <ProductCard
+        key={product.id}
+        data={product}
+        theme={theme}
+        onAdd={() => handleAddToCart(product.id)}
+        onRemove={() => handleRemoveFromCart(product.id)}
+        onClick={() => setSelectedProduct(product)}
+      />
+    ))
+  ) : (
+    <div className="col-span-full flex flex-col items-center justify-center py-20 text-gray-400">
+      <Search size={40} className="mb-2 opacity-20" />
+      <p>No products found</p>
+    </div>
+  )}
+</div>
 
-            )) : (
-              <div className="col-span-full flex flex-col items-center justify-center py-20 text-gray-400">
-                <Search size={40} className="mb-2 opacity-20"/>
-                <p>No products found</p>
-              </div>
-            )}
-          </div>
         </main>
       </div>
 
       {/* FLOATING CART BAR */}
      {cartCount > 0 && (
-  <div className="fixed bottom-4 left-4 right-4 z-50 animate-in slide-in-from-bottom duration-300">
+  <div className="fixed bottom-4 left-4 right-4 z-50 animate-in slide-in-from-bottom duration-300 md:hidden">
     <div className="bg-gray-900 text-white p-3 rounded-xl shadow-2xl flex items-center justify-between">
       <div className="flex flex-col pl-2">
         <span className="text-xs text-gray-400 font-medium">
@@ -580,7 +483,7 @@ const handleRemoveFromCart = async (product_id) => {
     </div>
   </div>
 )}
-
+<Footer theme={theme} />
     </div>
   );
 }

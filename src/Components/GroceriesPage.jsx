@@ -6,6 +6,7 @@ import {
 } from "lucide-react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+const STORE_ID = Number(import.meta.env.VITE_STORE_ID);
 
 // --- MOCK NAVIGATION (Replaces react-router-dom for standalone preview) ---
 // const useNavigate = () => {
@@ -219,7 +220,9 @@ const fetchCategory = async () => {
   try {
     const response = await axios.post(
       "https://api.sribalajistores.com/product/allcatedetails",
-      {mode_fetchorall :0}
+      {mode_fetchorall :0,
+       register_id: STORE_ID,
+      }
     );
 
     const formatted = formatCategories(response.data.data);

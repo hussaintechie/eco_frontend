@@ -50,9 +50,8 @@ import {
 import { addToCartAPI } from "../api/cartapi";
 
 import { useCart } from "../context/CartContext.jsx";
-import toast from "react-hot-toast";
+import Footer from "./Footer.jsx";
 
-// import Footer from './Footer';
 const NOTIFICATIONS = [
   {
     id: 1,
@@ -165,11 +164,11 @@ const ProductCardVertical = ({
         )}
 
         {/* WISHLIST */}
-        {!isOutOfStock && (
+        {/* {!isOutOfStock && (
           <button className="absolute top-2 right-2 bg-white/80 p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-sm hover:text-red-500">
             <Heart size={14} />
           </button>
-        )}
+        )} */}
       </div>
 
       {/* CONTENT */}
@@ -198,9 +197,10 @@ const ProductCardVertical = ({
               disabled={isOutOfStock}
               onClick={handleIncrement}
               className={`p-2 rounded-lg transition
-                ${isOutOfStock
-                  ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                  : `${theme.accent} ${theme.primaryText} hover:scale-105`
+                ${
+                  isOutOfStock
+                    ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                    : `${theme.accent} ${theme.primaryText} hover:scale-105`
                 }
               `}
             >
@@ -267,16 +267,16 @@ const RecommendedProductCard = ({
     >
       {/* IMAGE */}
       <div className="relative h-32 md:h-40 mb-3 rounded-xl overflow-hidden bg-gray-50">
-
+        
         {/* 🔥 FIXED IMAGE LOADING FOR PRODUCTS 🔥 */}
-
+       
 
         {/* WISHLIST */}
-        {!isOutOfStock && (
+        {/* {!isOutOfStock && (
           <button className="absolute top-2 right-2 bg-white/80 backdrop-blur p-1.5 rounded-full text-gray-400 hover:text-red-500 transition shadow-sm">
             <Heart size={14} />
           </button>
-        )}
+        )} */}
 
         {/* ORGANIC */}
         {idx % 3 === 0 && !isOutOfStock && (
@@ -390,16 +390,18 @@ const NotificationDrawer = ({ isOpen, onClose, theme }) => {
     <>
       {/* Backdrop */}
       <div
-        className={`fixed inset-0 bg-black/40 backdrop-blur-sm z-[60] transition-opacity duration-300 ${isOpen
-          ? "opacity-100 pointer-events-auto"
-          : "opacity-0 pointer-events-none"
-          }`}
+        className={`fixed inset-0 bg-black/40 backdrop-blur-sm z-[60] transition-opacity duration-300 ${
+          isOpen
+            ? "opacity-100 pointer-events-auto"
+            : "opacity-0 pointer-events-none"
+        }`}
         onClick={onClose}
       />
       {/* Drawer */}
       <div
-        className={`fixed top-0 right-0 h-full w-[85%] md:w-[400px] bg-white z-[70] shadow-2xl transform transition-transform duration-300 ease-out ${isOpen ? "translate-x-0" : "translate-x-full"
-          }`}
+        className={`fixed top-0 right-0 h-full w-[85%] md:w-[400px] bg-white z-[70] shadow-2xl transform transition-transform duration-300 ease-out ${
+          isOpen ? "translate-x-0" : "translate-x-full"
+        }`}
       >
         <div
           className={`p-4 border-b border-gray-100 flex justify-between items-center ${theme.gradient}`}
@@ -458,25 +460,37 @@ const NotificationDrawer = ({ isOpen, onClose, theme }) => {
 };
 
 // --- AD TEMPLATES ---
-
-// 👇👇👇 YOUR GOOGLE DRIVE BANNER IMAGES (DIRECT LINKS) 👇👇👇
 const BANNER_IMAGES = [
-  // Banner 1: (ID: 1oO_GTUoaA6LAo4Hm3TfC1ta0eaueulKG)
-  "https://res.cloudinary.com/duzladayx/image/upload/v1769101661/banner1_wnb2ow.png",
-
-  // Banner 2: (ID: 1apCdzkMl9X-FZlZAgZLLKAPFDkCdEG34)
-  "https://drive.google.com/file/d/1apCdzkMl9X-FZlZAgZLLKAPFDkCdEG34/view?usp=drive_link",
-
-  // Banner 3: (ID: 1apCdzkMl9X-FZlZAgZLLKAPFDkCdEG34)
-  // ⚠️ NOTE: You pasted the same link for Banner 2 & 3. 
-  // Replace the ID below if you find the real Banner 3 link.
-  "https://drive.google.com/file/d/1qMx8fB37dCzGmLuuKsMR3qDSnAAtGbCB/view?usp=drive_link",
+  {
+    desktop: "https://res.cloudinary.com/duzladayx/image/upload/v1769343614/banner5_kkye4k.png",
+    mobile: "https://res.cloudinary.com/duzladayx/image/upload/v1769343614/banner5_kkye4k.png",
+  },
+  {
+    desktop: "https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=1200&q=80",
+    mobile: "https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=1200&q=80",
+  },
+  
 ];
+
+
+
+
 
 const ParallaxAdBanner = ({ theme }) => {
   const [currentImage, setCurrentImage] = useState(0);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
-  // ✅ Automatic Image Changer (Changes every 4 seconds)
+  // ✅ Detect screen resize
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  // ✅ Auto slideshow
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentImage((prev) => (prev + 1) % BANNER_IMAGES.length);
@@ -486,52 +500,67 @@ const ParallaxAdBanner = ({ theme }) => {
   }, []);
 
   return (
-    <div className="w-full h-48 md:h-64 rounded-2xl overflow-hidden relative mb-12 group cursor-pointer shadow-lg bg-gray-900">
+    <div
+      className="
+        w-full
+        
+       aspect-[16/8]
+        md:aspect-[32/8]
+
+        rounded-2xl
+        overflow-hidden
+        relative
+        mb-8 md:mb-12
+        group
+        cursor-pointer
+        shadow-lg
+        bg-gray-900
+      "
+    >
       {/* SLIDESHOW IMAGES */}
       <div className="absolute inset-0 w-full h-full">
-        {BANNER_IMAGES.map((imgSrc, index) => (
+        {BANNER_IMAGES.map((img, index) => (
           <img
             key={index}
-            src={imgSrc}
-            // 🔥 REQUIRED FOR DRIVE IMAGES
-            referrerPolicy="no-referrer"
-            className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ease-in-out
+            src={isMobile ? img.mobile : img.desktop}
+            className={`absolute inset-0 w-full h-full object-cover
+              transition-all duration-[2000ms] ease-in-out
               ${index === currentImage ? "opacity-60" : "opacity-0"}
-              group-hover:scale-105 transition-transform duration-[2000ms]
+              group-hover:scale-105
             `}
             alt={`Banner ${index + 1}`}
             onError={(e) => {
-              console.error("Banner failed:", imgSrc);
-              e.target.style.display = "none";
+              e.currentTarget.style.display = "none";
             }}
           />
         ))}
       </div>
+<div className="absolute inset-0 flex flex-col justify-center items-start p-3 md:p-12 z-10">
+        <span className="hidden md:inline-block bg-yellow-400 text-black text-xs font-black px-1 py-1 rounded mb-2 uppercase tracking-wider">
+  Market Day Special
+</span>
 
-      {/* TEXT CONTENT (Overlay) */}
-      <div className="absolute inset-0 flex flex-col justify-center items-start p-8 md:p-12 z-10">
-        <span className="bg-yellow-400 text-black text-xs font-black px-2 py-1 rounded mb-2 uppercase tracking-wider">
-          Market Day Special
-        </span>
-        <h3 className="text-3xl md:text-5xl font-black text-white mb-2 leading-none drop-shadow-lg">
+        <h3 className="text-2xl md:text-5xl font-black text-white mb-2 leading-none drop-shadow-lg">
           Fresh from <br /> the Farm
         </h3>
-        <p className="text-gray-200 text-sm md:text-base mb-6 max-w-md drop-shadow-md hidden md:block">
-          Get 100% organic vegetables delivered directly from local farmers to
-          your doorstep within 24 hours.
-        </p>
-        <button className="bg-white text-gray-900 font-bold py-3 px-8 rounded-full hover:bg-gray-100 transition shadow-xl flex items-center gap-2">
-          Shop Now <ArrowRight size={16} />
-        </button>
+        <p className="text-gray-200 text-xs md:text-base mb-6 max-w-[200px] md:max-w-md drop-shadow-md hidden md:block">
+    Get 100% organic vegetables delivered directly from local farmers.
+  </p>
+       <button className="bg-white text-gray-900 text-sm md:text-base font-bold py-2 px-5 md:py-3 md:px-8 rounded-full hover:bg-gray-100 transition shadow-xl flex items-center gap-2">
+    Shop Now <ArrowRight size={14} className="md:w-4 md:h-4" />
+  </button>
       </div>
 
-      {/* DOTS (Indicators) */}
-      <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-2 z-20">
+      {/* DOT INDICATORS */}
+      <div className="absolute bottom-2 md:bottom-3 left-0 right-0 flex justify-center gap-2 z-20">
         {BANNER_IMAGES.map((_, index) => (
           <div
             key={index}
-            className={`h-1.5 rounded-full transition-all duration-300 shadow-sm ${index === currentImage ? "w-6 bg-white" : "w-1.5 bg-white/50"
-              }`}
+            className={`h-1.5 rounded-full transition-all duration-300 shadow-sm ${
+              index === currentImage
+                ? "w-6 bg-white"
+                : "w-1.5 bg-white/50"
+            }`}
           />
         ))}
       </div>
@@ -539,48 +568,9 @@ const ParallaxAdBanner = ({ theme }) => {
   );
 };
 
-const GridAd = ({ theme }) => (
-  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-12">
-    <div className="bg-[#FFF8E7] rounded-2xl p-6 flex flex-col justify-between relative overflow-hidden h-48 cursor-pointer hover:shadow-md transition">
-      <div className="relative z-10">
-        <span className="text-orange-600 font-bold text-xs">
-          BREAKFAST SPECIAL
-        </span>
-        <h4 className="text-2xl font-black text-gray-800 mt-1">
-          Kellogg's & <br />
-          Oats
-        </h4>
-        <p className="text-sm text-gray-600 mt-2">Up to 30% OFF</p>
-      </div>
-      <img
-        src="https://images.unsplash.com/photo-1590080875515-8a3a8dc5735e?auto=format&fit=crop&w=300&q=80"
-        className="absolute -bottom-4 -right-4 w-40 object-contain rotate-12"
-        alt="ad1"
-      />
-    </div>
-    <div className="bg-[#EAFBF3] rounded-2xl p-6 flex flex-col justify-between relative overflow-hidden h-48 cursor-pointer hover:shadow-md transition">
-      <div className="relative z-10">
-        <span className="text-green-600 font-bold text-xs">HYGIENE STORE</span>
-        <h4 className="text-2xl font-black text-gray-800 mt-1">
-          Cleaning <br />
-          Essentials
-        </h4>
-        <p className="text-sm text-gray-600 mt-2">Starting ₹99</p>
-      </div>
-      <img
-        src="https://images.unsplash.com/photo-1585421514738-01798e14806c?auto=format&fit=crop&w=300&q=80"
-        className="absolute bottom-0 right-0 w-32 object-contain"
-        alt="ad2"
-      />
-    </div>
-  </div>
-);
-
 const Header = ({ theme, setMenuOpen, onOpenNotifications, cartCount }) => {
   const [isScrolled, setIsScrolled] = useState(false);
-  const [search, setSearch] = useState("");
-  const [results, setResults] = useState([]);
-  const [show, setShow] = useState(false);
+
   useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 10);
@@ -589,52 +579,13 @@ const Header = ({ theme, setMenuOpen, onOpenNotifications, cartCount }) => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
   const navigate = useNavigate();
-   const token = localStorage.getItem("token");
-
-  const handleSearch = async (text) => {
-    setSearch(text);
-
-    if (text.length < 2) {
-      setResults([]);
-      setShow(false);
-      return;
-    }
-
-    try {
-      const response = await API.post(
-        "product/Searchdata",
-        { searchtxt: text }
-      );
-
-      setResults(response.data.data);
-      setShow(true);
-
-      console.log("Searchdata Categories:", formatted);
-    } catch (error) {
-      console.error("Searchdata fetch error:", error);
-    }
-
-  };
-
-  const handleSelect = (serchdata) => {
-    if (!serchdata?.url) return;
-
-    navigate(`/${serchdata.url}`, {
-      state: {
-        id: serchdata.id,
-        name: serchdata.name,
-        img: serchdata.img || "",
-      },
-    });
-  };
-
-
   return (
     <header
-      className={`sticky top-0 z-50 w-full font-sans transition-all duration-300 ${isScrolled
-        ? "bg-white/80 backdrop-blur-xl shadow-md py-1"
-        : "bg-transparent py-2"
-        }`}
+      className={`sticky top-0 z-50 w-full font-sans transition-all duration-300 ${
+        isScrolled
+          ? "bg-white/80 backdrop-blur-xl shadow-md py-1"
+          : "bg-transparent py-2"
+      }`}
     >
       <div className="max-w-7xl mx-auto px-4 md:px-6">
         {/* TOP ROW: Logo + Actions */}
@@ -663,8 +614,6 @@ const Header = ({ theme, setMenuOpen, onOpenNotifications, cartCount }) => {
             <input
               type="text"
               placeholder="Search for fresh groceries..."
-              value={search}
-              onChange={(e) => handleSearch(e.target.value)}
               className={`w-full bg-gray-100/50 border-2 border-transparent hover:bg-white hover:border-gray-100 focus:bg-white focus:border-${theme.primary.replace(
                 "bg-",
                 ""
@@ -677,20 +626,6 @@ const Header = ({ theme, setMenuOpen, onOpenNotifications, cartCount }) => {
               size={18}
               className="absolute left-4 top-3 text-gray-400 group-hover:text-gray-600 transition-colors"
             />
-            {show && results.length > 0 && (
-              <ul className="absolute top-12 left-0 w-full bg-white shadow-lg rounded-xl z-50 max-h-64 overflow-auto">
-                {results.map((item) => (
-                  <li
-                    key={`${item.nav}-${item.id}`}
-                    onClick={() => handleSelect(item)}
-                    className="px-4 py-2 hover:bg-gray-100 cursor-pointer text-sm"
-                  >
-                    {item.name}
-                  </li>
-                ))}
-              </ul>
-            )}
-
           </div>
 
           {/* Right Icons */}
@@ -702,15 +637,7 @@ const Header = ({ theme, setMenuOpen, onOpenNotifications, cartCount }) => {
 
             {/* Desktop Cart */}
             <div
-              
-                onClick={() => {
-    if (!token) {
-      toast.error("Please login to add items to cart ❌");
-      navigate("/login");
-      return;
-    }
-    navigate("/cart");
-  }}
+              onClick={() => navigate("/cart")}
               className={`hidden md:flex items-center gap-2 px-4 py-2 rounded-full ${theme.accent} ${theme.accentText} cursor-pointer hover:shadow-lg hover:scale-105 transition-all`}
             >
               <div className="relative">
@@ -727,7 +654,7 @@ const Header = ({ theme, setMenuOpen, onOpenNotifications, cartCount }) => {
 
             {/* Profile Icon */}
             <div
-              onClick={() => {if(!token) {toast.error("Please login to access profile");navigate("/login");return;} navigate("/profile")}}
+              onClick={() => navigate("/profile")}
               className="hidden md:block p-2 bg-gray-100 rounded-full text-gray-600 hover:bg-gray-200 cursor-pointer transition"
             >
               <User size={20} />
@@ -757,29 +684,20 @@ const Header = ({ theme, setMenuOpen, onOpenNotifications, cartCount }) => {
 const BottomNav = ({ theme, cartCount }) => {
   const [active, setActive] = useState("home");
   const navigate = useNavigate();
-const token = localStorage.getItem("token");
+
   const navItems = [
-  { id: "home", icon: Home, label: "Home", route: token ? "/home" : "/login" },
-  { id: "search", icon: Search, label: "Search", route: token ? "/search" : "/login" },
-  {
-    id: "cart",
-    icon: ShoppingBag,
-    label: "Cart",
-    special: true,
-    route: token ? "/cart" : "/login",
-  },
-  { id: "saved", icon: Heart, label: "Saved", route: token ? "/saved" : "/login" },
-  { id: "profile", icon: User, label: "Profile", route: token ? "/profile" : "/login" },
-];
-
-const handleNavClick = (item) => {
-  // ✅ if not logged in
-  if (!token && item.route === "/login") {
-    toast.error("Please login first 🔐");
-  }
-
-  navigate(item.route);
-};
+    { id: "home", icon: Home, label: "Home", route: "/home" },
+    { id: "search", icon: Search, label: "Search", route: "/search" },
+    {
+      id: "cart",
+      icon: ShoppingBag,
+      label: "Cart",
+      special: true,
+      route: "/cart",
+    },
+    // { id: "saved", icon: Heart, label: "Saved", route: "/saved" },
+    { id: "profile", icon: User, label: "Profile", route: "/profile" },
+  ];
 
   return (
     <div className="fixed bottom-6 inset-x-0 mx-auto w-[90%] md:hidden z-50">
@@ -792,9 +710,8 @@ const handleNavClick = (item) => {
               <button
                 key={item.id}
                 onClick={() => {
-                   setActive(item.id);
-          handleNavClick(item);
-                 
+                  setActive(item.id);
+                  navigate(item.route);
                 }}
                 className={`relative -top-10 ${theme.primary} text-white p-4 rounded-full shadow-lg hover:scale-105 transition-transform border-4 border-white`}
               >
@@ -826,10 +743,11 @@ const handleNavClick = (item) => {
               key={item.id}
               onClick={() => {
                 setActive(item.id);
-                handleNavClick(item);
+                navigate(item.route);
               }}
-              className={`flex flex-col items-center justify-center w-12 gap-1 transition-all ${isActive ? theme.primaryText : "text-gray-400"
-                }`}
+              className={`flex flex-col items-center justify-center w-12 gap-1 transition-all ${
+                isActive ? theme.primaryText : "text-gray-400"
+              }`}
             >
               {/* UPDATED: Thicker icons (strokeWidth) */}
               <item.icon size={24} strokeWidth={isActive ? 3 : 2.5} />
@@ -850,31 +768,23 @@ const MainContent = () => {
 
   /* ---------------- CART LOGIC (UNCHANGED) ---------------- */
   const handleAddToCart = async (product_id) => {
-  try {
-    const res = await addToCartAPI(product_id, 1);
-
-    if (res.data.status) {
-      incrementCartCount();
-      
-    } else {
-      toast.error("Failed to add item ❌");
+    incrementCartCount();
+    try {
+      const res = await addToCartAPI(product_id, 1);
+      if (!res.data.status) alert("Failed to add item");
+    } catch (err) {
+      console.error("Add to cart error", err);
+      alert("Please login to add items");
     }
-  } catch (err) {
-    console.error("Add to cart error", err);
-    toast.error("Please login to add items 🔐");
-    navigate("/login");
-  }
-};
+  };
 
-const handleRemoveFromCart = async (product_id) => {
-  try {
-    await addToCartAPI(product_id, -1);
-    toast("Removed from cart 🗑️");
-  } catch (err) {
-    console.error("Remove from cart error", err);
-    toast.error("Something went wrong ❌");
-  }
-};
+  const handleRemoveFromCart = async (product_id) => {
+    try {
+      await addToCartAPI(product_id, -1);
+    } catch (err) {
+      console.error("Remove from cart error", err);
+    }
+  };
 
   /* ---------------- THEME / BASIC STATE (UNCHANGED) ---------------- */
   const [currentSeason, setCurrentSeason] = useState("winter");
@@ -893,10 +803,19 @@ const handleRemoveFromCart = async (product_id) => {
      ✅ CLOUDINARY BANNERS (ONLY ONE SOURCE – FIXED)
      ========================================================= */
   const BANNERS = [
-    "https://res.cloudinary.com/duzladayx/image/upload/v1769106661/banner1_ximafq.png",
-    "https://res.cloudinary.com/duzladayx/image/upload/v1769106661/banner2_xgdmes.png",
-    "https://res.cloudinary.com/duzladayx/image/upload/v1769106661/banner3_mnbf4k.png",
-  ];
+  {
+    desktop: "https://res.cloudinary.com/duzladayx/image/upload/v1769334911/banner1_ximafq.png",
+    mobile: "https://res.cloudinary.com/duzladayx/image/upload/v1769337855/banner2_qkweie.png",
+  },
+  {
+    desktop: "https://res.cloudinary.com/duzladayx/image/upload/v1769335725/banner2_xgdmes.png",
+    mobile: "https://res.cloudinary.com/duzladayx/image/upload/v1769337869/banner3_qz3vej.png",
+  },
+  {
+    desktop: "https://res.cloudinary.com/duzladayx/image/upload/v1769334868/banner3_mnbf4k.png",
+    mobile: "https://res.cloudinary.com/duzladayx/image/upload/v1769337247/banner1_nvryqi.png",
+  },
+];
 
   /* ---------------- SLIDER STATE (FIXED ORDER) ---------------- */
   const [slideIndex, setSlideIndex] = useState(0);
@@ -1016,40 +935,50 @@ const handleRemoveFromCart = async (product_id) => {
       <main className="relative z-10 max-w-7xl mx-auto px-4 md:px-6 pt-2">
 {/* --- 1. HERO SECTION --- */}
         <div className="w-full mb-8">
-          <div className="w-full relative rounded-2xl overflow-hidden shadow-xl aspect-[16/8] md:aspect-[21/8] group">
-            {BANNERS.map((_, i) => (
-              <div
-                key={i}
-                className={`absolute inset-0 transition-opacity duration-1000 ${i === slideIndex ? "opacity-100 z-10" : "opacity-0 z-0"
-                  }`}
-              >
-                <img
-                  src={BANNERS[i]}
-                  className={`w-full h-full object-cover ${theme.bannerTone}`}
-                  alt={`Banner ${i + 1}`}
-                />
+  <div className="relative w-full overflow-hidden rounded-2xl shadow-xl
+  aspect-[16/10]
+  md:aspect-[32/10]
+">
 
-                <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/20 to-transparent p-6 md:p-12 flex flex-col justify-center text-white">
-                  <h2 className="text-3xl md:text-5xl font-black">
-                    Fresh & Organic <br /> Delivered Fast.
-                  </h2>
-                </div>
-              </div>
-            ))}
+    {BANNERS.map((banner, i) => (
+      <div
+        key={i}
+        className={`absolute inset-0 transition-opacity duration-1000 ${
+          i === slideIndex ? "opacity-100 z-10" : "opacity-0 z-0"
+        }`}
+      >
+        {/* DESKTOP IMAGE */}
+        <img
+          src={banner.desktop}
+          alt="Banner desktop"
+          className="hidden md:block w-full h-full object-cover"
+        />
 
-            {/* DOTS */}
-            <div className="absolute bottom-4 left-6 z-20 flex gap-2">
-              {BANNERS.map((_, i) => (
-                <div
-                  key={i}
-                  className={`h-1.5 rounded-full transition-all duration-300 ${i === slideIndex ? "w-6 bg-white" : "w-1.5 bg-white/50"
-                    }`}
-                />
-              ))}
-            </div>
-          </div>
-        </div>
+        {/* MOBILE IMAGE */}
+        <img
+          src={banner.mobile}
+          alt="Banner mobile"
+          className="block md:hidden w-full h-full object-cover"
+        />
 
+        {/* Overlay Text */}
+      
+      </div>
+    ))}
+
+    {/* Dots */}
+    <div className="absolute bottom-4 left-6 z-20 flex gap-2">
+      {BANNERS.map((_, i) => (
+        <div
+          key={i}
+          className={`h-1.5 rounded-full transition-all duration-300 ${
+            i === slideIndex ? "w-6 bg-white" : "w-1.5 bg-white/50"
+          }`}
+        />
+      ))}
+    </div>
+  </div>
+</div>
         
         {/* --- 2. CATEGORIES --- */}
         {/* --- CATEGORIES SECTION --- */}
@@ -1180,12 +1109,12 @@ const handleRemoveFromCart = async (product_id) => {
           </div>
 
           {/* Unified Grid Layout */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             
             {/* 1. SPOTLIGHT (Large Left) - Full Image */}
             <div className={`col-span-2 row-span-2 rounded-2xl relative overflow-hidden group cursor-pointer border border-gray-100 shadow-sm hover:shadow-md transition-all h-64 md:h-auto`}>
               <img
-                src="https://images.unsplash.com/photo-1515942661900-94b3d1972591?auto=format&fit=crop&w=600&q=80"
+                src="https://res.cloudinary.com/duzladayx/image/upload/v1769347659/banner_6_uhhblj.png"
                 className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                 alt="immunity"
               />
@@ -1194,7 +1123,7 @@ const handleRemoveFromCart = async (product_id) => {
             {/* 2. FRESH JUICES (Small Top) - Full Image */}
             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm relative overflow-hidden group h-32 md:h-40 cursor-pointer hover:-translate-y-1 transition-transform">
               <img
-                src="https://images.unsplash.com/photo-1619566636858-adf3ef46400b?auto=format&fit=crop&w=300&q=80"
+                src="https://res.cloudinary.com/duzladayx/image/upload/v1769349038/banner8_aqhjpq.png"
                 className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                 alt="juice"
               />
@@ -1203,7 +1132,7 @@ const handleRemoveFromCart = async (product_id) => {
             {/* 3. DAIRY (Small Top) - Full Image */}
             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm relative overflow-hidden group h-32 md:h-40 cursor-pointer hover:-translate-y-1 transition-transform">
               <img
-                src="https://images.unsplash.com/photo-1628088062854-d1870b4553da?auto=format&fit=crop&w=300&q=80"
+                src="https://res.cloudinary.com/duzladayx/image/upload/v1769349416/banner7_nxhmmw.png"
                 className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                 alt="dairy"
               />
@@ -1212,7 +1141,7 @@ const handleRemoveFromCart = async (product_id) => {
             {/* 5. BREAKFAST SPECIAL (Bottom Left) - Full Image */}
             <div className="col-span-2 md:col-span-2 bg-[#FFF8E7] rounded-2xl relative overflow-hidden h-48 md:h-52 cursor-pointer hover:shadow-md transition-all group">
               <img
-                src="https://images.unsplash.com/photo-1590080875515-8a3a8dc5735e?auto=format&fit=crop&w=500&q=80"
+                src="https://res.cloudinary.com/duzladayx/image/upload/v1769349969/banner9_pwmw3v.png"
                 className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                 alt="breakfast"
               />
@@ -1248,7 +1177,7 @@ const handleRemoveFromCart = async (product_id) => {
           </div>
         </div>
       </main>
-   {/* <Footer theme={theme} /> */}
+      <Footer theme={theme} />
       <BottomNav theme={theme} cartCount={cartCount} />
     </div>
   );
