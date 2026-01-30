@@ -29,8 +29,10 @@ import ProtectedRoute from "./Components/ProtectedRoute";
 import { iswebview } from "./utils/isWebView";
 import { Toaster } from "react-hot-toast";
 /* ✅ SMART LANDING COMPONENT */
+
 function LandingRedirect() {
-   const isApp = new URLSearchParams(window.location.search).get("from") === "app";
+  const isApp =
+    new URLSearchParams(window.location.search).get("from") === "app";
   const token = localStorage.getItem("token");
 
   // ✅ Logged in → Home (app & browser)
@@ -39,21 +41,19 @@ function LandingRedirect() {
   }
 
   // ✅ React Native WebView → Login
- if (isApp) return <Navigate to="/login" replace />;
+  if (isApp) return <Navigate to="/login" replace />;
   // ✅ Browser without login → Home (ProtectedRoute will decide)
   return <Navigate to="/home" replace />;
 }
 
 function App() {
   return (
-    
     <CartProvider>
       <BrowserRouter>
-       <Toaster position="top-center" reverseOrder={false} />
+        <Toaster position="top-center" reverseOrder={false} />
         <Routes>
           {/* ENTRY */}
           <Route path="/" element={<LandingRedirect />} />
-
           {/* PUBLIC */}
           <Route path="/home" element={<MainContent />} /> {/* ✅ PUBLIC */}
           <Route path="/login" element={<LoginForm />} />
@@ -65,7 +65,7 @@ function App() {
           <Route element={<ProtectedRoute />}>
             <Route path="/cart" element={<CartPage />} />
             <Route path="/category" element={<CreativeCategoryPage />} />
-          
+
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="/addresses" element={<SavedAddressesPage />} />
             <Route path="/orders" element={<MyOrdersPage />} />

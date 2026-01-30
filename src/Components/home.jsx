@@ -48,6 +48,7 @@ import {
   SeasonalParticles,
 } from "../SEASON_CONFIG.jsx";
 import { addToCartAPI } from "../api/cartapi";
+import { toast } from "react-toastify";
 
 import { useCart } from "../context/CartContext.jsx";
 import Footer from "./Footer.jsx";
@@ -695,7 +696,7 @@ const BottomNav = ({ theme, cartCount }) => {
       special: true,
       route: "/cart",
     },
-    // { id: "saved", icon: Heart, label: "Saved", route: "/saved" },
+     { id: "saved", icon: Heart, label: "Saved", route: "/saved" },
     { id: "profile", icon: User, label: "Profile", route: "/profile" },
   ];
 
@@ -764,17 +765,21 @@ const BottomNav = ({ theme, cartCount }) => {
 // ✅ CLOUDINARY BANNERS (ONLY ONE SOURCE)
 // 3. MAIN PAGE CONTENT
 const MainContent = () => {
+
   const { cartCount, incrementCartCount } = useCart();
 
   /* ---------------- CART LOGIC (UNCHANGED) ---------------- */
   const handleAddToCart = async (product_id) => {
-    incrementCartCount();
+    
     try {
       const res = await addToCartAPI(product_id, 1);
+      incrementCartCount();
       if (!res.data.status) alert("Failed to add item");
+
     } catch (err) {
       console.error("Add to cart error", err);
-      alert("Please login to add items");
+      toast.error("Please login to add items");
+      navigate("/login")
     }
   };
 
