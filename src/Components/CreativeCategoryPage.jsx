@@ -7,9 +7,15 @@ import {
 } from "lucide-react";
 import { useLocation,useNavigate} from "react-router-dom";
 import API from "../api/auth.js";
-import { addToCartAPI, removeCartItemAPI } from "../api/cartapi";
+
 import { useCart } from "../context/CartContext";
 import Footer from "./Footer.jsx";
+import {
+  addToCartAPI,
+  getCartAPI,
+  updateCartQtyAPI,
+  removeCartItemAPI,
+} from "../api/cartapi";
 
 import { SEASON_CONFIG, getSeason, SeasonalParticles} from './SEASON_CONFIG.jsx';
 
@@ -74,27 +80,20 @@ import { SEASON_CONFIG, getSeason, SeasonalParticles} from './SEASON_CONFIG.jsx'
 //   );
 // };
 
-const ProductCard = ({ data, theme, onAdd, onRemove, onClick }) => {
+const ProductCard = ({ data, theme, qty, onAdd, onRemove, onClick }) => {
   const displayVariant = data?.variants?.[0] || {};
   const curstk = Number(displayVariant.current_stock) || 0;
   const isOutOfStock = curstk <= 0;
 
-  // ✅ SAME AS HOME PAGE
-  const [qty, setQty] = useState(0);
-
   const handleIncrement = (e) => {
     e.stopPropagation();
     if (isOutOfStock) return;
-    setQty((prev) => prev + 1);
-    onAdd();
+    onAdd(data.id);
   };
 
   const handleDecrement = (e) => {
     e.stopPropagation();
-    if (qty > 0) {
-      setQty((prev) => prev - 1);
-      onRemove();
-    }
+    if (qty > 0) onRemove(data.id);
   };
 
   return (
@@ -112,7 +111,6 @@ const ProductCard = ({ data, theme, onAdd, onRemove, onClick }) => {
           ${isOutOfStock ? "blur-sm grayscale" : "group-hover:scale-110"}`}
         />
 
-        {/* ❤️ HEART (MATCH HOME PAGE) */}
         {!isOutOfStock && (
           <button
             onClick={(e) => e.stopPropagation()}
@@ -122,7 +120,6 @@ const ProductCard = ({ data, theme, onAdd, onRemove, onClick }) => {
           </button>
         )}
 
-        {/* OUT OF STOCK */}
         {isOutOfStock && (
           <span className="absolute inset-0 flex items-center justify-center bg-black/40 text-white text-xs font-bold">
             OUT OF STOCK
@@ -145,7 +142,7 @@ const ProductCard = ({ data, theme, onAdd, onRemove, onClick }) => {
             ₹{displayVariant.price}
           </span>
 
-          {/* ➕➖ SAME UX AS HOME */}
+          {/* ADD / QTY */}
           {qty === 0 ? (
             <button
               disabled={isOutOfStock}
@@ -162,9 +159,11 @@ const ProductCard = ({ data, theme, onAdd, onRemove, onClick }) => {
               >
                 <Minus size={14} strokeWidth={3} />
               </button>
+
               <span className={`text-xs font-black w-4 text-center ${theme.primaryText}`}>
                 {qty}
               </span>
+
               <button
                 onClick={handleIncrement}
                 className="bg-white rounded p-0.5 shadow hover:scale-110 transition"
@@ -178,6 +177,7 @@ const ProductCard = ({ data, theme, onAdd, onRemove, onClick }) => {
     </div>
   );
 };
+
 
 // B. Product Details Modal
 const ProductDetailsModal = ({ product, isOpen, onClose, onAdd, cartQty, theme }) => {
@@ -276,8 +276,28 @@ const ProductDetailsModal = ({ product, isOpen, onClose, onAdd, cartQty, theme }
 
 // --- 4. MAIN PAGE COMPONENT ---
 export default function CreativeCategoryPage() {
+  const [cartItems, setCartItems] = useState([]);
+   const cartCount = cartItems.reduce(
+    (sum, item) => sum + Number(item.quantity || 0),
+    0
+  );
+
+const refreshCart = async () => {
+  try {
+    const res = await getCartAPI();
+    setCartItems(res.data.cart || []);
+  } catch (err) {
+    console.log("refreshCart error", err);
+  }
+};
+
+useEffect(() => {
+  refreshCart();
+}, []);
+
   const navigate = useNavigate();
-  const { cartCount, incrementCartCount, decrementCartCount } = useCart();
+ const { incrementCartCount, decrementCartCount } = useCart(); // optional
+
 
   const [activeCategory, setActiveCategory] = useState("All");
 
@@ -347,20 +367,32 @@ export default function CreativeCategoryPage() {
   const handleAddToCart = async (product_id) => {
   try {
     await addToCartAPI(product_id, 1);
-    incrementCartCount(); // global
+    await refreshCart();
   } catch (err) {
     alert("Please login to add items");
+    navigate("/login");
   }
 };
 
 const handleRemoveFromCart = async (product_id) => {
   try {
-    await removeCartItemAPI(product_id);
-    decrementCartCount(); // global
+    const cartItem = cartItems.find((c) => c.product_id === product_id);
+    if (!cartItem) return;
+
+    const newQty = cartItem.quantity - 1;
+
+    if (newQty <= 0) {
+      await removeCartItemAPI(cartItem.cart_id);
+    } else {
+      await updateCartQtyAPI(cartItem.cart_id, newQty);
+    }
+
+    await refreshCart();
   } catch (err) {
     console.error(err);
   }
 };
+
 
   
 
@@ -443,15 +475,17 @@ const handleRemoveFromCart = async (product_id) => {
           <div className="grid grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-2 md:gap-6 pb-24">
   {filteredProducts.length > 0 ? (
     filteredProducts.map((product) => (
-      <ProductCard
-        key={product.id}
-        data={product}
-        theme={theme}
-        onAdd={() => handleAddToCart(product.id)}
-        onRemove={() => handleRemoveFromCart(product.id)}
-        onClick={() => setSelectedProduct(product)}
-      />
-    ))
+  <ProductCard
+    key={product.id}
+    data={product}
+    theme={theme}
+    qty={cartItems.find((c) => c.product_id === product.id)?.quantity || 0}
+    onAdd={handleAddToCart}
+    onRemove={handleRemoveFromCart}
+    onClick={() => setSelectedProduct(product)}
+  />
+))
+
   ) : (
     <div className="col-span-full flex flex-col items-center justify-center py-20 text-gray-400">
       <Search size={40} className="mb-2 opacity-20" />

@@ -47,7 +47,14 @@ import {
   getSeason,
   SeasonalParticles,
 } from "../SEASON_CONFIG.jsx";
-import { addToCartAPI } from "../api/cartapi";
+import {
+  addToCartAPI,
+  getCartAPI,
+  updateCartQtyAPI,
+  removeCartItemAPI,
+} from "../api/cartapi";
+
+import { toast } from "react-toastify";
 
 import { useCart } from "../context/CartContext.jsx";
 import Footer from "./Footer.jsx";
@@ -114,26 +121,24 @@ const SectionHeader = ({ title, action = "See All", icon: Icon, theme }) => (
 const ProductCardVertical = ({
   product,
   theme,
+  qty,  // ✅ coming from parent
   onAddToCart,
   onRemoveFromCart,
 }) => {
   const curstk = Number(product?.current_stock) || 0;
   const isOutOfStock = curstk <= 0;
-  // Local state to track quantity for UI
-  const [qty, setQty] = useState(0);
 
   const handleIncrement = () => {
     if (isOutOfStock) return;
-    setQty((prev) => prev + 1);
     onAddToCart(product.product_id);
   };
 
   const handleDecrement = () => {
     if (qty > 0) {
-      setQty((prev) => prev - 1);
       onRemoveFromCart(product.product_id);
     }
   };
+
 
   return (
     <div
@@ -358,6 +363,7 @@ const RecommendedProductCard = ({
 const HorizontalScrollRow = ({
   data,
   theme,
+  cartItems =[],
   onAddToCart,
   onRemoveFromCart,
 }) => (
@@ -367,23 +373,22 @@ const HorizontalScrollRow = ({
         key={i}
         product={item}
         theme={theme}
+        qty={cartItems.find((c) => c.product_id === item.product_id)?.quantity || 0}
         onAddToCart={onAddToCart}
         onRemoveFromCart={onRemoveFromCart}
       />
     ))}
+
+    {/* View All inside same return ✅ */}
     <div className="min-w-[100px] flex flex-col items-center justify-center text-gray-400 cursor-pointer group">
-      <div
-        className={`w-12 h-12 rounded-full border-2 border-gray-200 flex items-center justify-center group-hover:border-${theme.primary.replace(
-          "bg-",
-          ""
-        )} transition`}
-      >
+      <div className="w-12 h-12 rounded-full border-2 border-gray-200 flex items-center justify-center transition">
         <ArrowRight size={20} />
       </div>
       <span className="text-xs font-bold mt-2">View All</span>
     </div>
   </div>
 );
+
 
 const NotificationDrawer = ({ isOpen, onClose, theme }) => {
   return (
@@ -695,7 +700,7 @@ const BottomNav = ({ theme, cartCount }) => {
       special: true,
       route: "/cart",
     },
-    // { id: "saved", icon: Heart, label: "Saved", route: "/saved" },
+     { id: "saved", icon: Heart, label: "Saved", route: "/saved" },
     { id: "profile", icon: User, label: "Profile", route: "/profile" },
   ];
 
@@ -764,27 +769,59 @@ const BottomNav = ({ theme, cartCount }) => {
 // ✅ CLOUDINARY BANNERS (ONLY ONE SOURCE)
 // 3. MAIN PAGE CONTENT
 const MainContent = () => {
-  const { cartCount, incrementCartCount } = useCart();
+
+
+  const [cartItems, setCartItems] = useState([]);
+    const cartCount = cartItems.reduce((sum, item) => sum + Number(item.quantity || 0), 0);
+
+
+  const { incrementCartCount } = useCart(); // optional if you use it
+
+
+const refreshCart = async () => {
+  try {
+    const res = await getCartAPI();
+    setCartItems(res.data.cart || []);
+  } catch (err) {
+    console.log("refreshCart error", err);
+  }
+};
+useEffect(() => {
+  refreshCart();
+}, []);
 
   /* ---------------- CART LOGIC (UNCHANGED) ---------------- */
-  const handleAddToCart = async (product_id) => {
-    incrementCartCount();
-    try {
-      const res = await addToCartAPI(product_id, 1);
-      if (!res.data.status) alert("Failed to add item");
-    } catch (err) {
-      console.error("Add to cart error", err);
-      alert("Please login to add items");
-    }
-  };
+ const handleAddToCart = async (product_id) => {
+  try {
+    await addToCartAPI(product_id, 1);
+    await refreshCart();
+  } catch (err) {
+    console.error(err);
+    toast.error("Please login to add items");
+    navigate("/login");
+  }
+};
 
-  const handleRemoveFromCart = async (product_id) => {
-    try {
-      await addToCartAPI(product_id, -1);
-    } catch (err) {
-      console.error("Remove from cart error", err);
+
+ const handleRemoveFromCart = async (product_id) => {
+  try {
+    const cartItem = cartItems.find((c) => c.product_id === product_id);
+
+    if (!cartItem) return;
+
+    const newQty = cartItem.quantity - 1;
+
+    if (newQty <= 0) {
+      await removeCartItemAPI(cartItem.cart_id);
+    } else {
+      await updateCartQtyAPI(cartItem.cart_id, newQty);
     }
-  };
+
+    await refreshCart();
+  } catch (err) {
+    console.error("remove error", err);
+  }
+};
 
   /* ---------------- THEME / BASIC STATE (UNCHANGED) ---------------- */
   const [currentSeason, setCurrentSeason] = useState("winter");
@@ -1070,6 +1107,7 @@ const MainContent = () => {
             <HorizontalScrollRow
               data={SUPER_DEALS_DATA}
               onAddToCart={handleAddToCart}
+              cartItems={cartItems} 
               onRemoveFromCart={handleRemoveFromCart}
               theme={{
                 ...theme,
@@ -1093,6 +1131,7 @@ const MainContent = () => {
           <HorizontalScrollRow
             data={VEG_DATA}
             theme={theme}
+            cartItems={cartItems} 
             onAddToCart={handleAddToCart}
             onRemoveFromCart={handleRemoveFromCart}
           />

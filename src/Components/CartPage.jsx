@@ -16,7 +16,8 @@ import {
   getCartBillAPI,
   getDeliverySlotsAPI,
   updateCartQtyAPI,
-  clearCartAPI
+  clearCartAPI,
+  removeCartItemAPI, 
 } from "../api/cartapi.js";
 import { fetchAddresses } from "../api/addressAPI.js";
 
@@ -359,8 +360,11 @@ const isSlotInFuture = (slotLabel) => {
   // -------------------------------
 const updateQty = async (cart_id, qty) => {
   try {
-    // ✅ allow qty = 0
-    await updateCartQtyAPI(cart_id, qty);
+    if (qty <= 0) {
+      await removeCartItemAPI(cart_id); // ✅ remove
+    } else {
+      await updateCartQtyAPI(cart_id, qty);
+    }
 
     await loadCart();
     await loadBill();
@@ -368,7 +372,20 @@ const updateQty = async (cart_id, qty) => {
     console.error("Error updating quantity:", err);
   }
 };
- handleClearCart = async () => {
+const handleDeleteItem = async (cart_id) => {
+  try {
+    await removeCartItemAPI(cart_id); // ✅ remove single item
+    await loadCart();
+    await loadBill();
+    toast.success("Item removed");
+  } catch (err) {
+    console.error("delete item error", err);
+    toast.error("Failed to remove item");
+  }
+};
+
+
+  const handleClearCart = async () => {
     try {
       const res = await clearCartAPI();
       console.log(res.data.message);
@@ -833,62 +850,73 @@ const getCouponLabel = (coupon) => {
 
             <div className="space-y-4">
               {cart.map((item) => (
-                <div
-                  key={item.cart_id}
-                  className="flex gap-4 items-start border-b border-slate-100 pb-4 last:border-b-0 last:pb-0"
-                >
-                  <img
-                    src={item.product_image}
-                    alt={item.product_name}
-                    className="w-20 h-20 rounded-xl object-cover bg-slate-100"
-                  />
+               <div
+  key={item.cart_id}
+  className="flex gap-4 items-start border-b border-slate-100 pb-4 last:border-b-0 last:pb-0 relative"
+>
+  <img
+    src={item.product_image}
+    alt={item.product_name}
+    className="w-20 h-20 rounded-xl object-cover bg-slate-100"
+  />
 
-                  <div className="flex-1">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <p className="font-semibold text-slate-800">
-                          {item.product_name}
-                        </p>
-                        {item.weight && (
-                          <p className="text-xs text-slate-500 mt-1">
-                            {item.weight}
-                          </p>
-                        )}
-                      </div>
-                      <p className="font-bold text-slate-800">₹{item.price * item.quantity} </p>
-                    </div>
+  <div className="flex-1">
+    {/* TOP ROW */}
+    <div className="flex justify-between items-start">
+      <div>
+        <p className="font-semibold text-slate-800">{item.product_name}</p>
 
-                    <div className="flex justify-between items-center mt-3">
-                      <div
-                        className={`flex items-center rounded-lg ${theme.primary} text-white font-bold h-8 shadow-md`}
-                      >
-                        <button
-                          onClick={() => updateQty(item.cart_id, item.quantity - 1)}
-                          className="px-3 h-full hover:bg-black/10 transition"
-                        >
-                          <Minus className="w-3 h-3" />
-                        </button>
+        {item.weight && (
+          <p className="text-xs text-slate-500 mt-1">{item.weight}</p>
+        )}
+      </div>
 
-                        <span className="px-2 text-sm min-w-[20px] text-center">
-                          {item.quantity}
-                        </span>
+      <p className="font-bold text-slate-800">
+        ₹{item.price * item.quantity}
+      </p>
+    </div>
 
-                        <button
-                          onClick={() => updateQty(item.cart_id, item.quantity + 1)}
-                          className="px-3 h-full hover:bg-black/10 transition"
-                        >
-                          <Plus className="w-3 h-3" />
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+    {/* BOTTOM ROW (QTY + DELETE RIGHT SIDE) */}
+    <div className="flex justify-between items-center mt-3">
+      {/* QTY BUTTON */}
+      <div className={`flex items-center rounded-lg ${theme.primary} text-white font-bold h-8 shadow-md`}>
+        <button
+          onClick={() => updateQty(item.cart_id, item.quantity - 1)}
+          className="px-3 h-full hover:bg-black/10 transition"
+        >
+          <Minus className="w-3 h-3" />
+        </button>
+
+        <span className="px-2 text-sm min-w-[20px] text-center">
+          {item.quantity}
+        </span>
+
+        <button
+          onClick={() => updateQty(item.cart_id, item.quantity + 1)}
+          className="px-3 h-full hover:bg-black/10 transition"
+        >
+          <Plus className="w-3 h-3" />
+        </button>
+      </div>
+
+      {/* ✅ DELETE BUTTON RIGHT SIDE */}
+      <button
+        onClick={() => handleDeleteItem(item.cart_id)}
+        className="w-9 h-9 flex items-center justify-center rounded-full bg-red-50 hover:bg-red-100 text-red-600 shadow-sm transition"
+        title="Remove item"
+      >
+        <X className="w-4 h-4" />
+      </button>
+    </div>
+  </div>
+</div>
+
               ))}
             </div>
           </div>
 
           {/* BESTSELLERS SECTION */}
-          <div className="mt-8">
+          {/* <div className="mt-8">
             <div className="flex justify-between items-center mb-4">
               <h3 className="font-bold text-lg text-slate-800">Before you checkout</h3>
             </div>
@@ -931,7 +959,7 @@ const getCouponLabel = (coupon) => {
                 </div>
               ))}
             </div>
-          </div>
+          </div> */}
         </div>
 
         {/* RIGHT COLUMN – BILL CARD + DESKTOP CTA */}
@@ -1341,12 +1369,12 @@ const getCouponLabel = (coupon) => {
                 placeholder="e.g. Call me upon arrival"
                 className="w-full mt-1 p-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-1 text-sm focus:ring-slate-300"
               />
-              <button
+              {/* <button
                 onClick={() => setShowInstructionModal(false)}
                 className={`w-full ${theme.primary} text-white font-bold py-3 rounded-xl mt-2`}
               >
                 Confirm
-              </button>
+              </button> */}
             </div>
           </div>
         </div>
