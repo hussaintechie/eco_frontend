@@ -357,17 +357,18 @@ const isSlotInFuture = (slotLabel) => {
   // -------------------------------
   // UPDATE QTY
   // -------------------------------
-  const updateQty = async (cart_id, qty) => {
-    if (qty < 1) return;
-    try {
-      await updateCartQtyAPI(cart_id, qty);
-      await loadCart();
-      await loadBill();
-    } catch (err) {
-      console.error("Error updating quantity:", err);
-    }
-  };
-  const handleClearCart = async () => {
+const updateQty = async (cart_id, qty) => {
+  try {
+    // ✅ allow qty = 0
+    await updateCartQtyAPI(cart_id, qty);
+
+    await loadCart();
+    await loadBill();
+  } catch (err) {
+    console.error("Error updating quantity:", err);
+  }
+};
+ handleClearCart = async () => {
     try {
       const res = await clearCartAPI();
       console.log(res.data.message);
