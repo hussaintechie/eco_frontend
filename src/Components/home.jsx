@@ -1026,7 +1026,9 @@ useEffect(() => {
               Categories
             </h3>
 
-            <button className={`text-sm font-semibold ${theme.primaryText} hover:underline flex items-center gap-1`}>
+            <button 
+            onClick={() => navigate("/groceries")}
+            className={`text-sm font-semibold ${theme.primaryText} hover:underline flex items-center gap-1`}>
               See all <ChevronDown className="-rotate-90" size={14} />
             </button>
           </div>

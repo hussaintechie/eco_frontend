@@ -299,14 +299,14 @@ const handleCateitm =(category)=>{
         </div>
 
         {/* Desktop Search Bar */}
-        <div className="flex-1 max-w-2xl mx-8 relative">
+        {/* <div className="flex-1 max-w-2xl mx-8 relative">
             <input 
                 type="text" 
                 placeholder="Search for milk, bread, eggs..." 
                 className={`w-full bg-gray-50 border border-gray-200 rounded-full py-3 px-6 pl-12 focus:ring-2 focus:ring-opacity-50 outline-none text-gray-700 focus:${theme.border.replace('border-', 'ring-')}`}
             />
             <Search className="absolute left-4 top-3.5 w-5 h-5 text-gray-400" />
-        </div>
+        </div> */}
 
         {/* Desktop Nav Icons */}
         <div className="flex items-center gap-6 text-gray-600">
