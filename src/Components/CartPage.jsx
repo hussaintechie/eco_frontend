@@ -8,7 +8,7 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import API from "../api/auth";
-import { toast } from "react-toastify";
+
 import { useCart } from "../context/CartContext.jsx";
 import { SEASON_CONFIG, getSeason } from "../SEASON_CONFIG.jsx";
 import {
@@ -26,6 +26,7 @@ const iconMap = {
   Work: Briefcase,
   Other: MapPin,
 };
+import { toast } from "react-toastify";
 
 // ------------------------------------------------
 // STATIC DATA (UI-ONLY SECTIONS)
@@ -403,11 +404,11 @@ resetCart();
   // -------------------------------
  const handleApplySpecificCoupon = async (coupon) => {
   if (coupon.is_used) {
-    return alert("You have already used this coupon.");
+    return toast.error("You have already used this coupon.");
   }
 
   if (itemTotal < coupon.min_order_value) {
-    return alert(`Add ₹${coupon.min_order_value - itemTotal} more to apply this coupon`);
+    return toast.error(`Add ₹${coupon.min_order_value - itemTotal} more to apply this coupon`);
   }
 
   const res = await API.post("/coupon/apply", {
@@ -465,7 +466,7 @@ if (!selectedAddress) {
 
 
     if (!selectedPayment) {
-      alert("Select payment method");
+      toast.error("Select payment method");
       return;
     }
 
@@ -485,23 +486,49 @@ if (!selectedAddress) {
 
       const { key, amount, orderId } = res.data;
 
-      const options = {
-        key,
-        amount,
-        currency: "INR",
-        name: "BALAJI SHOP",
-        description: "Order Payment",
-        order_id: orderId,
-        method: {
-          upi: true,
-          emi: false,
-          netbanking: false,
-          wallet: false,
-          paylater: false,
-        },
+const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+const options = {
+  key,
+  amount,
+  currency: "INR",
+  name: "SBS GROCES",
+  description: "Order Payment",
+  order_id: orderId,
+
+  method: {
+    upi: true,
+  },
+
+  upi: {
+    flow: "intent", // ✅ force intent
+  },
+
+  config: {
+    display: {
+      blocks: {
         upi: {
-          flow: "intent",
+          name: "Pay using UPI",
+          instruments: [
+            {
+              method: "upi",
+              flows: ["intent"],
+              apps: ["google_pay", "phonepe", "paytm", "bhim"], // ✅ add apps
+            },
+          ],
         },
+      },
+      sequence: ["block.upi"],
+      preferences: {
+        show_default_blocks: false,
+      },
+    },
+  },
+
+ 
+
+ 
+
         handler: async function (response) {
           try {
             const verifyRes = await API.post("/api/payment/verify", {
@@ -519,15 +546,15 @@ if (!selectedAddress) {
                 response.razorpay_signature
               );
             } else {
-              alert("Payment verification failed");
+              toast.error("Payment verification failed");
             }
           } catch (err) {
-            alert("Payment verification error");
+            toast.error("Payment verification error");
           }
         },
         modal: {
           ondismiss: function () {
-            alert("Payment cancelled by user");
+            toast.error("Payment cancelled by user");
           }
         }
       };
@@ -535,13 +562,13 @@ if (!selectedAddress) {
       const rzp = new window.Razorpay(options);
       rzp.on("payment.failed", function (response) {
         console.error("Payment failed:", response.error);
-        alert(`Payment Failed\nReason: ${response.error.description || "Unknown"}`);
+        toast.error(`Payment Failed\nReason: ${response.error.description || "Unknown"}`);
       });
       rzp.open();
 
     } catch (err) {
       console.error(err);
-      alert("Payment initialization failed");
+      toast.error("Payment initialization failed");
     }
   };
 
@@ -556,7 +583,7 @@ if (!selectedAddress) {
     const deliveryTimes = extractDeliveryTimes(selectedSlot, selectedDate);
 
     if (!deliveryTimes) {
-      alert("Select delivery slot");
+      toast.error("Select delivery slot");
       return;
     }
 
@@ -601,12 +628,12 @@ coupon_discount: appliedCoupon?.discount || 0,
          resetCart();
         navigate("/PostPaymentDeliveryFlow");
       } else {
-        alert(res.data?.message || "Order failed after payment");
+        toast.error(res.data?.message || "Order failed after payment");
       }
 
     } catch (error) {
       console.error(error);
-      alert("Order failed. Amount will be refunded if debited.");
+      toast.error("Order failed. Amount will be refunded if debited.");
     }
   };
 
@@ -795,9 +822,9 @@ const getCouponLabel = (coupon) => {
           <div className="bg-white p-4 md:p-6 rounded-2xl shadow-sm border border-slate-100">
             <div className="flex justify-between items-end mb-4">
               <h3 className="font-bold text-slate-700 text-lg">Delivery Preference</h3>
-              <span className="text-xs text-slate-400 bg-slate-50 px-2 py-1 rounded-md border border-slate-100">
+              {/* <span className="text-xs text-slate-400 bg-slate-50 px-2 py-1 rounded-md border border-slate-100">
                 {cart.length} Item{cart.length !== 1 ? "s" : ""}
-              </span>
+              </span> */}
             </div>
 
             <div
@@ -821,13 +848,13 @@ const getCouponLabel = (coupon) => {
               <ChevronDown className="w-5 h-5 text-slate-400 group-hover:text-slate-600" />
             </div>
 
-            <button
+            {/* <button
               onClick={() => setShowInstructionModal(true)}
               className="mt-3 text-xs font-semibold text-slate-600 underline flex items-center gap-1"
             >
               <FileText className="w-3 h-3" />
               Add delivery instructions (optional)
-            </button>
+            </button> */}
           </div>
 
           {/* CART ITEMS */}

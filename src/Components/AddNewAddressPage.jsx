@@ -79,6 +79,16 @@ const [apiError, setApiError] = useState("");
   const searchInputRef = useRef(null);
 
   const handleChange = (k, v) => setAddress((p) => ({ ...p, [k]: v }));
+useEffect(() => {
+  const interval = setInterval(() => {
+    if (window.__APP_LOCATION__) {
+      console.log("✅ Got location from App:", window.__APP_LOCATION__);
+      clearInterval(interval);
+    }
+  }, 500);
+
+  return () => clearInterval(interval);
+}, []);
 
   /* ---------------- AUTOFILL ---------------- */
   const fetchAutofill = async (lat, lng) => {
@@ -175,21 +185,42 @@ const [apiError, setApiError] = useState("");
 
   /* ---------------- CURRENT LOCATION ---------------- */
   const getCurrentLocation = () => {
-    setLoading(true); // Indicate we are fetching GPS
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition((p) => {
+  setLoading(true);
+
+  // ✅ 1) First check location injected from App (WebView)
+  const appLoc = window.__APP_LOCATION__;
+
+  if (appLoc?.lat && appLoc?.lng) {
+    const pos = { lat: appLoc.lat, lng: appLoc.lng };
+
+    mapInstanceRef.current.setCenter(pos);
+    markerRef.current.setPosition(pos);
+
+    fetchAutofill(appLoc.lat, appLoc.lng);
+    return;
+  }
+
+  // ✅ 2) Normal Browser fallback
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      (p) => {
         const pos = { lat: p.coords.latitude, lng: p.coords.longitude };
         mapInstanceRef.current.setCenter(pos);
         markerRef.current.setPosition(pos);
+
         fetchAutofill(p.coords.latitude, p.coords.longitude);
-      }, (error) => {
+      },
+      (error) => {
         console.error("Geolocation error", error);
-        setLoading(false); // Stop loading if error
-      });
-    } else {
         setLoading(false);
-    }
-  };
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  } else {
+    setLoading(false);
+  }
+};
+
 
   const validate = () => {
     const e = {};

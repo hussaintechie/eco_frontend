@@ -1,11 +1,12 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect} from "react";
 import { 
   ArrowLeft, Search, ShoppingCart, User, 
   Snowflake, Sun, Flower2, CloudRain,
-  Home, Heart
+  Home, Heart, Leaf
 } from "lucide-react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 const STORE_ID = Number(import.meta.env.VITE_STORE_ID);
 
 // --- MOCK NAVIGATION (Replaces react-router-dom for standalone preview) ---
@@ -141,48 +142,48 @@ const SeasonalParticles = ({ season }) => {
 };
 
 // --- 3. INTERNAL BOTTOM NAV COMPONENT ---
-const BottomNav = ({ theme }) => {
-  const [active, setActive] = useState('home');
-  const navItems = [
-    { id: 'home', icon: Home, label: 'Home' },
-    { id: 'search', icon: Search, label: 'Search' },
-    { id: 'cart', icon: ShoppingCart, label: 'Cart', special: true },
-    { id: 'saved', icon: Heart, label: 'Saved' },
-    { id: 'profile', icon: User, label: 'Profile' },
-  ];
+// const BottomNav = ({ theme }) => {
+//   const [active, setActive] = useState('home');
+//   const navItems = [
+//     { id: 'home', icon: Home, label: 'Home' },
+//     { id: 'search', icon: Search, label: 'Search' },
+//     { id: 'cart', icon: ShoppingCart, label: 'Cart', special: true },
+//     { id: 'saved', icon: Heart, label: 'Saved' },
+//     { id: 'profile', icon: User, label: 'Profile' },
+//   ];
 
-  return (
-    <div className="fixed bottom-6 inset-x-0 mx-auto w-[90%] md:hidden z-50">
-      <div className="bg-white/80 backdrop-blur-xl border border-white/50 shadow-2xl shadow-gray-200/50 rounded-2xl flex justify-between items-center px-2 py-3">
-        {navItems.map((item) => {
-          const isActive = active === item.id;
-          if (item.special) {
-            return (
-              <button 
-                key={item.id}
-                onClick={() => setActive(item.id)}
-                className={`relative -top-8 ${theme?.primary || 'bg-gray-800'} text-white p-4 rounded-full shadow-lg hover:scale-105 transition-transform`}
-              >
-                <item.icon size={24} />
-                <span className="absolute top-0 right-0 w-3.5 h-3.5 bg-white border-2 border-transparent rounded-full box-content text-[9px] font-bold text-black flex items-center justify-center">3</span>
-              </button>
-            )
-          }
-          return (
-            <button 
-              key={item.id}
-              onClick={() => setActive(item.id)}
-              className={`flex flex-col items-center justify-center w-12 gap-1 transition-all ${isActive ? (theme?.primaryText || 'text-gray-900') : 'text-gray-400'}`}
-            >
-               <item.icon size={20} strokeWidth={isActive ? 2.5 : 2} />
-               {isActive && <span className="text-[9px] font-bold">{item.label}</span>}
-            </button>
-          )
-        })}
-      </div>
-    </div>
-  );
-};
+//   return (
+//     <div className="fixed bottom-6 inset-x-0 mx-auto w-[90%] md:hidden z-50">
+//       <div className="bg-white/80 backdrop-blur-xl border border-white/50 shadow-2xl shadow-gray-200/50 rounded-2xl flex justify-between items-center px-2 py-3">
+//         {navItems.map((item) => {
+//           const isActive = active === item.id;
+//           if (item.special) {
+//             return (
+//               <button 
+//                 key={item.id}
+//                 onClick={() => setActive(item.id)}
+//                 className={`relative -top-8 ${theme?.primary || 'bg-gray-800'} text-white p-4 rounded-full shadow-lg hover:scale-105 transition-transform`}
+//               >
+//                 <item.icon size={24} />
+//                 <span className="absolute top-0 right-0 w-3.5 h-3.5 bg-white border-2 border-transparent rounded-full box-content text-[9px] font-bold text-black flex items-center justify-center">3</span>
+//               </button>
+//             )
+//           }
+//           return (
+//             <button 
+//               key={item.id}
+//               onClick={() => setActive(item.id)}
+//               className={`flex flex-col items-center justify-center w-12 gap-1 transition-all ${isActive ? (theme?.primaryText || 'text-gray-900') : 'text-gray-400'}`}
+//             >
+//                <item.icon size={20} strokeWidth={isActive ? 2.5 : 2} />
+//                {isActive && <span className="text-[9px] font-bold">{item.label}</span>}
+//             </button>
+//           )
+//         })}
+//       </div>
+//     </div>
+//   );
+// };
 
 function GroceriesPage() {
   const navigate = useNavigate();
@@ -254,7 +255,7 @@ const handleCateitm =(category)=>{
   console.log(category ,'categorycategorycategory');
 
   if(!category.cat_id){
-   alert("Undefinded Categories");
+   toast.error("Undefined Categories");
    return;
   }
 
@@ -267,7 +268,7 @@ const handleCateitm =(category)=>{
   });
 
 };
-
+const naviagte=useNavigate();
   return (
     // MAIN WRAPPER
     <div className={`w-full min-h-screen relative ${theme.gradient} transition-colors duration-700 font-sans`}>
@@ -283,7 +284,7 @@ const handleCateitm =(category)=>{
           onClick={() => navigate(-1)} 
         />
         <p className="flex-1 text-xl font-bold text-center pr-2">Groceries</p>
-        <Search className="w-6 h-6" />
+        {/* <Search className="w-6 h-6" /> */}
       </div>
 
       {/* ======================= */}
@@ -292,10 +293,12 @@ const handleCateitm =(category)=>{
       <div className="hidden md:flex fixed top-0 w-full z-50 bg-white/90 backdrop-blur-sm h-20 items-center px-8 shadow-sm justify-between">
         {/* Logo Area */}
         <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate('/')}>
-            <div className={`w-8 h-8 ${theme.primary} rounded-lg flex items-center justify-center transition-colors`}>
-                <span className="text-white font-bold text-xl">G</span>
+            <div
+              className={`p-2 rounded-xl ${theme.primary} text-white shadow-lg shadow-${theme.primary}/30`}
+            >
+              <Leaf size={20} fill="currentColor" className="opacity-90" />
             </div>
-            <span className={`text-2xl font-bold ${theme.primaryText} tracking-tight transition-colors`}>GroceryApp</span>
+            <span className={`text-2xl font-bold ${theme.primaryText} tracking-tight transition-colors`}> SBS GROCES</span>
         </div>
 
         {/* Desktop Search Bar */}
@@ -310,15 +313,18 @@ const handleCateitm =(category)=>{
 
         {/* Desktop Nav Icons */}
         <div className="flex items-center gap-6 text-gray-600">
-            <div className={`flex flex-col items-center cursor-pointer hover:${theme.primaryText} transition`}>
-                <User className="w-6 h-6" />
+            <div 
+            onClick={() => navigate("/profile")}
+            className={`flex flex-col items-center cursor-pointer hover:${theme.primaryText} transition`}>
+                <User className="w-6 h-6"  />
                 <span className="text-xs font-medium">Profile</span>
             </div>
-            <div className={`flex flex-col items-center cursor-pointer hover:${theme.primaryText} transition relative`}>
-                <ShoppingCart className="w-6 h-6" />
+            <div 
+            onClick={() => navigate("/cart")}
+            className={`flex flex-col items-center cursor-pointer hover:${theme.primaryText} transition relative`}>
+                <ShoppingCart className="w-6 h-6"  />
                 <span className="text-xs font-medium">Cart</span>
-                <span className={`absolute -top-1 -right-1 ${theme.primary} text-white text-[10px] w-4 h-4 flex items-center justify-center rounded-full transition-colors`}>2</span>
-            </div>
+                </div>
         </div>
       </div>
 
@@ -330,7 +336,7 @@ const handleCateitm =(category)=>{
       <div className="pt-20 md:pt-28 md:px-8 md:pb-12 relative z-10">
         
         {/* DESKTOP HERO BANNER (Hidden on Mobile) */}
-        <div className={`hidden md:block max-w-7xl mx-auto mb-8 rounded-2xl overflow-hidden shadow-lg relative h-64 ${theme.bannerGradient} transition-colors duration-700`}>
+        {/* <div className={`hidden md:block max-w-7xl mx-auto mb-8 rounded-2xl overflow-hidden shadow-lg relative h-64 ${theme.bannerGradient} transition-colors duration-700`}>
              <div className="absolute inset-0 flex items-center px-12 text-white">
                  <div className="max-w-lg relative z-10">
                      <span className="bg-white/20 backdrop-blur px-2 py-1 rounded text-xs font-bold uppercase tracking-wider mb-2 inline-block border border-white/30">
@@ -340,10 +346,10 @@ const handleCateitm =(category)=>{
                      <p className="text-white/90 text-lg mb-6">Get everything delivered to your doorstep in minutes.</p>
                      <button className={`bg-white ${theme.primaryText} px-6 py-2 rounded-full font-bold hover:bg-gray-50 transition shadow-sm`}>Shop Now</button>
                  </div>
-                 {/* Decorative Circle */}
+               
                  <div className="absolute -right-20 -bottom-40 w-96 h-96 bg-white opacity-10 rounded-full blur-3xl"></div>
              </div>
-        </div>
+        </div> */}
 
         {/* MAIN CARD / GRID CONTAINER */}
         <div className="bg-white/95 md:bg-white w-full rounded-t-[30px] md:rounded-2xl md:max-w-7xl md:mx-auto min-h-[calc(100vh-80px)] md:min-h-0 px-4 pt-6 pb-24 md:p-8 md:shadow-xl md:border md:border-gray-100 backdrop-blur-sm">
@@ -421,15 +427,15 @@ const handleCateitm =(category)=>{
       </div>
 
       {/* MOBILE BOTTOM NAV (< md) */}
-      <div className="md:hidden">
+      {/* <div className="md:hidden">
          <BottomNav theme={theme} />
-      </div>
+      </div> */}
 
       {/* DESKTOP FOOTER (>= md) */}
       <div className="hidden md:block bg-gray-900 text-gray-400 py-12 mt-12 relative z-10">
           <div className="max-w-7xl mx-auto px-8 grid grid-cols-4 gap-8">
               <div>
-                  <h3 className="text-white font-bold text-lg mb-4">GroceryApp</h3>
+                  <h3 className="text-white font-bold text-lg mb-4">SBS GROCES</h3>
                   <p className="text-sm">Freshness delivered to your doorstep.</p>
               </div>
               <div>

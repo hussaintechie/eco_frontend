@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Star, Check, User, Package, Truck } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { getReviewStatusAPI, submitReviewAPI } from "../api/review";
-
+import { toast } from "react-toastify";
 
 
 const PostPaymentDeliveryFlow = ({ order_id }) => {
@@ -53,7 +53,7 @@ const PostPaymentDeliveryFlow = ({ order_id }) => {
   const submitFeedback = async () => {
     try {
       if (!rating) {
-        alert("Please select a rating");
+        toast.error("Please select a rating");
         return;
       }
 
