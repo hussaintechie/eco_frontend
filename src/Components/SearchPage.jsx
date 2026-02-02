@@ -1,11 +1,27 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import {
-  Search, X, Clock, ArrowUpRight, Filter, ShoppingCart,
-  Snowflake, Sun, Flower2, CloudRain, Gift, Thermometer, Leaf
-} from 'lucide-react';
+  Search,
+  X,
+  Snowflake,
+  Sun,
+  Flower2,
+  CloudRain,
+  ShoppingBasket,
+  Leaf,
+} from "lucide-react";
+
 import API from "../api/auth";
 import { useLocation, useNavigate } from "react-router-dom";
-// --- SEASONAL CONFIG (Reused) ---
+
+import {
+  addToCartAPI,
+  getCartAPI,
+  updateCartQtyAPI,
+  removeCartItemAPI,
+} from "../api/cartapi";
+import { toast } from "react-toastify";
+
+// --- SEASONAL CONFIG ---
 const SEASON_CONFIG = {
   winter: {
     name: "Winter Fest",
@@ -50,7 +66,7 @@ const SEASON_CONFIG = {
     cardBg: "bg-white/90 border-teal-100",
     icon: CloudRain,
     bannerTone: "contrast-125 brightness-90 sepia-[.2]",
-  }
+  },
 };
 
 const getSeason = () => {
@@ -61,208 +77,371 @@ const getSeason = () => {
   return "monsoon";
 };
 
-// --- MOCK DATA ---
-// const ALL_PRODUCTS = [
-//   { id: 1, name: "Organic Bananas", category: "Fruits", price: 40, image: "https://placehold.co/150?text=Bananas" },
-//   { id: 2, name: "Fresh Milk", category: "Dairy", price: 32, image: "https://placehold.co/150?text=Milk" },
-//   { id: 3, name: "Dark Chocolate", category: "Snacks", price: 120, image: "https://placehold.co/150?text=Choco" },
-//   { id: 4, name: "Green Tea", category: "Beverage", price: 250, image: "https://placehold.co/150?text=Tea" },
-//   { id: 5, name: "Avocado", category: "Fruits", price: 80, image: "https://placehold.co/150?text=Avocado" },
-//   { id: 6, name: "Almonds", category: "Nuts", price: 450, image: "https://placehold.co/150?text=Almonds" },
-// ];
+const cleanSearchText = (text = "") => {
+  return text.replace(/\s*--\s*\(.*?\)/g, "").trim();
+};
 
-// const RECENT_SEARCHES = ["Milk", "Green Tea", "Sugar free"];
-//const POPULAR_TAGS = ["Fresh Fruits", "Dairy", "Winter Snacks", "Hot Coffee", "Nuts"];
+export default function SearchPage() {
+  const inputRef = useRef(null);
 
-const SearchPage = () => {
   const currentKey = getSeason();
   const theme = SEASON_CONFIG[currentKey];
   const SeasonIcon = theme.icon;
 
-  const [query, setQuery] = useState("");
-  const [results, setResults] = useState([]);
-  const [isFocused, setIsFocused] = useState(false);
-  const [ALL_PRODUCTS, setAllproduct] = useState([]);
-  const [POPULAR_TAGS, setpopTags] = useState([]);
+  const navigate = useNavigate();
+  const location = useLocation();
 
-  const { state } = useLocation();
-  const { id, name, img } = state || { id: 0, name: "", img: "" };
+  const autoFocus = location.state?.autoFocus;
+  const name = location.state?.name || "";
 
-  // ✅ Set query from navigation state
   useEffect(() => {
-    const cleanQuery = cleanSearchText(name);
-    if (cleanQuery) {
-      setQuery(cleanQuery);
+    if (autoFocus) {
+      setTimeout(() => {
+        inputRef.current?.focus();
+      }, 400);
     }
+  }, [autoFocus]);
+
+  const [query, setQuery] = useState("");
+  const [isFocused, setIsFocused] = useState(false);
+  const [allProducts, setAllProducts] = useState([]);
+  const [popularTags, setPopularTags] = useState([]);
+
+  const [cartItems, setCartItems] = useState([]);
+
+  // ✅ Loading states
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [cartLoadingId, setCartLoadingId] = useState(null);
+
+  const cartCount = cartItems.reduce(
+    (sum, item) => sum + Number(item.quantity || 0),
+    0
+  );
+
+  useEffect(() => {
+    const clean = cleanSearchText(name);
+    if (clean) setQuery(clean);
   }, [name]);
 
-  // ✅ Fetch from API
-  useEffect(() => {
-    if (query.trim().length >= 2) {
-      handledataprocess();
-    } else {
-      setAllproduct([]);
-      setpopTags([]);
+  const refreshCart = async () => {
+    try {
+      const res = await getCartAPI();
+      setCartItems(res.data.cart || []);
+    } catch (err) {
+      console.log("refreshCart error:", err);
     }
-  }, [query]);
-  // ✅ Fetch from API
+  };
+
   useEffect(() => {
-    handledataprocess(2);
+    refreshCart();
   }, []);
 
-  const handledataprocess = async (mode = 1) => {
+  const fetchSearchData = async (mode = 1) => {
     const cleanQuery = cleanSearchText(query);
 
-    console.log(cleanQuery, "cleanQuery");
     try {
-      const response = await API.post(
-        "product/SearchItems",
-        {
-          searchtxt: cleanQuery,
-          mode: mode,
-        }
-      );
+      setSearchLoading(true);
 
-      setAllproduct(response.data.data || []);
-      setpopTags(response.data.popularTags || []);
+      const response = await API.post("product/SearchItems", {
+        searchtxt: cleanQuery,
+        mode: mode,
+      });
+
+      setAllProducts(response.data.data || []);
+      setPopularTags(response.data.popularTags || []);
     } catch (error) {
-      console.error("Searchdata fetch error:", error);
-      setAllproduct([]);
-      setpopTags([]);
+      console.error("Search fetch error:", error);
+      setAllProducts([]);
+      setPopularTags([]);
+    } finally {
+      setSearchLoading(false);
     }
   };
-  const cleanSearchText = (text = "") => {
-    return text
-      .replace(/\s*--\s*\(.*?\)/g, "") // remove --(...)
-      .trim();
+
+  useEffect(() => {
+    fetchSearchData(2);
+  }, []);
+
+  useEffect(() => {
+    if (query.trim().length >= 2) {
+      fetchSearchData(1);
+    } else {
+      setAllProducts([]);
+    }
+  }, [query]);
+
+  const results = useMemo(() => {
+    if (!query.trim()) return [];
+    return (allProducts || []).filter(
+      (p) =>
+        p.name?.toLowerCase().includes(query.toLowerCase()) ||
+        p.category?.toLowerCase().includes(query.toLowerCase())
+    );
+  }, [query, allProducts]);
+
+  /* ---------------- CART ACTIONS (WITH LOADING) ---------------- */
+
+  const handleAddToCart = async (product_id) => {
+    if (cartLoadingId === product_id) return;
+
+    try {
+      setCartLoadingId(product_id);
+
+      await addToCartAPI(product_id, 1);
+      await refreshCart();
+    } catch (err) {
+      toast.error("Please login to add items");
+      navigate("/login");
+    } finally {
+      setCartLoadingId(null);
+    }
   };
-  // ✅ Instant client-side filter
-  useEffect(() => { if (query.trim() === "") { setResults([]); } else { const filtered = ALL_PRODUCTS.filter(p => p.name.toLowerCase().includes(query.toLowerCase()) || p.category.toLowerCase().includes(query.toLowerCase())); setResults(filtered); } }, [query]);
+
+  const handleRemoveFromCart = async (product_id) => {
+    if (cartLoadingId === product_id) return;
+
+    try {
+      setCartLoadingId(product_id);
+
+      const cartItem = cartItems.find((c) => c.product_id === product_id);
+      if (!cartItem) return;
+
+      const newQty = cartItem.quantity - 1;
+
+      if (newQty <= 0) {
+        await removeCartItemAPI(cartItem.cart_id);
+      } else {
+        await updateCartQtyAPI(cartItem.cart_id, newQty);
+      }
+
+      await refreshCart();
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setCartLoadingId(null);
+    }
+  };
 
   return (
     <div className={`min-h-screen transition-colors duration-500 ${theme.gradient}`}>
+      {/* --- STICKY HEADER --- */}
+      <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-lg border-b border-gray-100 shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 h-16 md:h-20 flex items-center justify-between gap-3 md:gap-8">
+          {/* 1. Logo Section */}
+          <div
+            className="hidden md:flex items-center gap-3 shrink-0 cursor-pointer"
+            onClick={() => navigate("/")}
+          >
+            <div className={`p-2 rounded-xl ${theme.primary} text-white shadow-lg`}>
+              <Leaf size={20} fill="currentColor" className="opacity-90" />
+            </div>
+            <div className="hidden sm:block">
+              <h1 className="text-xl font-bold text-gray-800 leading-tight">
+                SBS <span className="text-[#009661]">GROCES</span>
+              </h1>
+              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] mt-0.5">
+                Fresh & Organic
+              </p>
+            </div>
+          </div>
 
-      {/* --- 1. Sticky Search Header --- */}
-      <div className="sticky top-0 z-50 p-4 bg-white/80 backdrop-blur-md shadow-sm">
-        <div className="max-w-md mx-auto relative">
-          <input
-            type="text"
-            placeholder={`Search for ${theme.name} specials...`}
-            className={`w-full pl-12 pr-10 py-3.5 rounded-xl border-none ring-1 outline-none transition-all shadow-sm
-              ${isFocused
-                ? `ring-2 ring-offset-2 ${theme.accent} ring-${theme.primaryText.split('-')[1]}-400` // Dynamic focus ring
-                : 'ring-gray-200 bg-gray-50'
-              }
-            `}
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            onFocus={() => setIsFocused(true)}
-          />
+          {/* 2. Search Bar Section */}
+          <div className="flex-1 relative group py-2">
+            <input
+              ref={inputRef}
+              type="text"
+              placeholder="Search groceries..."
+              className={`w-full pl-10 md:pl-12 pr-10 py-2.5 md:py-3 rounded-xl md:rounded-2xl border-none outline-none transition-all text-sm md:text-base
+                ${isFocused ? "bg-white ring-2 ring-emerald-100 shadow-md" : "bg-gray-100/80 hover:bg-gray-100"}
+              `}
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              onFocus={() => setIsFocused(true)}
+              onBlur={() => setIsFocused(false)}
+            />
 
-          {/* Search Icon (Left) */}
-          <Search
-            className={`absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 ${isFocused ? theme.primaryText : 'text-gray-400'}`}
-          />
+            <Search
+              className={`absolute left-3 md:left-4 top-1/2 -translate-y-1/2 w-4 h-4 md:w-5 md:h-5 transition-colors ${
+                isFocused ? "text-emerald-600" : "text-gray-400"
+              }`}
+            />
 
-          {/* Clear Button (Right) - Only shows when typing */}
-          {query && (
+            {query && (
+              <button
+                onClick={() => setQuery("")}
+                className="absolute right-3 md:right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              >
+                <X size={16} />
+              </button>
+            )}
+          </div>
+
+          {/* 3. My Cart Section (Desktop) */}
+          <div className="hidden md:block shrink-0">
             <button
-              onClick={() => setQuery("")}
-              className="absolute right-4 top-1/2 -translate-y-1/2 bg-gray-200 rounded-full p-1 hover:bg-gray-300"
+              onClick={() => navigate("/cart")}
+              className="flex items-center gap-3 px-5 py-2.5 rounded-2xl bg-[#F0FFF4] text-[#009661] border border-emerald-100 hover:bg-emerald-100 transition-all font-bold text-sm"
             >
-              <X size={14} className="text-gray-600" />
+              <div className="relative">
+                <ShoppingBasket size={20} />
+                {cartCount > 0 && (
+                  <span className="absolute -top-2 -right-2 bg-emerald-600 text-white text-[10px] rounded-full w-5 h-5 flex items-center justify-center border-2 border-[#F0FFF4]">
+                    {cartCount}
+                  </span>
+                )}
+              </div>
+              <span>My Cart</span>
             </button>
-          )}
+          </div>
         </div>
-      </div>
+      </header>
 
-      <div className="max-w-md mx-auto p-4 pb-20">
-
-        {/* --- 2. State: User is Searching (Showing Results) --- */}
+      {/* --- PAGE CONTENT --- */}
+      <main className="max-w-7xl mx-auto p-4 md:p-6">
         {query ? (
           <div>
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="font-semibold text-gray-700">
-                Found {results.length} results
-              </h2>
-              <button className={`text-xs flex items-center gap-1 font-medium ${theme.primaryText}`}>
-                <Filter size={14} /> Filter
-              </button>
-            </div>
+            {/* ✅ Search Loading */}
+            {searchLoading && (
+              <div className="mb-4 text-sm font-bold text-gray-400 flex items-center gap-2">
+                <div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
+                Searching...
+              </div>
+            )}
 
             {results.length > 0 ? (
-              <div className="grid grid-cols-2 gap-4">
-                {results.map(item => (
-                  <div key={item.id} className={`${theme.cardBg} p-3 rounded-xl border shadow-sm`}>
-                    <div className={`aspect-square rounded-lg bg-gray-100 mb-3 overflow-hidden ${theme.bannerTone}`}>
-                      <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-6">
+                {results.map((item) => {
+                  const qty =
+                    cartItems.find((c) => c.product_id === item.id)?.quantity ||
+                    0;
+
+                  const loading = cartLoadingId === item.id;
+
+                  return (
+                    <div
+                      key={item.id}
+                      className="bg-white p-3 md:p-4 rounded-2xl md:rounded-3xl border border-gray-100 shadow-sm hover:shadow-xl transition-all group flex flex-row sm:flex-col gap-4 sm:gap-0"
+                    >
+                      {/* Image */}
+                      <div className="w-24 h-24 sm:w-full sm:aspect-square shrink-0 rounded-xl md:rounded-2xl mb-0 sm:mb-4 overflow-hidden">
+                        <img
+                          src={item.image}
+                          alt={item.name}
+                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                        />
+                      </div>
+
+                      {/* Content */}
+                      <div className="flex flex-col justify-between flex-1 min-w-0 py-1 sm:py-0">
+                        <div>
+                          <h3 className="font-bold text-gray-800 text-sm md:text-base mb-0.5 truncate leading-tight">
+                            {item.name}
+                          </h3>
+                          <p className="text-[10px] md:text-xs text-gray-400 mb-2 sm:mb-3 truncate">
+                            {item.category}
+                          </p>
+                        </div>
+
+                        <div className="flex justify-between items-center mt-auto">
+                          <span className="text-base md:text-lg font-black text-gray-900">
+                            ₹{item.price}
+                          </span>
+
+                          {/* ✅ Controls with Loading */}
+                          <div className="shrink-0">
+                            {qty === 0 ? (
+                              <button
+                                disabled={loading}
+                                onClick={() => handleAddToCart(item.id)}
+                                className={`px-4 md:px-5 py-1.5 md:py-2 rounded-lg md:rounded-xl text-[11px] md:text-xs font-bold transition-colors flex items-center justify-center gap-2
+                                  ${
+                                    loading
+                                      ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                                      : "bg-emerald-600 text-white hover:bg-emerald-700"
+                                  }
+                                `}
+                              >
+                                {loading ? (
+                                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                ) : (
+                                  "ADD"
+                                )}
+                              </button>
+                            ) : (
+                              <div className="flex items-center gap-2 md:gap-3 bg-gray-100 rounded-lg md:rounded-xl px-1.5 md:px-2 py-1">
+                                <button
+                                  disabled={loading}
+                                  onClick={() => handleRemoveFromCart(item.id)}
+                                  className={`w-6 h-6 md:w-7 md:h-7 bg-white rounded-md md:rounded-lg shadow-sm font-bold text-emerald-600 text-sm
+                                    ${
+                                      loading
+                                        ? "opacity-60 cursor-not-allowed"
+                                        : ""
+                                    }
+                                  `}
+                                >
+                                  -
+                                </button>
+
+                                <span className="text-xs md:text-sm font-bold w-4 text-center">
+                                  {loading ? "..." : qty}
+                                </span>
+
+                                <button
+                                  disabled={loading}
+                                  onClick={() => handleAddToCart(item.id)}
+                                  className={`w-6 h-6 md:w-7 md:h-7 bg-white rounded-md md:rounded-lg shadow-sm font-bold text-emerald-600 text-sm
+                                    ${
+                                      loading
+                                        ? "opacity-60 cursor-not-allowed"
+                                        : ""
+                                    }
+                                  `}
+                                >
+                                  +
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
                     </div>
-                    <h3 className="font-medium text-gray-800 text-sm line-clamp-1">{item.name}</h3>
-                    <div className="flex justify-between items-center mt-2">
-                      <span className={`font-bold ${theme.primaryText}`}>₹{item.price}</span>
-                      <button className={`${theme.accent} p-1.5 rounded-lg ${theme.primaryText}`}>
-                        <ShoppingCart size={16} />
-                      </button>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             ) : (
-              <div className="text-center py-12">
-                <SeasonIcon size={48} className={`mx-auto mb-3 opacity-30 ${theme.primaryText}`} />
-                <p className="text-gray-500">No items found for "{query}"</p>
+              <div className="text-center py-20 bg-white rounded-3xl border border-dashed border-gray-200">
+                <SeasonIcon size={64} className="mx-auto mb-4 text-gray-200" />
+                <p className="text-gray-400 font-medium">
+                  No results found for "{query}"
+                </p>
               </div>
             )}
           </div>
         ) : (
-          /* --- 3. State: Default (History & Trending) --- */
-          <div className="space-y-8 animate-fade-in">
-
-            {/* Recent Searches */}
-            {/* <section>
-              <div className="flex justify-between items-center mb-3">
-                <h3 className="font-bold text-gray-800 text-sm uppercase tracking-wide">Recent</h3>
-                <button className="text-xs text-gray-400 hover:text-red-500">Clear</button>
-              </div>
-              <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                {RECENT_SEARCHES.map((term, index) => (
-                  <button 
-                    key={index}
-                    onClick={() => setQuery(term)}
-                    className="w-full text-left px-4 py-3 flex items-center gap-3 hover:bg-gray-50 border-b last:border-0 border-gray-50 transition"
-                  >
-                    <Clock size={16} className="text-gray-400" />
-                    <span className="text-gray-700 flex-1">{term}</span>
-                    <ArrowUpRight size={16} className="text-gray-300" />
-                  </button>
-                ))}
-              </div>
-            </section> */}
-
-            {/* Popular/Trending Categories */}
-            <section>
-              <h3 className="font-bold text-gray-800 text-sm uppercase tracking-wide mb-3 flex items-center gap-2">
-                Trending {theme.name} <SeasonIcon size={14} className={theme.primaryText} />
-              </h3>
-              <div className="flex flex-wrap gap-2">
-                {POPULAR_TAGS.map((tag, index) => (
-                  <button
-                    key={index}
-                    onClick={() => setQuery(tag)}
-                    className={`px-4 py-2 rounded-full text-sm font-medium transition active:scale-95
-                      ${index === 0 ? `${theme.primary} text-white` : 'bg-white border border-gray-200 text-gray-600 hover:border-gray-300'}
-                    `}
-                  >
-                    {tag}
-                  </button>
-                ))}
-              </div>
-            </section>
+          <div className="text-center text-gray-400 py-20">
+            Start typing to search products...
           </div>
         )}
-      </div>
+      </main>
+
+      {/* ✅ MOBILE FLOATING CART */}
+      {cartCount > 0 && (
+        <div className="fixed bottom-6 left-4 right-4 z-50 md:hidden">
+          <button
+            onClick={() => navigate("/cart")}
+            className="w-full bg-gray-900 text-white p-4 rounded-2xl shadow-2xl flex items-center justify-between"
+          >
+            <div className="flex items-center gap-3">
+              <ShoppingBasket className="text-emerald-400" />
+              <span className="font-bold">{cartCount} Items</span>
+            </div>
+            <span className="bg-emerald-600 px-4 py-1.5 rounded-xl text-sm font-bold uppercase tracking-wider">
+              View Cart
+            </span>
+          </button>
+        </div>
+      )}
     </div>
   );
-};
-
-export default SearchPage;
+}

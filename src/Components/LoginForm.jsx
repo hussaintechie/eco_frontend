@@ -108,7 +108,7 @@ export default function LoginForm() {
 
   // ================= VERIFY OTP =================
   const handleVerifyOtp = async () => {
-    if (!otp) return alert("Enter OTP");
+    if (!otp) return toast.error("Enter OTP");
 
     try {
       setLoading(true);
@@ -133,7 +133,7 @@ export default function LoginForm() {
 }
 
     } catch (err) {
-      alert(err.response?.data?.message || "Invalid OTP");
+      toast.error(err.response?.data?.message || "Invalid OTP");
     } finally {
       setLoading(false);
     }
@@ -216,7 +216,7 @@ export default function LoginForm() {
           />
 
           <Typography variant={isDesktop ? "h2" : "h3"} fontWeight={800}>
-            SB <br />
+            SBS <br />
             <span style={{ color: theme.primary }}>Grocery</span>
           </Typography>
 

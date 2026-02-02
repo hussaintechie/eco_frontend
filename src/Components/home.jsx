@@ -39,6 +39,10 @@ import {
   AlertCircle,
   Package,
   Route,
+  Store,
+  Repeat,
+Layers,
+  
 } from "lucide-react";
 import API from "../api/auth";
 import { useNavigate, BrowserRouter } from "react-router-dom";
@@ -121,7 +125,8 @@ const SectionHeader = ({ title, action = "See All", icon: Icon, theme }) => (
 const ProductCardVertical = ({
   product,
   theme,
-  qty,  // ✅ coming from parent
+  qty,  
+  loading, // ✅ coming from parent
   onAddToCart,
   onRemoveFromCart,
 }) => {
@@ -146,7 +151,7 @@ const ProductCardVertical = ({
       ${isOutOfStock ? "opacity-70" : "hover:shadow-lg"} transition-all group`}
     >
       {/* IMAGE */}
-      <div className="h-28 md:h-36 bg-gray-50 rounded-lg mb-3 relative overflow-hidden">
+      <div className="h-28 md:h-36 rounded-lg mb-3 relative overflow-hidden">
         <img
           src={product.img}
           alt={product.name}
@@ -197,43 +202,52 @@ const ProductCardVertical = ({
           </div>
 
           {/* ADD / MINUS CONTROLS */}
-          {qty === 0 ? (
-            <button
-              disabled={isOutOfStock}
-              onClick={handleIncrement}
-              className={`p-2 rounded-lg transition
-                ${
-                  isOutOfStock
-                    ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                    : `${theme.accent} ${theme.primaryText} hover:scale-105`
-                }
-              `}
-            >
-              <Plus size={16} strokeWidth={3} />
-            </button>
-          ) : (
-            <div
-              className={`flex items-center gap-1.5 ${theme.accent} rounded-lg px-1 py-1`}
-            >
-              <button
-                onClick={handleDecrement}
-                className="bg-white rounded p-0.5 shadow-sm text-gray-800 hover:scale-110 transition"
-              >
-                <Minus size={14} strokeWidth={3} />
-              </button>
-              <span
-                className={`text-xs font-black w-4 text-center ${theme.primaryText}`}
-              >
-                {qty}
-              </span>
-              <button
-                onClick={handleIncrement}
-                className="bg-white rounded p-0.5 shadow-sm text-gray-800 hover:scale-110 transition"
-              >
-                <Plus size={14} strokeWidth={3} />
-              </button>
-            </div>
-          )}
+         {qty === 0 ? (
+  <button
+    disabled={isOutOfStock || loading}
+    onClick={handleIncrement}
+    className={`p-2 rounded-lg transition flex items-center justify-center
+      ${
+        isOutOfStock || loading
+          ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+          : `${theme.accent} ${theme.primaryText} hover:scale-105`
+      }
+    `}
+  >
+    {loading ? (
+      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+    ) : (
+      <Plus size={16} strokeWidth={3} />
+    )}
+  </button>
+) : (
+  <div className={`flex items-center gap-1.5 ${theme.accent} rounded-lg px-1 py-1`}>
+    <button
+      disabled={loading}
+      onClick={handleDecrement}
+      className={`bg-white rounded p-0.5 shadow-sm text-gray-800 transition
+        ${loading ? "opacity-60 cursor-not-allowed" : "hover:scale-110"}
+      `}
+    >
+      <Minus size={14} strokeWidth={3} />
+    </button>
+
+    <span className={`text-xs font-black w-4 text-center ${theme.primaryText}`}>
+      {loading ? "..." : qty}
+    </span>
+
+    <button
+      disabled={loading}
+      onClick={handleIncrement}
+      className={`bg-white rounded p-0.5 shadow-sm text-gray-800 transition
+        ${loading ? "opacity-60 cursor-not-allowed" : "hover:scale-110"}
+      `}
+    >
+      <Plus size={14} strokeWidth={3} />
+    </button>
+  </div>
+)}
+
         </div>
       </div>
     </div>
@@ -271,7 +285,7 @@ const RecommendedProductCard = ({
       ${isOutOfStock ? "opacity-70" : "hover:shadow-xl hover:-translate-y-1"}`}
     >
       {/* IMAGE */}
-      <div className="relative h-32 md:h-40 mb-3 rounded-xl overflow-hidden bg-gray-50">
+      <div className="relative h-32 md:h-40 mb-3 rounded-xl overflow-hidden ">
         
         {/* 🔥 FIXED IMAGE LOADING FOR PRODUCTS 🔥 */}
        
@@ -365,6 +379,7 @@ const HorizontalScrollRow = ({
   theme,
   cartItems =[],
   onAddToCart,
+   cartLoadingId,
   onRemoveFromCart,
 }) => (
   <div className="flex gap-4 overflow-x-auto no-scrollbar pb-6 pl-1 scroll-smooth">
@@ -374,6 +389,7 @@ const HorizontalScrollRow = ({
         product={item}
         theme={theme}
         qty={cartItems.find((c) => c.product_id === item.product_id)?.quantity || 0}
+        loading={cartLoadingId === item.product_id}
         onAddToCart={onAddToCart}
         onRemoveFromCart={onRemoveFromCart}
       />
@@ -426,7 +442,7 @@ const NotificationDrawer = ({ isOpen, onClose, theme }) => {
           {NOTIFICATIONS.map((notif) => (
             <div
               key={notif.id}
-              className="flex gap-3 p-3 bg-gray-50/50 hover:bg-gray-50 rounded-xl border border-gray-100 transition-colors cursor-pointer group"
+              className="flex gap-3 p-3 rounded-xl border border-gray-100 transition-colors cursor-pointer group"
             >
               <div
                 className={`w-10 h-10 rounded-full ${notif.bg} ${notif.color} flex items-center justify-center shrink-0`}
@@ -484,6 +500,7 @@ const BANNER_IMAGES = [
 const ParallaxAdBanner = ({ theme }) => {
   const [currentImage, setCurrentImage] = useState(0);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+   const navigate = useNavigate();
 
   // ✅ Detect screen resize
   useEffect(() => {
@@ -551,7 +568,9 @@ const ParallaxAdBanner = ({ theme }) => {
         <p className="text-gray-200 text-xs md:text-base mb-6 max-w-[200px] md:max-w-md drop-shadow-md hidden md:block">
     Get 100% organic vegetables delivered directly from local farmers.
   </p>
-       <button className="bg-white text-gray-900 text-sm md:text-base font-bold py-2 px-5 md:py-3 md:px-8 rounded-full hover:bg-gray-100 transition shadow-xl flex items-center gap-2">
+       <button 
+       onClick={() => navigate("/groceries")}
+       className="bg-white text-gray-900 text-sm md:text-base font-bold py-2 px-5 md:py-3 md:px-8 rounded-full hover:bg-gray-100 transition shadow-xl flex items-center gap-2">
     Shop Now <ArrowRight size={14} className="md:w-4 md:h-4" />
   </button>
       </div>
@@ -616,22 +635,19 @@ const Header = ({ theme, setMenuOpen, onOpenNotifications, cartCount }) => {
 
           {/* Desktop Search (Centered) */}
           <div className="hidden md:flex flex-1 max-w-lg mx-auto relative group">
-            <input
-              type="text"
-              placeholder="Search for fresh groceries..."
-              className={`w-full bg-gray-100/50 border-2 border-transparent hover:bg-white hover:border-gray-100 focus:bg-white focus:border-${theme.primary.replace(
-                "bg-",
-                ""
-              )}/30 focus:ring-4 focus:ring-${theme.primary.replace(
-                "bg-",
-                ""
-              )}/10 text-gray-800 text-sm rounded-full py-2.5 px-5 pl-12 transition-all duration-300 outline-none`}
-            />
-            <Search
-              size={18}
-              className="absolute left-4 top-3 text-gray-400 group-hover:text-gray-600 transition-colors"
-            />
-          </div>
+      <input
+        type="text"
+        placeholder="Search for fresh groceries..."
+        readOnly
+        onClick={() => navigate("/search", { state: { autoFocus: true } })}
+        className="w-full bg-gray-100/50 border-2 border-transparent hover:bg-white hover:border-gray-100
+        text-gray-800 text-sm rounded-full py-2.5 px-5 pl-12 transition-all duration-300 outline-none cursor-pointer"
+      />
+      <Search
+        size={18}
+        className="absolute left-4 top-3 text-gray-400 group-hover:text-gray-600 transition-colors"
+      />
+    </div>
 
           {/* Right Icons */}
           <div className="flex items-center gap-3 md:gap-5">
@@ -670,10 +686,14 @@ const Header = ({ theme, setMenuOpen, onOpenNotifications, cartCount }) => {
         {/* MOBILE SEARCH BAR (Floating) */}
         <div className="md:hidden pb-3 pt-1">
           <div className="relative shadow-lg shadow-gray-200/50 rounded-2xl">
-            <input
-              className="w-full bg-white text-sm rounded-2xl py-3 pl-11 pr-4 focus:outline-none text-gray-700 placeholder-gray-400 shadow-sm border border-gray-100/50"
-              placeholder="Search 'Strawberries'..."
-            />
+           <input
+  type="text"
+  placeholder="Search 'Strawberries'..."
+  readOnly
+  onClick={() => navigate("/search", { state: { autoFocus: true } })}
+  className="w-full bg-white text-sm rounded-2xl py-3 pl-11 pr-4 focus:outline-none text-gray-700 placeholder-gray-400 shadow-sm border border-gray-100/50 cursor-pointer"
+/>
+
             <div
               className={`absolute left-3 top-2.5 p-1 rounded-lg ${theme.accent} ${theme.primaryText}`}
             >
@@ -692,7 +712,8 @@ const BottomNav = ({ theme, cartCount }) => {
 
   const navItems = [
     { id: "home", icon: Home, label: "Home", route: "/home" },
-    { id: "search", icon: Search, label: "Search", route: "/search" },
+
+    { id: "orders", icon: Repeat, label: "Reorder", route: "/orders" },
     {
       id: "cart",
       icon: ShoppingBag,
@@ -700,7 +721,8 @@ const BottomNav = ({ theme, cartCount }) => {
       special: true,
       route: "/cart",
     },
-     { id: "saved", icon: Heart, label: "Saved", route: "/saved" },
+       { id: "groceries", icon: Store, label: "Groceries", route: "/groceries" },
+      
     { id: "profile", icon: User, label: "Profile", route: "/profile" },
   ];
 
@@ -770,6 +792,9 @@ const BottomNav = ({ theme, cartCount }) => {
 // 3. MAIN PAGE CONTENT
 const MainContent = () => {
 
+const [pageLoading, setPageLoading] = useState(true);
+const [cartLoadingId, setCartLoadingId] = useState(null); 
+// store product_id currently updating
 
   const [cartItems, setCartItems] = useState([]);
     const cartCount = cartItems.reduce((sum, item) => sum + Number(item.quantity || 0), 0);
@@ -792,7 +817,9 @@ useEffect(() => {
 
   /* ---------------- CART LOGIC (UNCHANGED) ---------------- */
  const handleAddToCart = async (product_id) => {
+  if (cartLoadingId === product_id) return;
   try {
+    setCartLoadingId(product_id);
     await addToCartAPI(product_id, 1);
     await refreshCart();
   } catch (err) {
@@ -800,11 +827,16 @@ useEffect(() => {
     toast.error("Please login to add items");
     navigate("/login");
   }
+   finally {
+    setCartLoadingId(null);
+  }
 };
 
 
  const handleRemoveFromCart = async (product_id) => {
+  if (cartLoadingId === product_id) return;
   try {
+     setCartLoadingId(product_id);
     const cartItem = cartItems.find((c) => c.product_id === product_id);
 
     if (!cartItem) return;
@@ -820,6 +852,9 @@ useEffect(() => {
     await refreshCart();
   } catch (err) {
     console.error("remove error", err);
+  }
+  finally {
+    setCartLoadingId(null);
   }
 };
 
@@ -922,7 +957,7 @@ useEffect(() => {
     console.log(category, "categorycategorycategory");
 
     if (!category.cat_id) {
-      alert("Undefinded Categories");
+      toast.error("Undefined Categories");
       return;
     }
 
@@ -1110,6 +1145,7 @@ useEffect(() => {
               data={SUPER_DEALS_DATA}
               onAddToCart={handleAddToCart}
               cartItems={cartItems} 
+              cartLoadingId={cartLoadingId}
               onRemoveFromCart={handleRemoveFromCart}
               theme={{
                 ...theme,
@@ -1134,6 +1170,7 @@ useEffect(() => {
             data={VEG_DATA}
             theme={theme}
             cartItems={cartItems} 
+            cartLoadingId={cartLoadingId}
             onAddToCart={handleAddToCart}
             onRemoveFromCart={handleRemoveFromCart}
           />
@@ -1211,11 +1248,11 @@ useEffect(() => {
               />
             ))}
           </div>
-          <div className="text-center pb-8 mt-8">
+          {/* <div className="text-center pb-8 mt-8">
             <button className="text-gray-400 font-semibold text-sm hover:text-gray-800 transition">
               Show More Products
             </button>
-          </div>
+          </div> */}
         </div>
       </main>
       <Footer theme={theme} />
