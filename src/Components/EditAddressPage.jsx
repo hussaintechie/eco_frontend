@@ -199,6 +199,12 @@ const EditAddressPage = () => {
 
   /* ---------------- SAVE (EDIT MODE) ---------------- */
   const saveEditedAddress = async () => {
+    const finalFullAddress =
+  detectedAddress?.trim() ||
+  `${address.line1 || ""}, ${address.line2 || ""}, ${address.landmark || ""}, ${address.city || ""} - ${address.pin || ""}`
+    .replace(/,\s*,/g, ",")
+    .replace(/\s+/g, " ")
+    .trim();
     if (!validate()) return;
     setLoading(true);
 
@@ -213,6 +219,7 @@ const EditAddressPage = () => {
       city: address.city,
       lat: address.lat,
       lng: address.lon,
+      full_address: finalFullAddress,
     };
 
     try {

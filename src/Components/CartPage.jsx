@@ -294,6 +294,8 @@ const cartpage = () => {
     (async () => {
       try {
         setPageLoading(true);
+        await new Promise((resolve) => requestAnimationFrame(resolve));
+        await new Promise((resolve) => setTimeout(resolve, 0));
         await Promise.all([
           loadCart(),
           loadBill(),
@@ -679,8 +681,6 @@ const cartpage = () => {
         razorpay_order_id,
         razorpay_signature,
         items_details: cart.map((item) => ({
-          
-          
           product_id: item.product_id,
           product_name: item.product_name,
           product_qty: item.quantity,
@@ -732,6 +732,12 @@ const cartpage = () => {
     <div
       className={`min-h-screen font-sans ${theme.gradient} transition-colors duration-500`}
     >
+      {pageLoading && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-white">
+          <div className="w-12 h-12 border-4 border-gray-300 border-t-transparent rounded-full animate-spin" />
+        </div>
+      )}
+
       {/* HEADER */}
       <div className="bg-white sticky top-0 z-20 shadow-sm">
         <div className="max-w-6xl mx-auto px-4 md:px-8">
@@ -958,110 +964,116 @@ const cartpage = () => {
             <div className="flex justify-between items-center mb-4">
               <h3 className="font-bold text-slate-700 text-lg">Your Items</h3>
 
-             <button
-  disabled={clearLoading}
-  onClick={handleClearCart}
-  className={`px-4 py-2 border rounded-lg text-sm font-bold transition
+              <button
+                disabled={clearLoading}
+                onClick={handleClearCart}
+                className={`px-4 py-2 border rounded-lg text-sm font-bold transition
     ${
       clearLoading
         ? "bg-gray-200 text-gray-500 cursor-not-allowed border-gray-200"
         : "text-red-500 border-red-400 hover:bg-red-50"
     }
   `}
->
-  {clearLoading ? "Clearing..." : "Clear Cart"}
-</button>
-
+              >
+                {clearLoading ? "Clearing..." : "Clear Cart"}
+              </button>
             </div>
 
             {cart.length === 0 && (
               <p className="text-sm text-slate-500">Your cart is empty.</p>
             )}
 
- <div className="space-y-4">
-  {cart.map((item) => {
-    const loading = itemLoadingId === item.cart_id;
+            <div className="space-y-4">
+              {cart.map((item) => {
+                const loading = itemLoadingId === item.cart_id;
 
-    return (
-      <div
-        key={item.cart_id}
-        className="flex gap-4 items-start border-b border-slate-100 pb-4 last:border-b-0 last:pb-0 relative"
-      >
-        <img
-          src={item.product_image}
-          alt={item.product_name}
-          className="w-20 h-20 rounded-xl object-cover bg-slate-100"
-        />
+                return (
+                  <div
+                    key={item.cart_id}
+                    className="flex gap-4 items-start border-b border-slate-100 pb-4 last:border-b-0 last:pb-0 relative"
+                  >
+                    <img
+                      src={item.product_image}
+                      alt={item.product_name}
+                      className="w-20 h-20 rounded-xl object-cover bg-slate-100"
+                    />
 
-        <div className="flex-1">
-          {/* TOP ROW */}
-          <div className="flex justify-between items-start">
-            <div>
-              <p className="font-semibold text-slate-800">{item.product_name}</p>
+                    <div className="flex-1">
+                      {/* TOP ROW */}
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <p className="font-semibold text-slate-800">
+                            {item.product_name}
+                          </p>
 
-              {item.weight && (
-                <p className="text-xs text-slate-500 mt-1">{item.weight}</p>
-              )}
+                          {item.weight && (
+                            <p className="text-xs text-slate-500 mt-1">
+                              {item.weight}
+                            </p>
+                          )}
+                        </div>
+
+                        <p className="font-bold text-slate-800">
+                          ₹{item.price * item.quantity}
+                        </p>
+                      </div>
+
+                      {/* BOTTOM ROW (QTY + DELETE RIGHT SIDE) */}
+                      <div className="flex justify-between items-center mt-3">
+                        {/* QTY BUTTON */}
+                        <div
+                          className={`flex items-center rounded-lg ${theme.primary} text-white font-bold h-8 shadow-md`}
+                        >
+                          <button
+                            disabled={loading}
+                            onClick={() =>
+                              updateQty(item.cart_id, item.quantity - 1)
+                            }
+                            className={`px-3 h-full hover:bg-black/10 transition ${
+                              loading ? "opacity-60 cursor-not-allowed" : ""
+                            }`}
+                          >
+                            <Minus className="w-3 h-3" />
+                          </button>
+
+                          <span className="px-2 text-sm min-w-[20px] text-center">
+                            {item.quantity}
+                          </span>
+
+                          <button
+                            disabled={loading}
+                            onClick={() =>
+                              updateQty(item.cart_id, item.quantity + 1)
+                            }
+                            className={`px-3 h-full hover:bg-black/10 transition ${
+                              loading ? "opacity-60 cursor-not-allowed" : ""
+                            }`}
+                          >
+                            <Plus className="w-3 h-3" />
+                          </button>
+                        </div>
+
+                        {/* DELETE BUTTON */}
+                        <button
+                          disabled={loading}
+                          onClick={() => handleDeleteItem(item.cart_id)}
+                          className={`w-9 h-9 flex items-center justify-center rounded-full bg-red-50 hover:bg-red-100 text-red-600 shadow-sm transition ${
+                            loading ? "opacity-60 cursor-not-allowed" : ""
+                          }`}
+                          title="Remove item"
+                        >
+                          {loading ? (
+                            <div className="w-4 h-4 border-2 border-red-400 border-t-transparent rounded-full animate-spin" />
+                          ) : (
+                            <X className="w-4 h-4" />
+                          )}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
-
-            <p className="font-bold text-slate-800">
-              ₹{item.price * item.quantity}
-            </p>
-          </div>
-
-          {/* BOTTOM ROW (QTY + DELETE RIGHT SIDE) */}
-          <div className="flex justify-between items-center mt-3">
-            {/* QTY BUTTON */}
-            <div
-              className={`flex items-center rounded-lg ${theme.primary} text-white font-bold h-8 shadow-md`}
-            >
-              <button
-                disabled={loading}
-                onClick={() => updateQty(item.cart_id, item.quantity - 1)}
-                className={`px-3 h-full hover:bg-black/10 transition ${
-                  loading ? "opacity-60 cursor-not-allowed" : ""
-                }`}
-              >
-                <Minus className="w-3 h-3" />
-              </button>
-
-              <span className="px-2 text-sm min-w-[20px] text-center">
-                {item.quantity}
-              </span>
-
-              <button
-                disabled={loading}
-                onClick={() => updateQty(item.cart_id, item.quantity + 1)}
-                className={`px-3 h-full hover:bg-black/10 transition ${
-                  loading ? "opacity-60 cursor-not-allowed" : ""
-                }`}
-              >
-                <Plus className="w-3 h-3" />
-              </button>
-            </div>
-
-            {/* DELETE BUTTON */}
-            <button
-              disabled={loading}
-              onClick={() => handleDeleteItem(item.cart_id)}
-              className={`w-9 h-9 flex items-center justify-center rounded-full bg-red-50 hover:bg-red-100 text-red-600 shadow-sm transition ${
-                loading ? "opacity-60 cursor-not-allowed" : ""
-              }`}
-              title="Remove item"
-            >
-              {loading ? (
-                <div className="w-4 h-4 border-2 border-red-400 border-t-transparent rounded-full animate-spin" />
-              ) : (
-                <X className="w-4 h-4" />
-              )}
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  })}
-</div>
-
           </div>
 
           {/* BESTSELLERS SECTION */}
