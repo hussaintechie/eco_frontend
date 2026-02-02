@@ -113,7 +113,7 @@ const SectionHeader = ({ title, action = "See All", icon: Icon, theme }) => (
     <span
       className={`${theme.primaryText} text-xs font-bold cursor-pointer hover:underline flex items-center gap-1`}
     >
-      {action} <ChevronDown className="-rotate-90" size={14} />
+      {/* {action} <ChevronDown className="-rotate-90" size={14} /> */}
     </span>
   </div>
 );
@@ -380,12 +380,12 @@ const HorizontalScrollRow = ({
     ))}
 
     {/* View All inside same return ✅ */}
-    <div className="min-w-[100px] flex flex-col items-center justify-center text-gray-400 cursor-pointer group">
+    {/* <div className="min-w-[100px] flex flex-col items-center justify-center text-gray-400 cursor-pointer group">
       <div className="w-12 h-12 rounded-full border-2 border-gray-200 flex items-center justify-center transition">
         <ArrowRight size={20} />
       </div>
       <span className="text-xs font-bold mt-2">View All</span>
-    </div>
+    </div> */}
   </div>
 );
 
@@ -1216,7 +1216,7 @@ useEffect(() => {
         <div className="mb-20">
           <SectionHeader
             title="Recommended For You"
-            action="View All"
+          
             theme={theme}
           />
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
@@ -1231,11 +1231,11 @@ useEffect(() => {
               />
             ))}
           </div>
-          <div className="text-center pb-8 mt-8">
+          {/* <div className="text-center pb-8 mt-8">
             <button className="text-gray-400 font-semibold text-sm hover:text-gray-800 transition">
               Show More Products
             </button>
-          </div>
+          </div> */}
         </div>
       </main>
       <Footer theme={theme} />
