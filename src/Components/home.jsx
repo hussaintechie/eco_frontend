@@ -1137,9 +1137,9 @@ useEffect(() => {
                   SUPER DEALS
                 </h3>
               </div>
-              <div className="flex items-center gap-1 bg-red-600 text-white px-3 py-1 rounded-lg text-xs font-bold shadow-sm animate-bounce">
+              {/* <div className="flex items-center gap-1 bg-red-600 text-white px-3 py-1 rounded-lg text-xs font-bold shadow-sm animate-bounce">
                 <Clock size={12} /> Ends in 12h
-              </div>
+              </div> */}
             </div>
             <HorizontalScrollRow
               data={SUPER_DEALS_DATA}
@@ -1175,6 +1175,7 @@ useEffect(() => {
             onRemoveFromCart={handleRemoveFromCart}
           />
         </div>
+        
 
      {/* --- 7. WINTER FEST ESSENTIALS (Merged Grid) --- */}
         <div className="mb-12">
