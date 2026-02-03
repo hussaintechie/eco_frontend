@@ -39,6 +39,8 @@ import {
   AlertCircle,
   Package,
   Route,
+  Repeat,
+  Store,
 } from "lucide-react";
 import API from "../api/auth";
 import { useNavigate, BrowserRouter } from "react-router-dom";
@@ -615,7 +617,7 @@ const Header = ({ theme, setMenuOpen, onOpenNotifications, cartCount }) => {
           </div>
 
           {/* Desktop Search (Centered) */}
-          <div className="hidden md:flex flex-1 max-w-lg mx-auto relative group">
+          <div className="hidden md:flex flex-1 max-w-lg mx-auto relative group"  onClick={() => navigate("/search")}>
             <input
               type="text"
               placeholder="Search for fresh groceries..."
@@ -669,18 +671,20 @@ const Header = ({ theme, setMenuOpen, onOpenNotifications, cartCount }) => {
 
         {/* MOBILE SEARCH BAR (Floating) */}
         <div className="md:hidden pb-3 pt-1">
-          <div className="relative shadow-lg shadow-gray-200/50 rounded-2xl">
-            <input
-              className="w-full bg-white text-sm rounded-2xl py-3 pl-11 pr-4 focus:outline-none text-gray-700 placeholder-gray-400 shadow-sm border border-gray-100/50"
-              placeholder="Search 'Strawberries'..."
-            />
-            <div
-              className={`absolute left-3 top-2.5 p-1 rounded-lg ${theme.accent} ${theme.primaryText}`}
-            >
-              <Search size={14} strokeWidth={3} />
-            </div>
-          </div>
-        </div>
+       <div className="relative shadow-lg shadow-gray-200/50 rounded-2xl">
+    <input
+      readOnly
+      onFocus={() => navigate("/search")}
+      placeholder="Search 'Strawberries'..."
+      className="w-full bg-white text-sm rounded-2xl py-3 pl-11 pr-4 cursor-pointer focus:outline-none text-gray-700 placeholder-gray-400 shadow-sm border border-gray-100/50"
+    />
+    <div
+      className={`absolute left-3 top-2.5 p-1 rounded-lg ${theme.accent} ${theme.primaryText}`}
+    >
+      <Search size={14} strokeWidth={3} />
+    </div>
+  </div>
+</div>
       </div>
     </header>
   );
@@ -692,7 +696,7 @@ const BottomNav = ({ theme, cartCount }) => {
 
   const navItems = [
     { id: "home", icon: Home, label: "Home", route: "/home" },
-    { id: "search", icon: Search, label: "Search", route: "/search" },
+    { id: "search", icon: Repeat, label: "orders", route: "/orders" },
     {
       id: "cart",
       icon: ShoppingBag,
@@ -700,7 +704,7 @@ const BottomNav = ({ theme, cartCount }) => {
       special: true,
       route: "/cart",
     },
-     { id: "saved", icon: Heart, label: "Saved", route: "/saved" },
+     { id: "saved", icon: Store, label: "Groceries", route: "/groceries" },
     { id: "profile", icon: User, label: "Profile", route: "/profile" },
   ];
 

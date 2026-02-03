@@ -93,14 +93,12 @@ export default function SearchPage() {
 
   const autoFocus = location.state?.autoFocus;
   const name = location.state?.name || "";
+  
 
-  useEffect(() => {
-    if (autoFocus) {
-      setTimeout(() => {
-        inputRef.current?.focus();
-      }, 400);
-    }
-  }, [autoFocus]);
+  
+useEffect(() => {
+  inputRef.current?.focus();
+}, []);
 
   const [query, setQuery] = useState("");
   const [isFocused, setIsFocused] = useState(false);
