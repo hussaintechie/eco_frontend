@@ -144,6 +144,7 @@ useEffect(() => {
         searchtxt: cleanQuery,
         mode: mode,
       });
+console.log("Search API Response:", response.data.data?.[0]);
 
       setAllProducts(response.data.data || []);
       setPopularTags(response.data.popularTags || []);
@@ -308,104 +309,124 @@ useEffect(() => {
 
             {results.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-6">
-                {results.map((item) => {
-                  const qty =
-                    cartItems.find((c) => c.product_id === item.id)?.quantity ||
-                    0;
+               {results.map((item) => {
+  const qty =
+    cartItems.find((c) => c.product_id === item.id)?.quantity || 0;
 
-                  const loading = cartLoadingId === item.id;
+  const loading = cartLoadingId === item.id;
 
-                  return (
-                    <div
-                      key={item.id}
-                      className="bg-white p-3 md:p-4 rounded-2xl md:rounded-3xl border border-gray-100 shadow-sm hover:shadow-xl transition-all group flex flex-row sm:flex-col gap-4 sm:gap-0"
-                    >
-                      {/* Image */}
-                      <div className="w-24 h-24 sm:w-full sm:aspect-square shrink-0 rounded-xl md:rounded-2xl mb-0 sm:mb-4 overflow-hidden">
-                        <img
-                          src={item.image}
-                          alt={item.name}
-                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                        />
-                      </div>
+  const stock = Number(item.current_stock || 0); // ✅ stock from API
+  const isOutOfStock = stock <= 0;
 
-                      {/* Content */}
-                      <div className="flex flex-col justify-between flex-1 min-w-0 py-1 sm:py-0">
-                        <div>
-                          <h3 className="font-bold text-gray-800 text-sm md:text-base mb-0.5 truncate leading-tight">
-                            {item.name}
-                          </h3>
-                          <p className="text-[10px] md:text-xs text-gray-400 mb-2 sm:mb-3 truncate">
-                            {item.category}
-                          </p>
-                        </div>
+  return (
+    <div
+      key={item.id}
+      className={`bg-white p-3 md:p-4 rounded-2xl md:rounded-3xl border border-gray-100 shadow-sm hover:shadow-xl transition-all group flex flex-row sm:flex-col gap-4 sm:gap-0
+        ${isOutOfStock ? "opacity-70" : ""}
+      `}
+    >
+      {/* Image */}
+      <div className="relative w-24 h-24 sm:w-full sm:aspect-square shrink-0 rounded-xl md:rounded-2xl mb-0 sm:mb-4 overflow-hidden">
+        <img
+          src={item.image}
+          alt={item.name}
+          className={`w-full h-full object-cover group-hover:scale-110 transition-transform duration-500
+            ${isOutOfStock ? "blur-[1px] grayscale" : ""}
+          `}
+        />
 
-                        <div className="flex justify-between items-center mt-auto">
-                          <span className="text-base md:text-lg font-black text-gray-900">
-                            ₹{item.price}
-                          </span>
+        {/* ✅ OUT OF STOCK label */}
+        {isOutOfStock && (
+          <span className="absolute inset-0 flex items-center justify-center bg-black/50 text-white text-xs font-bold">
+            OUT OF STOCK
+          </span>
+        )}
+      </div>
 
-                          {/* ✅ Controls with Loading */}
-                          <div className="shrink-0">
-                            {qty === 0 ? (
-                              <button
-                                disabled={loading}
-                                onClick={() => handleAddToCart(item.id)}
-                                className={`px-4 md:px-5 py-1.5 md:py-2 rounded-lg md:rounded-xl text-[11px] md:text-xs font-bold transition-colors flex items-center justify-center gap-2
-                                  ${
-                                    loading
-                                      ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                                      : "bg-emerald-600 text-white hover:bg-emerald-700"
-                                  }
-                                `}
-                              >
-                                {loading ? (
-                                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                                ) : (
-                                  "ADD"
-                                )}
-                              </button>
-                            ) : (
-                              <div className="flex items-center gap-2 md:gap-3 bg-gray-100 rounded-lg md:rounded-xl px-1.5 md:px-2 py-1">
-                                <button
-                                  disabled={loading}
-                                  onClick={() => handleRemoveFromCart(item.id)}
-                                  className={`w-6 h-6 md:w-7 md:h-7 bg-white rounded-md md:rounded-lg shadow-sm font-bold text-emerald-600 text-sm
-                                    ${
-                                      loading
-                                        ? "opacity-60 cursor-not-allowed"
-                                        : ""
-                                    }
-                                  `}
-                                >
-                                  -
-                                </button>
+      {/* Content */}
+      <div className="flex flex-col justify-between flex-1 min-w-0 py-1 sm:py-0">
+        <div>
+          <h3 className="font-bold text-gray-800 text-sm md:text-base mb-0.5 truncate leading-tight">
+            {item.name}
+          </h3>
 
-                                <span className="text-xs md:text-sm font-bold w-4 text-center">
-                                  {loading ? "..." : qty}
-                                </span>
+          <p className="text-[10px] md:text-xs text-gray-400 mb-1 truncate">
+            {item.category}
+          </p>
 
-                                <button
-                                  disabled={loading}
-                                  onClick={() => handleAddToCart(item.id)}
-                                  className={`w-6 h-6 md:w-7 md:h-7 bg-white rounded-md md:rounded-lg shadow-sm font-bold text-emerald-600 text-sm
-                                    ${
-                                      loading
-                                        ? "opacity-60 cursor-not-allowed"
-                                        : ""
-                                    }
-                                  `}
-                                >
-                                  +
-                                </button>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
+          {/* ✅ STOCK DISPLAY */}
+          <p
+            className={`text-[11px] font-bold ${
+              isOutOfStock ? "text-red-600" : "text-emerald-600"
+            }`}
+          >
+            {isOutOfStock ? "Out of stock" : `In stock: ${stock}`}
+          </p>
+        </div>
+
+        <div className="flex justify-between items-center mt-auto">
+          <span className="text-base md:text-lg font-black text-gray-900">
+            ₹{item.price}
+          </span>
+
+          {/* ✅ Controls */}
+          <div className="shrink-0">
+            {qty === 0 ? (
+              <button
+                disabled={loading || isOutOfStock}
+                onClick={() => handleAddToCart(item.id)}
+                className={`px-4 md:px-5 py-1.5 md:py-2 rounded-lg md:rounded-xl text-[11px] md:text-xs font-bold transition-colors flex items-center justify-center gap-2
+                  ${
+                    loading || isOutOfStock
+                      ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                      : "bg-emerald-600 text-white hover:bg-emerald-700"
+                  }
+                `}
+              >
+                {loading ? (
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  "ADD"
+                )}
+              </button>
+            ) : (
+              <div className="flex items-center gap-2 md:gap-3 bg-gray-100 rounded-lg md:rounded-xl px-1.5 md:px-2 py-1">
+                <button
+                  disabled={loading}
+                  onClick={() => handleRemoveFromCart(item.id)}
+                  className={`w-6 h-6 md:w-7 md:h-7 bg-white rounded-md md:rounded-lg shadow-sm font-bold text-emerald-600 text-sm
+                    ${loading ? "opacity-60 cursor-not-allowed" : ""}
+                  `}
+                >
+                  -
+                </button>
+
+                <span className="text-xs md:text-sm font-bold w-4 text-center">
+                  {loading ? "..." : qty}
+                </span>
+
+                <button
+                  disabled={loading || isOutOfStock}
+                  onClick={() => handleAddToCart(item.id)}
+                  className={`w-6 h-6 md:w-7 md:h-7 bg-white rounded-md md:rounded-lg shadow-sm font-bold text-emerald-600 text-sm
+                    ${
+                      loading || isOutOfStock
+                        ? "opacity-60 cursor-not-allowed"
+                        : ""
+                    }
+                  `}
+                >
+                  +
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+})}
+
               </div>
             ) : (
               <div className="text-center py-20 bg-white rounded-3xl border border-dashed border-gray-200">
