@@ -250,7 +250,7 @@ const RecommendedProductCard = ({
   onAddToCart,
   onRemoveFromCart,
 }) => {
-  const curstk = Number(prod?.current_stock) || 0;
+  const curstk = Number(prod?.m) || 0;
   const isOutOfStock = curstk <= 0;
   const [qty, setQty] = useState(0);
 
