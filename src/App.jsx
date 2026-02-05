@@ -23,7 +23,7 @@ import TrackOrderPage from "./Components/TrackOrderPage.jsx";
 import OrderDetailPage from "./Components/OrderDetailPage.jsx";
 import EditAddressPage from "./Components/EditAddressPage.jsx";
 import PostPaymentDeliveryFlow from "./Components/PostPaymentDeliveryFlow.jsx";
-
+import Help from "./Components/Help.jsx";
 import { CartProvider } from "../src/context/CartContext.jsx";
 import ProtectedRoute from "./Components/ProtectedRoute";
 import { iswebview } from "./utils/isWebView";
@@ -65,7 +65,7 @@ function App() {
           <Route element={<ProtectedRoute />}>
             <Route path="/cart" element={<CartPage />} />
             <Route path="/category" element={<CreativeCategoryPage />} />
-
+            <Route path="Help" element={<Help/>}/>
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="/addresses" element={<SavedAddressesPage />} />
             <Route path="/orders" element={<MyOrdersPage />} />

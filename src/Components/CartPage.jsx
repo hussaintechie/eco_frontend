@@ -527,35 +527,57 @@ const cartpage = () => {
 
   const MIN_ORDER_VALUE = bill?.minimum_order || 200;
   const amountNeeded = bill?.remaining_amount || 0;
-  const canPlaceOrder = amountNeeded === 0;
+ const canPlaceOrder =
+  amountNeeded === 0 &&
+  cart?.length > 0 &&
+  itemTotal > 0;
+
   const { resetCart } = useCart();
-  const placeOrder = async () => {
-    if (!canPlaceOrder) return;
+ const placeOrder = async () => {
+  // ✅ prevent multiple clicks
+  if (orderLoading) return;
 
-    if (!selectedAddress) {
-      toast.error("Please add or select a delivery address", {
-        position: "bottom-center",
-        autoClose: 3000,
-        hideProgressBar: true,
-        pauseOnHover: true,
-      });
+  // ✅ Block empty cart order
+  if (!cart || cart.length === 0) {
+    toast.error("Your cart is empty. Add items to place order.");
+    return;
+  }
 
-      setShowAddressModal(true);
-      return;
-    }
+  if (itemTotal <= 0) {
+    toast.error("Your cart total is invalid.");
+    return;
+  }
 
-    if (!selectedPayment) {
-      toast.error("Select payment method");
-      return;
-    }
+  if (!canPlaceOrder) return;
+
+  if (!selectedAddress) {
+    toast.error("Please add or select a delivery address");
+    setShowAddressModal(true);
+    return;
+  }
+
+  if (!selectedPayment) {
+    toast.error("Select payment method");
+    return;
+  }
+
+  try {
+    setOrderLoading(true);   // ✅ LOCK
 
     if (selectedPayment.id === "cod") {
-      submitFinalOrder("COD", "Pending", null);
+      await submitFinalOrder("COD", "Pending", null);
       return;
     }
 
-    startRazorpayPayment();
-  };
+    await startRazorpayPayment();
+  } catch (e) {
+    console.log(e);
+  } finally {
+    setOrderLoading(false); // ✅ UNLOCK
+  }
+};
+
+
 
   const startRazorpayPayment = async () => {
     try {
@@ -579,9 +601,9 @@ const cartpage = () => {
           upi: true,
         },
 
-        upi: {
-          flow: "intent", // ✅ force intent
-        },
+        upi: isMobile
+    ? { flow: "intent" } // ✅ Mobile → open apps
+    : { flow: "collect" },
 
         config: {
           display: {
@@ -591,7 +613,7 @@ const cartpage = () => {
                 instruments: [
                   {
                     method: "upi",
-                    flows: ["intent"],
+                    flows: ["intent","collect", "qr"],
                     apps: ["google_pay", "phonepe", "paytm", "bhim"], // ✅ add apps
                   },
                 ],
@@ -630,6 +652,7 @@ const cartpage = () => {
         modal: {
           ondismiss: function () {
             toast.error("Payment cancelled by user");
+            setOrderLoading(false);
           },
         },
       };
@@ -637,6 +660,7 @@ const cartpage = () => {
       const rzp = new window.Razorpay(options);
       rzp.on("payment.failed", function (response) {
         console.error("Payment failed:", response.error);
+        setOrderLoading(false);
         toast.error(
           `Payment Failed\nReason: ${response.error.description || "Unknown"}`,
         );
@@ -1205,20 +1229,19 @@ const cartpage = () => {
                 )}
               </div>
 
-              <button
-                onClick={placeOrder}
-                disabled={!canPlaceOrder}
-                className={`w-full py-4 rounded-xl font-bold text-lg shadow-lg flex items-center justify-center gap-2 transition-all ${
-                  canPlaceOrder
-                    ? `${theme.primary} text-white hover:brightness-110 active:scale-95 shadow-indigo-200/50`
-                    : "bg-slate-300 text-slate-500 cursor-not-allowed shadow-none"
-                }`}
-              >
-                <span>
-                  {canPlaceOrder ? "Place Order" : `Add ₹${amountNeeded} more`}
-                </span>
-                {canPlaceOrder && <ChevronRight className="w-5 h-5" />}
-              </button>
+             <button
+  onClick={placeOrder}
+  disabled={!canPlaceOrder || orderLoading}
+  className={`w-full py-4 rounded-xl font-bold text-lg shadow-lg flex items-center justify-center gap-2 transition-all
+    ${
+      canPlaceOrder && !orderLoading
+        ? `${theme.primary} text-white hover:brightness-110 active:scale-95`
+        : "bg-slate-300 text-slate-500 cursor-not-allowed"
+    }`}
+>
+  {orderLoading ? "Placing Order..." : canPlaceOrder ? "Place Order" : `Add ₹${amountNeeded} more`}
+</button>
+
             </div>
           </div>
         </div>
@@ -1256,7 +1279,7 @@ const cartpage = () => {
 
           <button
             onClick={placeOrder}
-            disabled={!canPlaceOrder}
+            disabled={!canPlaceOrder  || orderLoading } 
             className={`flex-1 rounded-xl py-3 px-4 flex justify-between items-center shadow-lg transition-transform ${
               canPlaceOrder
                 ? `${theme.primary} text-white active:scale-95`

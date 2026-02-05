@@ -21,7 +21,7 @@ import {
 } from "../api/cartapi";
 import { toast } from "react-toastify";
 
-// --- SEASONAL CONFIG ---
+/* --- SEASONAL CONFIG --- */
 const SEASON_CONFIG = {
   winter: {
     name: "Winter Fest",
@@ -91,16 +91,11 @@ export default function SearchPage() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const autoFocus = location.state?.autoFocus;
   const name = location.state?.name || "";
 
   useEffect(() => {
-    if (autoFocus) {
-      setTimeout(() => {
-        inputRef.current?.focus();
-      }, 400);
-    }
-  }, [autoFocus]);
+    inputRef.current?.focus();
+  }, []);
 
   const [query, setQuery] = useState("");
   const [isFocused, setIsFocused] = useState(false);
@@ -136,6 +131,26 @@ export default function SearchPage() {
     refreshCart();
   }, []);
 
+  /* ✅ SAME METHOD AS CATEGORY PAGE */
+  const formatProducts = (items) => {
+    if (!items) return [];
+    return items.map((item) => ({
+      id: item.product_id || item.id,
+      category: item.category || "General",
+      name: item.title || item.name || "",
+      img: item.image || item.img || "",
+      desc: item.description || item.desc || "",
+      variants: [
+        {
+          weight: item.unit || "1 pc",
+          price: Number(item.price) || 0,
+          mrp: Number(item.mrp) || 0,
+          current_stock: Number(item.current_stock) || 0,
+        },
+      ],
+    }));
+  };
+
   const fetchSearchData = async (mode = 1) => {
     const cleanQuery = cleanSearchText(query);
 
@@ -147,7 +162,8 @@ export default function SearchPage() {
         mode: mode,
       });
 
-      setAllProducts(response.data.data || []);
+      const formatted = formatProducts(response.data.data || []);
+      setAllProducts(formatted);
       setPopularTags(response.data.popularTags || []);
     } catch (error) {
       console.error("Search fetch error:", error);
@@ -223,16 +239,20 @@ export default function SearchPage() {
   };
 
   return (
-    <div className={`min-h-screen transition-colors duration-500 ${theme.gradient}`}>
+    <div
+      className={`min-h-screen transition-colors duration-500 ${theme.gradient}`}
+    >
       {/* --- STICKY HEADER --- */}
       <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-lg border-b border-gray-100 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 h-16 md:h-20 flex items-center justify-between gap-3 md:gap-8">
-          {/* 1. Logo Section */}
+          {/* Logo */}
           <div
             className="hidden md:flex items-center gap-3 shrink-0 cursor-pointer"
             onClick={() => navigate("/")}
           >
-            <div className={`p-2 rounded-xl ${theme.primary} text-white shadow-lg`}>
+            <div
+              className={`p-2 rounded-xl ${theme.primary} text-white shadow-lg`}
+            >
               <Leaf size={20} fill="currentColor" className="opacity-90" />
             </div>
             <div className="hidden sm:block">
@@ -245,14 +265,18 @@ export default function SearchPage() {
             </div>
           </div>
 
-          {/* 2. Search Bar Section */}
+          {/* Search */}
           <div className="flex-1 relative group py-2">
             <input
               ref={inputRef}
               type="text"
               placeholder="Search groceries..."
               className={`w-full pl-10 md:pl-12 pr-10 py-2.5 md:py-3 rounded-xl md:rounded-2xl border-none outline-none transition-all text-sm md:text-base
-                ${isFocused ? "bg-white ring-2 ring-emerald-100 shadow-md" : "bg-gray-100/80 hover:bg-gray-100"}
+                ${
+                  isFocused
+                    ? "bg-white ring-2 ring-emerald-100 shadow-md"
+                    : "bg-gray-100/80 hover:bg-gray-100"
+                }
               `}
               value={query}
               onChange={(e) => setQuery(e.target.value)}
@@ -276,7 +300,7 @@ export default function SearchPage() {
             )}
           </div>
 
-          {/* 3. My Cart Section (Desktop) */}
+          {/* Cart Desktop */}
           <div className="hidden md:block shrink-0">
             <button
               onClick={() => navigate("/cart")}
@@ -296,11 +320,10 @@ export default function SearchPage() {
         </div>
       </header>
 
-      {/* --- PAGE CONTENT --- */}
+      {/* CONTENT */}
       <main className="max-w-7xl mx-auto p-4 md:p-6">
         {query ? (
           <div>
-            {/* ✅ Search Loading */}
             {searchLoading && (
               <div className="mb-4 text-sm font-bold text-gray-400 flex items-center gap-2">
                 <div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
@@ -317,18 +340,33 @@ export default function SearchPage() {
 
                   const loading = cartLoadingId === item.id;
 
+                  // ✅ STOCK FROM variants (IMPORTANT)
+                  const displayVariant = item?.variants?.[0] || {};
+                  const stock = Number(displayVariant.current_stock) || 0;
+                  const isOutOfStock = stock <= 0;
+
                   return (
                     <div
                       key={item.id}
-                      className="bg-white p-3 md:p-4 rounded-2xl md:rounded-3xl border border-gray-100 shadow-sm hover:shadow-xl transition-all group flex flex-row sm:flex-col gap-4 sm:gap-0"
+                      className={`bg-white p-3 md:p-4 rounded-2xl md:rounded-3xl border border-gray-100 shadow-sm hover:shadow-xl transition-all group flex flex-row sm:flex-col gap-4 sm:gap-0
+                        ${isOutOfStock ? "opacity-70" : ""}
+                      `}
                     >
                       {/* Image */}
-                      <div className="w-24 h-24 sm:w-full sm:aspect-square shrink-0 rounded-xl md:rounded-2xl mb-0 sm:mb-4 overflow-hidden">
+                      <div className="relative w-24 h-24 sm:w-full sm:aspect-square shrink-0 rounded-xl md:rounded-2xl mb-0 sm:mb-4 overflow-hidden">
                         <img
-                          src={item.image}
+                          src={item.img}
                           alt={item.name}
-                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                          className={`w-full h-full object-cover group-hover:scale-110 transition-transform duration-500
+                            ${isOutOfStock ? "blur-[1px] grayscale" : ""}
+                          `}
                         />
+
+                        {isOutOfStock && (
+                          <span className="absolute inset-0 flex items-center justify-center bg-black/50 text-white text-xs font-bold">
+                            OUT OF STOCK
+                          </span>
+                        )}
                       </div>
 
                       {/* Content */}
@@ -337,25 +375,39 @@ export default function SearchPage() {
                           <h3 className="font-bold text-gray-800 text-sm md:text-base mb-0.5 truncate leading-tight">
                             {item.name}
                           </h3>
-                          <p className="text-[10px] md:text-xs text-gray-400 mb-2 sm:mb-3 truncate">
+
+                          <p className="text-[10px] md:text-xs text-gray-400 mb-1 truncate">
                             {item.category}
+                          </p>
+
+                          {/* ✅ STOCK DISPLAY */}
+                          <p
+                            className={`text-[11px] font-bold ${
+                              isOutOfStock
+                                ? "text-red-600"
+                                : "text-emerald-600"
+                            }`}
+                          >
+                            {isOutOfStock
+                              ? "Out of stock"
+                              : `In stock: ${stock}`}
                           </p>
                         </div>
 
                         <div className="flex justify-between items-center mt-auto">
                           <span className="text-base md:text-lg font-black text-gray-900">
-                            ₹{item.price}
+                            ₹{displayVariant.price}
                           </span>
 
-                          {/* ✅ Controls with Loading */}
+                          {/* Controls */}
                           <div className="shrink-0">
                             {qty === 0 ? (
                               <button
-                                disabled={loading}
+                                disabled={loading || isOutOfStock}
                                 onClick={() => handleAddToCart(item.id)}
                                 className={`px-4 md:px-5 py-1.5 md:py-2 rounded-lg md:rounded-xl text-[11px] md:text-xs font-bold transition-colors flex items-center justify-center gap-2
                                   ${
-                                    loading
+                                    loading || isOutOfStock
                                       ? "bg-gray-300 text-gray-500 cursor-not-allowed"
                                       : "bg-emerald-600 text-white hover:bg-emerald-700"
                                   }
@@ -388,11 +440,11 @@ export default function SearchPage() {
                                 </span>
 
                                 <button
-                                  disabled={loading}
+                                  disabled={loading || isOutOfStock}
                                   onClick={() => handleAddToCart(item.id)}
                                   className={`w-6 h-6 md:w-7 md:h-7 bg-white rounded-md md:rounded-lg shadow-sm font-bold text-emerald-600 text-sm
                                     ${
-                                      loading
+                                      loading || isOutOfStock
                                         ? "opacity-60 cursor-not-allowed"
                                         : ""
                                     }
@@ -425,7 +477,7 @@ export default function SearchPage() {
         )}
       </main>
 
-      {/* ✅ MOBILE FLOATING CART */}
+      {/* MOBILE CART */}
       {cartCount > 0 && (
         <div className="fixed bottom-6 left-4 right-4 z-50 md:hidden">
           <button

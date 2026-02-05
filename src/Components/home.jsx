@@ -39,6 +39,8 @@ import {
   AlertCircle,
   Package,
   Route,
+  Repeat,
+  Store,
 } from "lucide-react";
 import API from "../api/auth";
 import { useNavigate, BrowserRouter } from "react-router-dom";
@@ -113,7 +115,7 @@ const SectionHeader = ({ title, action = "See All", icon: Icon, theme }) => (
     <span
       className={`${theme.primaryText} text-xs font-bold cursor-pointer hover:underline flex items-center gap-1`}
     >
-      {action} <ChevronDown className="-rotate-90" size={14} />
+      {/* {action} <ChevronDown className="-rotate-90" size={14} /> */}
     </span>
   </div>
 );
@@ -248,7 +250,7 @@ const RecommendedProductCard = ({
   onAddToCart,
   onRemoveFromCart,
 }) => {
-  const curstk = Number(prod?.current_stock) || 0;
+  const curstk = Number(prod?.m) || 0;
   const isOutOfStock = curstk <= 0;
   const [qty, setQty] = useState(0);
 
@@ -380,12 +382,12 @@ const HorizontalScrollRow = ({
     ))}
 
     {/* View All inside same return ✅ */}
-    <div className="min-w-[100px] flex flex-col items-center justify-center text-gray-400 cursor-pointer group">
+    {/* <div className="min-w-[100px] flex flex-col items-center justify-center text-gray-400 cursor-pointer group">
       <div className="w-12 h-12 rounded-full border-2 border-gray-200 flex items-center justify-center transition">
         <ArrowRight size={20} />
       </div>
       <span className="text-xs font-bold mt-2">View All</span>
-    </div>
+    </div> */}
   </div>
 );
 
@@ -615,7 +617,7 @@ const Header = ({ theme, setMenuOpen, onOpenNotifications, cartCount }) => {
           </div>
 
           {/* Desktop Search (Centered) */}
-          <div className="hidden md:flex flex-1 max-w-lg mx-auto relative group">
+          <div className="hidden md:flex flex-1 max-w-lg mx-auto relative group"  onClick={() => navigate("/search")}>
             <input
               type="text"
               placeholder="Search for fresh groceries..."
@@ -669,18 +671,20 @@ const Header = ({ theme, setMenuOpen, onOpenNotifications, cartCount }) => {
 
         {/* MOBILE SEARCH BAR (Floating) */}
         <div className="md:hidden pb-3 pt-1">
-          <div className="relative shadow-lg shadow-gray-200/50 rounded-2xl">
-            <input
-              className="w-full bg-white text-sm rounded-2xl py-3 pl-11 pr-4 focus:outline-none text-gray-700 placeholder-gray-400 shadow-sm border border-gray-100/50"
-              placeholder="Search 'Strawberries'..."
-            />
-            <div
-              className={`absolute left-3 top-2.5 p-1 rounded-lg ${theme.accent} ${theme.primaryText}`}
-            >
-              <Search size={14} strokeWidth={3} />
-            </div>
-          </div>
-        </div>
+       <div className="relative shadow-lg shadow-gray-200/50 rounded-2xl">
+    <input
+      readOnly
+      onFocus={() => navigate("/search")}
+      placeholder="Search 'Strawberries'..."
+      className="w-full bg-white text-sm rounded-2xl py-3 pl-11 pr-4 cursor-pointer focus:outline-none text-gray-700 placeholder-gray-400 shadow-sm border border-gray-100/50"
+    />
+    <div
+      className={`absolute left-3 top-2.5 p-1 rounded-lg ${theme.accent} ${theme.primaryText}`}
+    >
+      <Search size={14} strokeWidth={3} />
+    </div>
+  </div>
+</div>
       </div>
     </header>
   );
@@ -692,7 +696,7 @@ const BottomNav = ({ theme, cartCount }) => {
 
   const navItems = [
     { id: "home", icon: Home, label: "Home", route: "/home" },
-    { id: "search", icon: Search, label: "Search", route: "/search" },
+    { id: "search", icon: Repeat, label: "orders", route: "/orders" },
     {
       id: "cart",
       icon: ShoppingBag,
@@ -700,7 +704,7 @@ const BottomNav = ({ theme, cartCount }) => {
       special: true,
       route: "/cart",
     },
-     { id: "saved", icon: Heart, label: "Saved", route: "/saved" },
+     { id: "saved", icon: Store, label: "Groceries", route: "/groceries" },
     { id: "profile", icon: User, label: "Profile", route: "/profile" },
   ];
 
@@ -1104,9 +1108,9 @@ useEffect(() => {
                   SUPER DEALS
                 </h3>
               </div>
-              <div className="flex items-center gap-1 bg-red-600 text-white px-3 py-1 rounded-lg text-xs font-bold shadow-sm animate-bounce">
+              {/* <div className="flex items-center gap-1 bg-red-600 text-white px-3 py-1 rounded-lg text-xs font-bold shadow-sm animate-bounce">
                 <Clock size={12} /> Ends in 12h
-              </div>
+              </div> */}
             </div>
             <HorizontalScrollRow
               data={SUPER_DEALS_DATA}
@@ -1157,6 +1161,7 @@ useEffect(() => {
             onRemoveFromCart={handleRemoveFromCart}
           />
         </div>
+        
 
      {/* --- 7. WINTER FEST ESSENTIALS (Merged Grid) --- */}
         <div className="mb-12">
@@ -1215,7 +1220,7 @@ useEffect(() => {
         <div className="mb-20">
           <SectionHeader
             title="Recommended For You"
-            action="View All"
+          
             theme={theme}
           />
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
@@ -1230,11 +1235,11 @@ useEffect(() => {
               />
             ))}
           </div>
-          <div className="text-center pb-8 mt-8">
+          {/* <div className="text-center pb-8 mt-8">
             <button className="text-gray-400 font-semibold text-sm hover:text-gray-800 transition">
               Show More Products
             </button>
-          </div>
+          </div> */}
         </div>
       </main>
       <Footer theme={theme} />
