@@ -309,7 +309,7 @@ export default function CreativeCategoryPage() {
   const filteredProducts = useMemo(() => {
     return PRODUCTS.filter((p) =>
       p.name.toLowerCase().includes(searchQuery.toLowerCase())
-    );
+    ); 
   }, [searchQuery, PRODUCTS]);
 
   /* ------------ CART ACTIONS (WITH LOADING) ------------ */
