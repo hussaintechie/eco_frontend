@@ -1129,38 +1129,43 @@ useEffect(() => {
         {/* --- 4. AD BANNER 1 (New) --- */}
         <ParallaxAdBanner theme={theme} />
 
-        {/* --- 6. VEGETABLES ROW (New) --- */}
-        <div className="mb-10">
-          <SectionHeader
-            title="Fresh Vegetables"
-            icon={Carrot}
-            theme={theme}
-          />
-          <HorizontalScrollRow
-            data={VEG_DATA}
-            theme={theme}
-            cartItems={cartItems} 
-            onAddToCart={handleAddToCart}
-            onRemoveFromCart={handleRemoveFromCart}
-          />
-        </div>
+       
+      {VEG_DATA?.length > 0 && (
+  <div className="mb-10">
+    <SectionHeader
+      title="Fresh Vegetables"
+      icon={Carrot}
+      theme={theme}
+    />
+    <HorizontalScrollRow
+      data={VEG_DATA}
+      theme={theme}
+      cartItems={cartItems}
+      onAddToCart={handleAddToCart}
+      onRemoveFromCart={handleRemoveFromCart}
+    />
+  </div>
+)}
 
 
         {/* --- 6. VEGETABLES ROW (New) --- */}
-        <div className="mb-10">
-          <SectionHeader
-            title="Sessional Fruit"
-            icon={Carrot}
-            theme={theme}
-          />
-          <HorizontalScrollRow
-            data={FRUITS_DATA}
-            theme={theme}
-            cartItems={cartItems} 
-            onAddToCart={handleAddToCart}
-            onRemoveFromCart={handleRemoveFromCart}
-          />
-        </div>
+      {FRUITS_DATA?.length > 0 && (
+  <div className="mb-10">
+    <SectionHeader
+      title="Seasonal Fruit"
+      icon={Carrot}
+      theme={theme}
+    />
+    <HorizontalScrollRow
+      data={FRUITS_DATA}
+      theme={theme}
+      cartItems={cartItems}
+      onAddToCart={handleAddToCart}
+      onRemoveFromCart={handleRemoveFromCart}
+    />
+  </div>
+)}
+
         
 
      {/* --- 7. WINTER FEST ESSENTIALS (Merged Grid) --- */}
