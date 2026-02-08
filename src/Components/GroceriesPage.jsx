@@ -7,6 +7,7 @@ import {
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
+import Footer from "./Footer";
 const STORE_ID = Number(import.meta.env.VITE_STORE_ID);
 
 // --- MOCK NAVIGATION (Replaces react-router-dom for standalone preview) ---
@@ -429,42 +430,11 @@ const naviagte=useNavigate();
       {/* MOBILE BOTTOM NAV (< md) */}
       {/* <div className="md:hidden">
          <BottomNav theme={theme} />
-      </div> */}
+      </div> }
 
       {/* DESKTOP FOOTER (>= md) */}
-      <div className="hidden md:block bg-gray-900 text-gray-400 py-12 mt-12 relative z-10">
-          <div className="max-w-7xl mx-auto px-8 grid grid-cols-4 gap-8">
-              <div>
-                  <h3 className="text-white font-bold text-lg mb-4">SBS GROCES</h3>
-                  <p className="text-sm">Freshness delivered to your doorstep.</p>
-              </div>
-              <div>
-                  <h4 className="text-white font-bold mb-4">Company</h4>
-                  <ul className="space-y-2 text-sm">
-                      <li>About Us</li>
-                      <li>Careers</li>
-                      <li>Blog</li>
-                  </ul>
-              </div>
-              <div>
-                  <h4 className="text-white font-bold mb-4">Help</h4>
-                  <ul className="space-y-2 text-sm">
-                      <li>FAQs</li>
-                      <li>Contact Us</li>
-                      <li>Shipping</li>
-                  </ul>
-              </div>
-              <div>
-                  <h4 className="text-white font-bold mb-4">Social</h4>
-                  <div className="flex gap-4">
-                      <div className="w-8 h-8 bg-gray-800 rounded-full hover:bg-white/20 transition cursor-pointer"></div>
-                      <div className="w-8 h-8 bg-gray-800 rounded-full hover:bg-white/20 transition cursor-pointer"></div>
-                      <div className="w-8 h-8 bg-gray-800 rounded-full hover:bg-white/20 transition cursor-pointer"></div>
-                  </div>
-              </div>
-          </div>
-      </div>
-
+      
+<Footer theme={theme} />
     </div>
   );
 }

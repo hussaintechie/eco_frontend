@@ -942,6 +942,32 @@ useEffect(() => {
       },
     });
   };
+  const getSuperDealHoursLeft = () => {
+  const now = new Date();
+
+  // Today 12:01 AM
+  const start = new Date();
+  start.setHours(0, 1, 0, 0);
+
+  // If before 12:01 AM, deal hasn't started yet
+  if (now < start) return 24;
+
+  const diffMs = now - start;
+  const passedHours = Math.floor(diffMs / (1000 * 60 * 60));
+
+  const hoursLeft = 24 - passedHours;
+  return hoursLeft > 0 ? hoursLeft : 0;
+};
+
+  const [hoursLeft, setHoursLeft] = useState(getSuperDealHoursLeft());
+
+useEffect(() => {
+  const timer = setInterval(() => {
+    setHoursLeft(getSuperDealHoursLeft());
+  }, 60000); // update every minute
+
+  return () => clearInterval(timer);
+}, []);
 
   /* =========================================================
      ✅ JSX STARTS
@@ -1103,9 +1129,10 @@ useEffect(() => {
                   SUPER DEALS
                 </h3>
               </div>
-              {/* <div className="flex items-center gap-1 bg-red-600 text-white px-3 py-1 rounded-lg text-xs font-bold shadow-sm animate-bounce">
-                <Clock size={12} /> Ends in 12h
-              </div> */}
+              {  <div className="flex items-center gap-1 bg-red-600 text-white px-3 py-1 rounded-lg text-xs font-bold shadow-sm animate-bounce">
+      <Clock size={12} />
+      Ends in {hoursLeft}h
+    </div>}
             </div>
             <HorizontalScrollRow
               data={SUPER_DEALS_DATA}
