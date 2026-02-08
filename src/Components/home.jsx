@@ -916,7 +916,7 @@ useEffect(() => {
       cat_id: item.categories_id || 0,
       title: item.categories_name || "",
       subtitle: "",
-      img: item.cat_img,
+      img: item.image_url,
     }));
   };
   useEffect(() => {

@@ -240,7 +240,7 @@ const formatCategories = (items) => {
   return items.map((item) => ({
     cat_id: item.categories_id || 0,
     name: item.categories_name || "",
-    img: item.cat_img
+    img: item.image_url
   }));
 };
 
