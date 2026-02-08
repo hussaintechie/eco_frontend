@@ -256,6 +256,7 @@ const RecommendedProductCard = ({
   const isOutOfStock = curstk <= 0;
   const [qty, setQty] = useState(0);
 
+
   const handleIncrement = () => {
     if (isOutOfStock) return;
     setQty((prev) => prev + 1);
@@ -874,6 +875,8 @@ useEffect(() => {
   /* ---------------- DATA STATE (UNCHANGED) ---------------- */
   const [CATEGORIES, setCategories] = useState([]);
   const [SUPER_DEALS_DATA, setDealdata] = useState([]);
+  const [superDealsLoading, setSuperDealsLoading] = useState(true);
+
   const [FRUITS_DATA, setFruitdata] = useState([]);
   const [VEG_DATA, setVegdata] = useState([]);
   const [FEED_PRODUCTS, setRecomentdata] = useState([]);
@@ -893,24 +896,28 @@ useEffect(() => {
     console.error("Category fetch error:", error);
   }
 };
-  const fetchDeals = async () => {
-    try {
-      const response = await API.post(
-        "product/superdealsdata",
-        { register_id: STORE_ID } 
-      );
-      const { deals, veg, fruit, reco } = response.data.data;
+ const fetchDeals = async () => {
+  setSuperDealsLoading(true); // 👈 start loading BEFORE API
 
-      setDealdata(deals);
-      setFruitdata(fruit);
-      setVegdata(veg);
-      setRecomentdata(reco);
+  try {
+    const response = await API.post(
+      "product/superdealsdata",
+      { register_id: STORE_ID }
+    );
 
-      console.log("Deals data:", response.data.data);
-    } catch (error) {
-      console.error("Deals data fetch error:", error);
-    }
-  };
+    const { deals, veg, fruit, reco } = response.data.data;
+
+    setDealdata(deals || []);
+    setFruitdata(fruit || []);
+    setVegdata(veg || []);
+    setRecomentdata(reco || []);
+
+  } catch (error) {
+    console.error("Deals fetch error:", error);
+  } finally {
+    setSuperDealsLoading(false); // 👈 stop loading AFTER API
+  }
+};
 
 
   const formatCategories = (items) => {
@@ -1090,37 +1097,50 @@ useEffect(() => {
         </div>
 
         {/* --- 3. SUPER DISCOUNT ROW (New) --- */}
-        {SUPER_DEALS_DATA.length > 0 && (
-          <div className="mb-12">
-            <div className="flex items-center justify-between mb-4 bg-red-50 p-3 rounded-xl border border-red-100">
-              <div className="flex items-center gap-2 text-red-600">
-                <Percent
-                  size={24}
-                  fill="currentColor"
-                  className="animate-pulse"
-                />
-                <h3 className="text-xl font-black italic tracking-tighter">
-                  SUPER DEALS
-                </h3>
-              </div>
-              {/* <div className="flex items-center gap-1 bg-red-600 text-white px-3 py-1 rounded-lg text-xs font-bold shadow-sm animate-bounce">
-                <Clock size={12} /> Ends in 12h
-              </div> */}
-            </div>
-            <HorizontalScrollRow
-              data={SUPER_DEALS_DATA}
-              onAddToCart={handleAddToCart}
-              cartItems={cartItems} 
-              onRemoveFromCart={handleRemoveFromCart}
-              theme={{
-                ...theme,
-                accent: "bg-red-50",
-                primaryText: "text-red-600",
-                primary: "bg-red-600",
-              }}
-            />
-          </div>
-        )}
+      {superDealsLoading && (
+  <div className="mb-12">
+    <div className="flex items-center justify-between mb-4 bg-red-50 p-3 rounded-xl border border-red-100">
+      <h3 className="text-xl font-black text-red-600">
+        SUPER DEALS
+      </h3>
+    </div>
+
+    <div className="flex gap-4 overflow-x-auto pb-6">
+      {[...Array(5)].map((_, i) => (
+        <div
+          key={i}
+          className="min-w-[160px] h-44 bg-gray-200 rounded-xl animate-pulse"
+        />
+      ))}
+    </div>
+  </div>
+)}
+
+{!superDealsLoading && SUPER_DEALS_DATA.length > 0 && (
+  <div className="mb-12">
+    <div className="flex items-center gap-2 text-red-600 mb-4">
+      <Percent size={24} fill="currentColor" />
+      <h3 className="text-xl font-black italic tracking-tighter">
+        SUPER DEALS
+      </h3>
+    </div>
+
+    <HorizontalScrollRow
+      data={SUPER_DEALS_DATA}
+      onAddToCart={handleAddToCart}
+      cartItems={cartItems}
+      onRemoveFromCart={handleRemoveFromCart}
+      theme={{
+        ...theme,
+        accent: "bg-red-50",
+        primaryText: "text-red-600",
+        primary: "bg-red-600",
+      }}
+    />
+  </div>
+)}
+
+
         {/* --- 4. AD BANNER 1 (New) --- */}
         <ParallaxAdBanner theme={theme} />
 
