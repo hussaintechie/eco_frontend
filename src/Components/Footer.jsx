@@ -2,6 +2,28 @@ import React from 'react';
 import { FaApple, FaGooglePlay, FaEnvelope, FaPhoneAlt, FaLeaf } from 'react-icons/fa';
 import { getSeason, SEASON_CONFIG } from './SEASON_CONFIG'; 
 
+
+const categories = [
+  "Energy Drinks",
+  "Dairy Products",
+  "Milk Products",
+  "Tea & Coffee",
+  "Tooth Paste",
+  "Soaps",
+
+  "Detergents",
+  "Cleaning Items",
+  "Rice",
+  "Atta & Flour",
+  "Health & Pharma",
+  "Breakfast",
+
+  "Dals & Pulses",
+  "Shampoo",
+  "Oil & Ghee",
+  "Spices"
+];
+
 const Footer = () => {
   const currentSeason = getSeason();
   const theme = SEASON_CONFIG[currentSeason];
@@ -24,7 +46,7 @@ const Footer = () => {
             {/* Text Container */}
             <div className="flex flex-col">
               <h1 className="font-extrabold text-2xl tracking-tight leading-none flex gap-1">
-                <span className="text-gray-900">SB</span>
+                <span className="text-gray-900">SBS</span>
                 <span className={`${theme.primaryText}`}>GROCES</span>
               </h1>
               <span className="text-[11px] font-bold text-gray-400 tracking-widest mt-0.5">FRESH & ORGANIC</span>
@@ -54,33 +76,29 @@ const Footer = () => {
         </div>
 
         {/* Column 2: Useful Links */}
-        
 
         {/* Column 3: Categories */}
-        <div className="lg:w-1/2">
-          <h3 className={`font-semibold mb-4 ${theme.primaryText}`}>Categories</h3>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-x-4 gap-y-3 text-xs sm:text-sm">
-            <a href="#" className="hover:text-gray-900 transition">Fresh Fruits</a>
-            <a href="#" className="hover:text-gray-900 transition">Home Needs</a>
-            <a href="#" className="hover:text-gray-900 transition">Fresh Vegetables</a>
-            <a href="#" className="hover:text-gray-900 transition">Dairy, Eggs & Breads</a>
-            
-            <a href="#" className="hover:text-gray-900 transition">Masalas & Dry Fruits</a>
-            <a href="#" className="hover:text-gray-900 transition">Edible Oil & Ghee</a>
-            <a href="#" className="hover:text-gray-900 transition">Chips & Namkeens</a>
-            <a href="#" className="hover:text-gray-900 transition">Rice, Atta & Dal</a>
-            
-            <a href="#" className="hover:text-gray-900 transition">Bakery & Biscuits</a>
-            <a href="#" className="hover:text-gray-900 transition">Instant & Frozen</a>
-            <a href="#" className="hover:text-gray-900 transition">Batter & Breakfast</a>
-            <a href="#" className="hover:text-gray-900 transition">Drinks & Juices</a>
-            
-            <a href="#" className="hover:text-gray-900 transition">Cleaning Essentials</a>
-            <a href="#" className="hover:text-gray-900 transition">Personal Care</a>
-            <a href="#" className="hover:text-gray-900 transition">Health & Pharma</a>
-            <a href="#" className="hover:text-gray-900 transition">Sweets & Chocolates</a>
-          </div>
-        </div>
+      {/* Column 3: Categories */}
+<div className="lg:w-1/2">
+  <h3 className={`font-semibold mb-4 ${theme.primaryText}`}>
+    Categories
+  </h3>
+
+  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-x-4 gap-y-3 text-xs sm:text-sm">
+    {categories.map((cat, index) => (
+      <a
+        key={index}
+        href="/groceries"
+        className="hover:text-gray-900 transition"
+      >
+        {cat}
+      </a>
+    ))}
+  </div>
+</div>
+
+
+
       </div>
 
       <hr className={`my-8 ${theme.border} max-w-7xl mx-auto`} />

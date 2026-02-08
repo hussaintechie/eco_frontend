@@ -41,6 +41,7 @@ import {
   Route,
   Repeat,
   Store,
+ 
 } from "lucide-react";
 import API from "../api/auth";
 import { useNavigate, BrowserRouter } from "react-router-dom";
@@ -60,6 +61,7 @@ import { toast } from "react-toastify";
 
 import { useCart } from "../context/CartContext.jsx";
 import Footer from "./Footer.jsx";
+import { FaLeaf } from "react-icons/fa";
 
 const NOTIFICATIONS = [
   {
@@ -602,7 +604,7 @@ const Header = ({ theme, setMenuOpen, onOpenNotifications, cartCount }) => {
             <div
               className={`p-2 rounded-xl ${theme.primary} text-white shadow-lg shadow-${theme.primary}/30`}
             >
-              <Leaf size={20} fill="currentColor" className="opacity-90" />
+             <FaLeaf className="text-white -rotate-12" size={22} />
             </div>
             <div className="flex flex-col">
               <h1
@@ -966,14 +968,7 @@ useEffect(() => {
       />
 
       {/* ATMOSPHERE - REMOVED animate-pulse TO STOP BLINKING */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
-        <div
-          className={`absolute top-0 left-0 w-[500px] h-[500px] rounded-full mix-blend-multiply filter blur-3xl opacity-20 ${theme.primary}`}
-        ></div>
-        <div
-          className={`absolute bottom-0 right-0 w-[400px] h-[400px] rounded-full mix-blend-multiply filter blur-3xl opacity-20 ${theme.accent}`}
-        ></div>
-      </div>
+   
 
       <main className="relative z-10 max-w-7xl mx-auto px-4 md:px-6 pt-2">
 {/* --- 1. HERO SECTION --- */}
@@ -1228,7 +1223,7 @@ useEffect(() => {
           
             theme={theme}
           />
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-5">
             {FEED_PRODUCTS.map((prod, idx) => (
               <RecommendedProductCard
                 key={idx}
