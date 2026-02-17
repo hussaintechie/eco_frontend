@@ -474,10 +474,12 @@ const BANNER_IMAGES = [
   {
     desktop: "https://res.cloudinary.com/duzladayx/image/upload/v1769343614/banner5_kkye4k.png",
     mobile: "https://res.cloudinary.com/duzladayx/image/upload/v1769343614/banner5_kkye4k.png",
+    categoryId:8,
   },
   {
     desktop: "https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=1200&q=80",
     mobile: "https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=1200&q=80",
+     categoryId: 2,
   },
   
 ];
@@ -556,7 +558,7 @@ const ParallaxAdBanner = ({ theme }) => {
         <p className="text-gray-200 text-xs md:text-base mb-6 max-w-[200px] md:max-w-md drop-shadow-md hidden md:block">
     Get 100% organic vegetables delivered directly from local farmers.
   </p>
-       <button className="bg-white text-gray-900 text-sm md:text-base font-bold py-2 px-5 md:py-3 md:px-8 rounded-full hover:bg-gray-100 transition shadow-xl flex items-center gap-2">
+       <button onClick={() => handleBannerClick(8)} className="bg-white text-gray-900 text-sm md:text-base font-bold py-2 px-5 md:py-3 md:px-8 rounded-full hover:bg-gray-100 transition shadow-xl flex items-center gap-2">
     Shop Now <ArrowRight size={14} className="md:w-4 md:h-4" />
   </button>
       </div>
@@ -829,6 +831,17 @@ useEffect(() => {
     console.error("remove error", err);
   }
 };
+const handleBannerClick = (categoryId) => {
+  if (!categoryId) {
+    console.warn("Banner categoryId missing");
+    return;
+  }
+
+  navigate("/category", {
+    state: { id: categoryId },
+  });
+};
+
 
   /* ---------------- THEME / BASIC STATE (UNCHANGED) ---------------- */
   const [currentSeason, setCurrentSeason] = useState("winter");
@@ -850,14 +863,17 @@ useEffect(() => {
   {
     desktop: "https://res.cloudinary.com/duzladayx/image/upload/v1769334911/banner1_ximafq.png",
     mobile: "https://res.cloudinary.com/duzladayx/image/upload/v1769337855/banner2_qkweie.png",
+    categoryId: 2,
   },
   {
     desktop: "https://res.cloudinary.com/duzladayx/image/upload/v1769335725/banner2_xgdmes.png",
     mobile: "https://res.cloudinary.com/duzladayx/image/upload/v1769337869/banner3_qz3vej.png",
+    categoryId: 8,
   },
   {
     desktop: "https://res.cloudinary.com/duzladayx/image/upload/v1769334868/banner3_mnbf4k.png",
     mobile: "https://res.cloudinary.com/duzladayx/image/upload/v1769337247/banner1_nvryqi.png",
+    categoryId: 8,
   },
 ];
 
@@ -949,6 +965,32 @@ useEffect(() => {
       },
     });
   };
+  const getSuperDealHoursLeft = () => {
+  const now = new Date();
+
+  // Today 12:01 AM
+  const start = new Date();
+  start.setHours(0, 1, 0, 0);
+
+  // If before 12:01 AM, deal hasn't started yet
+  if (now < start) return 24;
+
+  const diffMs = now - start;
+  const passedHours = Math.floor(diffMs / (1000 * 60 * 60));
+
+  const hoursLeft = 24 - passedHours;
+  return hoursLeft > 0 ? hoursLeft : 0;
+};
+
+  const [hoursLeft, setHoursLeft] = useState(getSuperDealHoursLeft());
+
+useEffect(() => {
+  const timer = setInterval(() => {
+    setHoursLeft(getSuperDealHoursLeft());
+  }, 60000); // update every minute
+
+  return () => clearInterval(timer);
+}, []);
 
   /* =========================================================
      ✅ JSX STARTS
@@ -988,6 +1030,7 @@ useEffect(() => {
     {BANNERS.map((banner, i) => (
       <div
         key={i}
+        onClick={() => handleBannerClick(banner.categoryId)}
         className={`absolute inset-0 transition-opacity duration-1000 ${
           i === slideIndex ? "opacity-100 z-10" : "opacity-0 z-0"
         }`}
@@ -1097,7 +1140,7 @@ useEffect(() => {
         </div>
 
         {/* --- 3. SUPER DISCOUNT ROW (New) --- */}
-      {superDealsLoading && (
+         {superDealsLoading && (
   <div className="mb-12">
     <div className="flex items-center justify-between mb-4 bg-red-50 p-3 rounded-xl border border-red-100">
       <h3 className="text-xl font-black text-red-600">
@@ -1115,32 +1158,38 @@ useEffect(() => {
     </div>
   </div>
 )}
-
-{!superDealsLoading && SUPER_DEALS_DATA.length > 0 && (
-  <div className="mb-12">
-    <div className="flex items-center gap-2 text-red-600 mb-4">
-      <Percent size={24} fill="currentColor" />
-      <h3 className="text-xl font-black italic tracking-tighter">
-        SUPER DEALS
-      </h3>
-    </div>
-
-    <HorizontalScrollRow
-      data={SUPER_DEALS_DATA}
-      onAddToCart={handleAddToCart}
-      cartItems={cartItems}
-      onRemoveFromCart={handleRemoveFromCart}
-      theme={{
-        ...theme,
-        accent: "bg-red-50",
-        primaryText: "text-red-600",
-        primary: "bg-red-600",
-      }}
-    />
-  </div>
-)}
-
-
+        {SUPER_DEALS_DATA.length > 0 && (
+          <div className="mb-12">
+            <div className="flex items-center justify-between mb-4 bg-red-50 p-3 rounded-xl border border-red-100">
+              <div className="flex items-center gap-2 text-red-600">
+                <Percent
+                  size={24}
+                  fill="currentColor"
+                  className="animate-pulse"
+                />
+                <h3 className="text-xl font-black italic tracking-tighter">
+                  SUPER DEALS
+                </h3>
+              </div>
+              {  <div className="flex items-center gap-1 bg-red-600 text-white px-3 py-1 rounded-lg text-xs font-bold shadow-sm animate-bounce">
+      <Clock size={12} />
+      Ends in {hoursLeft}h
+    </div>}
+            </div>
+            <HorizontalScrollRow
+              data={SUPER_DEALS_DATA}
+              onAddToCart={handleAddToCart}
+              cartItems={cartItems} 
+              onRemoveFromCart={handleRemoveFromCart}
+              theme={{
+                ...theme,
+                accent: "bg-red-50",
+                primaryText: "text-red-600",
+                primary: "bg-red-600",
+              }}
+            />
+          </div>
+        )}
         {/* --- 4. AD BANNER 1 (New) --- */}
         <ParallaxAdBanner theme={theme} />
 
@@ -1199,15 +1248,18 @@ useEffect(() => {
             {/* 1. SPOTLIGHT (Large Left) - Full Image */}
             <div className={`col-span-2 row-span-2 rounded-2xl relative overflow-hidden group cursor-pointer border border-gray-100 shadow-sm hover:shadow-md transition-all h-64 md:h-auto`}>
               <img
+              onClick={() => handleBannerClick(10)}
                 src="https://res.cloudinary.com/duzladayx/image/upload/v1769347659/banner_6_uhhblj.png"
                 className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                 alt="immunity"
+               
               />
             </div>
 
             {/* 2. FRESH JUICES (Small Top) - Full Image */}
             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm relative overflow-hidden group h-32 md:h-40 cursor-pointer hover:-translate-y-1 transition-transform">
               <img
+              onClick={()=>handleBannerClick(9)}
                 src="https://res.cloudinary.com/duzladayx/image/upload/v1769349038/banner8_aqhjpq.png"
                 className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                 alt="juice"
@@ -1217,6 +1269,7 @@ useEffect(() => {
             {/* 3. DAIRY (Small Top) - Full Image */}
             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm relative overflow-hidden group h-32 md:h-40 cursor-pointer hover:-translate-y-1 transition-transform">
               <img
+              onClick={() => handleBannerClick(14)}
                 src="https://res.cloudinary.com/duzladayx/image/upload/v1769349416/banner7_nxhmmw.png"
                 className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                 alt="dairy"

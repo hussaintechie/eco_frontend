@@ -18,6 +18,12 @@ body {
   @apply overflow-x-hidden;
   padding-top: env(safe-area-inset-top);
   padding-bottom: env(safe-area-inset-bottom);
+   -webkit-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+
+  -webkit-touch-callout: none; /* iOS long press */
+  touch-action: manipulation; /* Prevent zoom gestures */
 
   -webkit-user-select: none;
   -ms-user-select: none;
@@ -31,4 +37,8 @@ select {
   -webkit-user-select: text;
   -ms-user-select: text;
   user-select: text;
+}
+* {
+  -webkit-user-select: none;
+  user-select: none;
 }

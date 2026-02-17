@@ -243,8 +243,19 @@ export default function CreativeCategoryPage() {
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [PRODUCTS, setProducts] = useState([]);
 
-  const { state } = useLocation();
-  const { id } = state || { id: 0 };
+  // const { state } = useLocation();
+  // const { id } = state || { id: 0 };
+  const location = useLocation();
+const id = location?.state?.id;
+
+useEffect(() => {
+  if (!id) {
+    navigate("/home");
+    return;
+  }
+  fetchCategoryItems();
+}, [id]);
+
 
   useEffect(() => {
     setCurrentSeason(getSeason());
