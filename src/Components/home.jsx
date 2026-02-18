@@ -782,6 +782,7 @@ const BottomNav = ({ theme, cartCount }) => {
 };
 // ✅ CLOUDINARY BANNERS (ONLY ONE SOURCE)
 // 3. MAIN PAGE CONTENT
+
 const ProductSkeleton = ({ count = 5 }) => (
   <div className="flex gap-4 overflow-x-auto pb-6">
     {[...Array(count)].map((_, i) => (
@@ -1185,6 +1186,20 @@ const MainContent = () => {
 
         {/* --- 4. AD BANNER 1 (New) --- */}
         <ParallaxAdBanner theme={theme} />
+{!Loading && SUPER_DEALS_DATA?.length > 0 && (
+  <div className="mb-10">
+    <SectionHeader title="Super Deals 🔥" theme={theme} />
+
+    <HorizontalScrollRow
+      data={SUPER_DEALS_DATA}
+      theme={theme}
+      cartItems={cartItems}
+      cartLoadingId={cartLoadingId}
+      onAddToCart={handleAddToCart}
+      onRemoveFromCart={handleRemoveFromCart}
+    />
+  </div>
+)}
 
         {Loading ? (
           <ProductSkeleton count={5} />
