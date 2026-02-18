@@ -238,7 +238,7 @@ const EditAddressPage = () => {
   const formFields = [
     { label: "Full Name", key: "name", colSpan: "col-span-2" },
     { label: "Phone Number", key: "phone", colSpan: "col-span-2" },
-    { label: "House / Building", key: "line1", colSpan: "col-span-2 md:col-span-1" },
+    { label: "Address", key: "line1", colSpan: "col-span-2 md:col-span-1" },
     { label: "Street / Area", key: "line2", colSpan: "col-span-2 md:col-span-1" },
     { label: "Landmark", key: "landmark", colSpan: "col-span-2" },
     { label: "City", key: "city", colSpan: "col-span-1" },
