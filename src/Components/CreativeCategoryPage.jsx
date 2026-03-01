@@ -87,9 +87,16 @@ const ProductCard = ({
         </h4>
 
         <div className="flex justify-between items-center mt-2">
-          <span className="text-sm font-black text-gray-900">
-            ₹{displayVariant.price}
-          </span>
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-black text-gray-900">
+              ₹{displayVariant.price}
+            </span>
+            {displayVariant.mrp > displayVariant.price && (
+              <span className="text-xs text-gray-400 line-through">
+                ₹{displayVariant.mrp}
+              </span>
+            )}
+          </div>
 
           {/* ADD / QTY */}
           {qty === 0 ? (
@@ -170,11 +177,12 @@ const ProductDetailsModal = ({
     currentVariant.mrp > 0
       ? Math.round(
           ((currentVariant.mrp - currentVariant.price) / currentVariant.mrp) *
-            100
+            100,
         )
       : 0;
 
   return (
+    
     <div className="fixed inset-0 z-[100] flex items-end md:items-center justify-center pointer-events-auto">
       <div
         className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity"
@@ -228,7 +236,7 @@ export default function CreativeCategoryPage() {
   const [cartItems, setCartItems] = useState([]);
   const cartCount = cartItems.reduce(
     (sum, item) => sum + Number(item.quantity || 0),
-    0
+    0,
   );
 
   // ✅ loading states
@@ -246,16 +254,15 @@ export default function CreativeCategoryPage() {
   // const { state } = useLocation();
   // const { id } = state || { id: 0 };
   const location = useLocation();
-const id = location?.state?.id;
+  const id = location?.state?.id;
 
-useEffect(() => {
-  if (!id) {
-    navigate("/home");
-    return;
-  }
-  fetchCategoryItems();
-}, [id]);
-
+  useEffect(() => {
+    if (!id) {
+      navigate("/home");
+      return;
+    }
+    fetchCategoryItems();
+  }, [id]);
 
   useEffect(() => {
     setCurrentSeason(getSeason());
@@ -319,8 +326,8 @@ useEffect(() => {
 
   const filteredProducts = useMemo(() => {
     return PRODUCTS.filter((p) =>
-      p.name.toLowerCase().includes(searchQuery.toLowerCase())
-    ); 
+      p.name.toLowerCase().includes(searchQuery.toLowerCase()),
+    );
   }, [searchQuery, PRODUCTS]);
 
   /* ------------ CART ACTIONS (WITH LOADING) ------------ */
@@ -370,6 +377,11 @@ useEffect(() => {
     <div
       className={`min-h-screen ${theme.gradient} font-sans text-gray-800 transition-colors duration-700 relative flex flex-col`}
     >
+       {pageLoading && (
+      <div className="fixed inset-0 z-[999] bg-white/70 backdrop-blur-sm flex items-center justify-center">
+        <div className="w-12 h-12 border-4 border-gray-300  rounded-full animate-spin"></div>
+      </div>
+    )}
       <SeasonalParticles season={currentSeason} />
 
       <ProductDetailsModal

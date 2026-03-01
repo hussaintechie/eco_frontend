@@ -1,8 +1,16 @@
-import React, { useState, useEffect} from "react";
-import { 
-  ArrowLeft, Search, ShoppingCart, User, 
-  Snowflake, Sun, Flower2, CloudRain,
-  Home, Heart, Leaf
+import React, { useState, useEffect } from "react";
+import {
+  ArrowLeft,
+  Search,
+  ShoppingCart,
+  User,
+  Snowflake,
+  Sun,
+  Flower2,
+  CloudRain,
+  Home,
+  Heart,
+  Leaf,
 } from "lucide-react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
@@ -31,7 +39,7 @@ const SEASON_CONFIG = {
     border: "border-indigo-100",
     icon: Snowflake,
     bannerGradient: "bg-gradient-to-r from-blue-900 to-indigo-800",
-    mobileHeader: "bg-gradient-to-r from-blue-600 to-indigo-600"
+    mobileHeader: "bg-gradient-to-r from-blue-600 to-indigo-600",
   },
   summer: {
     name: "Summer Chill",
@@ -42,7 +50,7 @@ const SEASON_CONFIG = {
     border: "border-orange-100",
     icon: Sun,
     bannerGradient: "bg-gradient-to-r from-orange-400 to-amber-300",
-    mobileHeader: "bg-gradient-to-r from-orange-500 to-orange-600"
+    mobileHeader: "bg-gradient-to-r from-orange-500 to-orange-600",
   },
   spring: {
     name: "Spring Bloom",
@@ -53,7 +61,7 @@ const SEASON_CONFIG = {
     border: "border-emerald-100",
     icon: Flower2,
     bannerGradient: "bg-gradient-to-r from-emerald-500 to-teal-400",
-    mobileHeader: "bg-gradient-to-r from-emerald-500 to-teal-500"
+    mobileHeader: "bg-gradient-to-r from-emerald-500 to-teal-500",
   },
   monsoon: {
     name: "Monsoon",
@@ -64,8 +72,8 @@ const SEASON_CONFIG = {
     border: "border-teal-100",
     icon: CloudRain,
     bannerGradient: "bg-gradient-to-r from-slate-700 to-teal-800",
-    mobileHeader: "bg-gradient-to-r from-slate-700 to-teal-700"
-  }
+    mobileHeader: "bg-gradient-to-r from-slate-700 to-teal-700",
+  },
 };
 
 const getSeason = () => {
@@ -91,7 +99,7 @@ const SeasonalParticles = ({ season }) => {
               top: -20,
               fontSize: `${Math.random() * 20 + 10}px`,
               animationDuration: `${Math.random() * 5 + 5}s`,
-              animationDelay: `${Math.random() * 5}s`
+              animationDelay: `${Math.random() * 5}s`,
             }}
           >
             ❄
@@ -117,27 +125,29 @@ const SeasonalParticles = ({ season }) => {
     );
   }
   if (season === "spring") {
-      return (
-        <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
-             {Array.from({ length: 8 }).map((_, i) => (
-                <div
-                    key={i}
-                    className="absolute text-emerald-100/40"
-                    style={{
-                    left: `${Math.random() * 100}%`,
-                    top: `${Math.random() * 100}%`,
-                    fontSize: `${Math.random() * 20 + 10}px`,
-                    transform: `rotate(${Math.random() * 360}deg)`
-                    }}
-                >
-                    🌸
-                </div>
-            ))}
-        </div>
-      )
+    return (
+      <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
+        {Array.from({ length: 8 }).map((_, i) => (
+          <div
+            key={i}
+            className="absolute text-emerald-100/40"
+            style={{
+              left: `${Math.random() * 100}%`,
+              top: `${Math.random() * 100}%`,
+              fontSize: `${Math.random() * 20 + 10}px`,
+              transform: `rotate(${Math.random() * 360}deg)`,
+            }}
+          >
+            🌸
+          </div>
+        ))}
+      </div>
+    );
   }
   if (season === "monsoon") {
-    return <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden bg-slate-900/5"></div>;
+    return (
+      <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden bg-slate-900/5"></div>
+    );
   }
   return null;
 };
@@ -160,7 +170,7 @@ const SeasonalParticles = ({ season }) => {
 //           const isActive = active === item.id;
 //           if (item.special) {
 //             return (
-//               <button 
+//               <button
 //                 key={item.id}
 //                 onClick={() => setActive(item.id)}
 //                 className={`relative -top-8 ${theme?.primary || 'bg-gray-800'} text-white p-4 rounded-full shadow-lg hover:scale-105 transition-transform`}
@@ -171,7 +181,7 @@ const SeasonalParticles = ({ season }) => {
 //             )
 //           }
 //           return (
-//             <button 
+//             <button
 //               key={item.id}
 //               onClick={() => setActive(item.id)}
 //               className={`flex flex-col items-center justify-center w-12 gap-1 transition-all ${isActive ? (theme?.primaryText || 'text-gray-900') : 'text-gray-400'}`}
@@ -190,6 +200,7 @@ function GroceriesPage() {
   const navigate = useNavigate();
   const [currentSeason, setCurrentSeason] = useState("winter");
   const [categories, setCategories] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     setCurrentSeason(getSeason());
@@ -218,71 +229,77 @@ function GroceriesPage() {
   //   { name: "Home Needs", img: "https://i.postimg.cc/ZnmwJNCf/18.png" },
   // ];
 
-const fetchCategory = async () => {
-  try {
-    const response = await axios.post(
-      "https://api.sribalajistores.com/product/allcatedetails",
-      {mode_fetchorall :0,
-       register_id: STORE_ID,
-      }
-    );
+  const fetchCategory = async () => {
+    try {
+      setLoading(true);
+      const response = await axios.post(
+        "https://api.sribalajistores.com/product/allcatedetails",
+        { mode_fetchorall: 0, register_id: STORE_ID },
+      );
 
-    const formatted = formatCategories(response.data.data);
+      const formatted = formatCategories(response.data.data);
 
-    setCategories(formatted);
+      setCategories(formatted);
 
-    console.log("Formatted Categories:", formatted);
-  } catch (error) {
-    console.error("Category fetch error:", error);
-  }
-};
+      console.log("Formatted Categories:", formatted);
+    } catch (error) {
+      console.error("Category fetch error:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-const formatCategories = (items) => {
-  return items.map((item) => ({
-    cat_id: item.categories_id || 0,
-    name: item.categories_name || "",
-    img: item.image_url
-  }));
-};
+  const formatCategories = (items) => {
+    return items.map((item) => ({
+      cat_id: item.categories_id || 0,
+      name: item.categories_name || "",
+      img: item.image_url,
+    }));
+  };
 
+  useEffect(() => {
+    fetchCategory();
+  }, []);
 
-useEffect(() => {
-  fetchCategory();
-}, []);
+  const handleCateitm = (category) => {
+    console.log(category, "categorycategorycategory");
 
-
-const handleCateitm =(category)=>{
-
-  console.log(category ,'categorycategorycategory');
-
-  if(!category.cat_id){
-   toast.error("Undefined Categories");
-   return;
-  }
+    if (!category.cat_id) {
+      toast.error("Undefined Categories");
+      return;
+    }
 
     navigate("/category", {
-    state: {
-      id: category.cat_id,
-      name: category.name,
-      img: category.img
-    }
-  });
-
-};
-const naviagte=useNavigate();
+      state: {
+        id: category.cat_id,
+        name: category.name,
+        img: category.img,
+      },
+    });
+  };
+  const naviagte = useNavigate();
   return (
     // MAIN WRAPPER
-    <div className={`w-full min-h-screen relative ${theme.gradient} transition-colors duration-700 font-sans`}>
+    <div
+      className={`w-full min-h-screen relative ${theme.gradient} transition-colors duration-700 font-sans`}
+    >
+      {loading && (
+        <div className="fixed inset-0 z-[999] bg-white/70 backdrop-blur-sm flex items-center justify-center">
+          <div className="w-12 h-12 border-4 border-gray-300 border-t-black rounded-full animate-spin"></div>
+        </div>
+      )}
 
       <SeasonalParticles season={currentSeason} />
 
       {/* ======================= */}
       {/* MOBILE HEADER (< md)    */}
       {/* ======================= */}
-      <div className={`md:hidden fixed top-0 w-full z-50 ${theme.mobileHeader} h-20 flex items-center px-4 shadow-none text-white transition-colors duration-500`}>
-        <ArrowLeft 
-          className="w-6 h-6 cursor-pointer" 
-          onClick={() => navigate(-1)} 
+      <div
+        className={`md:hidden fixed top-0 w-full z-50 ${theme.mobileHeader} h-20 flex items-center px-4 shadow-none text-white transition-colors duration-500`}
+      >
+        <ArrowLeft
+          className="w-6 h-6 cursor-pointer"
+          onClick={() => navigate(-1)}
         />
         <p className="flex-1 text-xl font-bold text-center pr-2">Groceries</p>
         {/* <Search className="w-6 h-6" /> */}
@@ -293,13 +310,21 @@ const naviagte=useNavigate();
       {/* ======================= */}
       <div className="hidden md:flex fixed top-0 w-full z-50 bg-white/90 backdrop-blur-sm h-20 items-center px-8 shadow-sm justify-between">
         {/* Logo Area */}
-        <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate('/')}>
-            <div
-              className={`p-2 rounded-xl ${theme.primary} text-white shadow-lg shadow-${theme.primary}/30`}
-            >
-              <Leaf size={20} fill="currentColor" className="opacity-90" />
-            </div>
-            <span className={`text-2xl font-bold ${theme.primaryText} tracking-tight transition-colors`}> SBS GROCES</span>
+        <div
+          className="flex items-center gap-2 cursor-pointer"
+          onClick={() => navigate("/")}
+        >
+          <div
+            className={`p-2 rounded-xl ${theme.primary} text-white shadow-lg shadow-${theme.primary}/30`}
+          >
+            <Leaf size={20} fill="currentColor" className="opacity-90" />
+          </div>
+          <span
+            className={`text-2xl font-bold ${theme.primaryText} tracking-tight transition-colors`}
+          >
+            {" "}
+            SBS GROCES
+          </span>
         </div>
 
         {/* Desktop Search Bar */}
@@ -314,28 +339,28 @@ const naviagte=useNavigate();
 
         {/* Desktop Nav Icons */}
         <div className="flex items-center gap-6 text-gray-600">
-            <div 
+          <div
             onClick={() => navigate("/profile")}
-            className={`flex flex-col items-center cursor-pointer hover:${theme.primaryText} transition`}>
-                <User className="w-6 h-6"  />
-                <span className="text-xs font-medium">Profile</span>
-            </div>
-            <div 
+            className={`flex flex-col items-center cursor-pointer hover:${theme.primaryText} transition`}
+          >
+            <User className="w-6 h-6" />
+            <span className="text-xs font-medium">Profile</span>
+          </div>
+          <div
             onClick={() => navigate("/cart")}
-            className={`flex flex-col items-center cursor-pointer hover:${theme.primaryText} transition relative`}>
-                <ShoppingCart className="w-6 h-6"  />
-                <span className="text-xs font-medium">Cart</span>
-                </div>
+            className={`flex flex-col items-center cursor-pointer hover:${theme.primaryText} transition relative`}
+          >
+            <ShoppingCart className="w-6 h-6" />
+            <span className="text-xs font-medium">Cart</span>
+          </div>
         </div>
       </div>
-
 
       {/* ======================= */}
       {/* CONTENT AREA            */}
       {/* ======================= */}
-      
+
       <div className="pt-20 md:pt-28 md:px-8 md:pb-12 relative z-10">
-        
         {/* DESKTOP HERO BANNER (Hidden on Mobile) */}
         {/* <div className={`hidden md:block max-w-7xl mx-auto mb-8 rounded-2xl overflow-hidden shadow-lg relative h-64 ${theme.bannerGradient} transition-colors duration-700`}>
              <div className="absolute inset-0 flex items-center px-12 text-white">
@@ -354,32 +379,36 @@ const naviagte=useNavigate();
 
         {/* MAIN CARD / GRID CONTAINER */}
         <div className="bg-white/95 md:bg-white w-full rounded-t-[30px] md:rounded-2xl md:max-w-7xl md:mx-auto min-h-[calc(100vh-80px)] md:min-h-0 px-4 pt-6 pb-24 md:p-8 md:shadow-xl md:border md:border-gray-100 backdrop-blur-sm">
-          
           {/* Section Title */}
           <div className="mb-6 flex items-center gap-2">
             <div>
-               <h2 className="text-lg md:text-2xl font-bold text-gray-800 md:mb-1">Shop by Category</h2>
-               <p className="hidden md:block text-gray-500 text-sm">Explore our wide range of products</p>
+              <h2 className="text-lg md:text-2xl font-bold text-gray-800 md:mb-1">
+                Shop by Category
+              </h2>
+              <p className="hidden md:block text-gray-500 text-sm">
+                Explore our wide range of products
+              </p>
             </div>
-            <div className={`hidden md:flex ml-auto items-center gap-2 text-xs font-bold ${theme.accent} ${theme.primaryText} px-3 py-1 rounded-full`}>
-               {theme.icon && <theme.icon size={14} />}
-               <span className="uppercase">{theme.name} Mode Active</span>
+            <div
+              className={`hidden md:flex ml-auto items-center gap-2 text-xs font-bold ${theme.accent} ${theme.primaryText} px-3 py-1 rounded-full`}
+            >
+              {theme.icon && <theme.icon size={14} />}
+              <span className="uppercase">{theme.name} Mode Active</span>
             </div>
           </div>
-          
+
           <div className="h-[1px] bg-gray-100 mb-6 md:hidden" />
 
-{/* GRID LAYOUT */}
-<div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 md:gap-8">
-  {categories.map((item, index) => (
-    <div
-      key={index}
-      className="group flex flex-col items-center text-center cursor-pointer"
-    >
-
-      {/* Image Card */}
-      <div
-        className="
+          {/* GRID LAYOUT */}
+          <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 md:gap-8">
+            {categories.map((item, index) => (
+              <div
+                key={index}
+                className="group flex flex-col items-center text-center cursor-pointer"
+              >
+                {/* Image Card */}
+                <div
+                  className="
           relative w-full aspect-square
           rounded-2xl
           bg-white
@@ -390,24 +419,26 @@ const naviagte=useNavigate();
           group-hover:shadow-lg
           group-hover:-translate-y-1
         "
-        onClick={()=>{ handleCateitm(item) }}
-      >
-        <img
-          src={item.img}
-          alt={item.name}
-          className="
+                  onClick={() => {
+                    handleCateitm(item);
+                  }}
+                >
+                  <img
+                    src={item.img}
+                    alt={item.name}
+                    className="
             max-w-[70%]
             max-h-[70%]
             object-contain
             transition-transform duration-300
             group-hover:scale-105
           "
-        />
-      </div>
+                  />
+                </div>
 
-      {/* Category Name */}
-      <p
-        className="
+                {/* Category Name */}
+                <p
+                  className="
           mt-3
           text-xs md:text-sm
           font-medium
@@ -416,14 +447,12 @@ const naviagte=useNavigate();
           transition-colors
           group-hover:text-gray-900
         "
-      >
-        {item.name}
-      </p>
-    </div>
-  ))}
-</div>
-
-
+                >
+                  {item.name}
+                </p>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -433,8 +462,8 @@ const naviagte=useNavigate();
       </div> }
 
       {/* DESKTOP FOOTER (>= md) */}
-      
-<Footer theme={theme} />
+
+      <Footer theme={theme} />
     </div>
   );
 }

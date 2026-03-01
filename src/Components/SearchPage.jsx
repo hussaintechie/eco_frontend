@@ -353,7 +353,11 @@ export default function SearchPage() {
                           <span className="text-base md:text-lg font-black text-gray-900">
                             ₹{item.price}
                           </span>
-
+                             {item.mrp > item.price && (
+              <span className="text-xs text-gray-400 line-through">
+                ₹{item.mrp}
+              </span>
+            )}
                           {/* Controls */}
                           <div className="shrink-0">
                             {qty === 0 ? (
