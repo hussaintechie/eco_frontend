@@ -60,6 +60,7 @@ import { toast } from "react-toastify";
 
 import { useCart } from "../context/CartContext.jsx";
 import Footer from "./Footer.jsx";
+import { FaLeaf } from "react-icons/fa";
 
 const NOTIFICATIONS = [
   {
@@ -123,7 +124,8 @@ const SectionHeader = ({ title, action = "See All", icon: Icon, theme }) => (
 const ProductCardVertical = ({
   product,
   theme,
-  qty,  // ✅ coming from parent
+  qty,
+  loading, // ✅ coming from parent
   onAddToCart,
   onRemoveFromCart,
 }) => {
@@ -140,7 +142,6 @@ const ProductCardVertical = ({
       onRemoveFromCart(product.product_id);
     }
   };
-
 
   return (
     <div
@@ -190,9 +191,11 @@ const ProductCardVertical = ({
 
         <div className="flex justify-between items-center mt-2">
           <div className="flex flex-col">
-            <span className="text-xs text-gray-400 line-through">
-              ₹{product.oldPrice}
-            </span>
+            {product.oldPrice > product.price && (
+              <span className="text-xs text-gray-400 line-through">
+                ₹{product.oldPrice}
+              </span>
+            )}
             <span className="text-sm font-black text-gray-900">
               ₹{product.price}
             </span>
@@ -232,7 +235,11 @@ const ProductCardVertical = ({
                 onClick={handleIncrement}
                 className="bg-white rounded p-0.5 shadow-sm text-gray-800 hover:scale-110 transition"
               >
-                <Plus size={14} strokeWidth={3} />
+                {loading ? (
+                  <div className="w-4 h-4 border-2 border-gray-300 border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  <Plus size={14} />
+                )}
               </button>
             </div>
           )}
@@ -274,14 +281,13 @@ const RecommendedProductCard = ({
     >
       {/* IMAGE */}
       <div className="relative h-32 md:h-40 mb-3 rounded-xl overflow-hidden bg-gray-50">
-         <img
+        {/* 🔥 FIXED IMAGE loading FOR PRODUCTS 🔥 */}
+        <img
           src={prod.img}
           alt={prod.name}
           className={`w-full h-full object-cover mix-blend-multiply transition-transform duration-500
           ${isOutOfStock ? "blur-sm grayscale" : "group-hover:scale-110"}`}
         />
-        {/* 🔥 FIXED IMAGE LOADING FOR PRODUCTS 🔥 */}
-       
 
         {/* WISHLIST */}
         {/* {!isOutOfStock && (
@@ -333,12 +339,9 @@ const RecommendedProductCard = ({
             ${
               isOutOfStock
                 ? "bg-gray-200 text-gray-400 cursor-not-allowed"
-                : `${theme.cardBg.replace(
-                    "bg-white/80",
-                    "bg-transparent"
-                  )} ${theme.primaryText} hover:${
-                    theme.primary
-                  } hover:text-white`
+                : `${theme.cardBg.replace("bg-white/80", "bg-transparent")} ${
+                    theme.primaryText
+                  } hover:${theme.primary} hover:text-white`
             }
           flex items-center justify-center gap-2`}
           >
@@ -370,7 +373,8 @@ const RecommendedProductCard = ({
 const HorizontalScrollRow = ({
   data,
   theme,
-  cartItems =[],
+  cartItems = [],
+  cartLoadingId,
   onAddToCart,
   onRemoveFromCart,
 }) => (
@@ -380,7 +384,10 @@ const HorizontalScrollRow = ({
         key={i}
         product={item}
         theme={theme}
-        qty={cartItems.find((c) => c.product_id === item.product_id)?.quantity || 0}
+        qty={
+          cartItems.find((c) => c.product_id === item.product_id)?.quantity || 0
+        }
+        loading={cartLoadingId === item.product_id}
         onAddToCart={onAddToCart}
         onRemoveFromCart={onRemoveFromCart}
       />
@@ -395,7 +402,6 @@ const HorizontalScrollRow = ({
     </div> */}
   </div>
 );
-
 
 const NotificationDrawer = ({ isOpen, onClose, theme }) => {
   return (
@@ -474,19 +480,20 @@ const NotificationDrawer = ({ isOpen, onClose, theme }) => {
 // --- AD TEMPLATES ---
 const BANNER_IMAGES = [
   {
-    desktop: "https://res.cloudinary.com/duzladayx/image/upload/v1769343614/banner5_kkye4k.png",
-    mobile: "https://res.cloudinary.com/duzladayx/image/upload/v1769343614/banner5_kkye4k.png",
+    desktop:
+      "https://res.cloudinary.com/duzladayx/image/upload/v1769343614/banner5_kkye4k.png",
+    mobile:
+      "https://res.cloudinary.com/duzladayx/image/upload/v1769343614/banner5_kkye4k.png",
+    categoryId: 8,
   },
   {
-    desktop: "https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=1200&q=80",
-    mobile: "https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=1200&q=80",
+    desktop:
+      "https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=1200&q=80",
+    mobile:
+      "https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=1200&q=80",
+    categoryId: 2,
   },
-  
 ];
-
-
-
-
 
 const ParallaxAdBanner = ({ theme }) => {
   const [currentImage, setCurrentImage] = useState(0);
@@ -547,20 +554,23 @@ const ParallaxAdBanner = ({ theme }) => {
           />
         ))}
       </div>
-<div className="absolute inset-0 flex flex-col justify-center items-start p-3 md:p-12 z-10">
+      <div className="absolute inset-0 flex flex-col justify-center items-start p-3 md:p-12 z-10">
         <span className="hidden md:inline-block bg-yellow-400 text-black text-xs font-black px-1 py-1 rounded mb-2 uppercase tracking-wider">
-  Market Day Special
-</span>
+          Market Day Special
+        </span>
 
         <h3 className="text-2xl md:text-5xl font-black text-white mb-2 leading-none drop-shadow-lg">
           Fresh from <br /> the Farm
         </h3>
         <p className="text-gray-200 text-xs md:text-base mb-6 max-w-[200px] md:max-w-md drop-shadow-md hidden md:block">
-    Get 100% organic vegetables delivered directly from local farmers.
-  </p>
-       <button className="bg-white text-gray-900 text-sm md:text-base font-bold py-2 px-5 md:py-3 md:px-8 rounded-full hover:bg-gray-100 transition shadow-xl flex items-center gap-2">
-    Shop Now <ArrowRight size={14} className="md:w-4 md:h-4" />
-  </button>
+          Get 100% organic vegetables delivered directly from local farmers.
+        </p>
+        <button
+          onClick={() => handleBannerClick(8)}
+          className="bg-white text-gray-900 text-sm md:text-base font-bold py-2 px-5 md:py-3 md:px-8 rounded-full hover:bg-gray-100 transition shadow-xl flex items-center gap-2"
+        >
+          Shop Now <ArrowRight size={14} className="md:w-4 md:h-4" />
+        </button>
       </div>
 
       {/* DOT INDICATORS */}
@@ -569,9 +579,7 @@ const ParallaxAdBanner = ({ theme }) => {
           <div
             key={index}
             className={`h-1.5 rounded-full transition-all duration-300 shadow-sm ${
-              index === currentImage
-                ? "w-6 bg-white"
-                : "w-1.5 bg-white/50"
+              index === currentImage ? "w-6 bg-white" : "w-1.5 bg-white/50"
             }`}
           />
         ))}
@@ -607,7 +615,7 @@ const Header = ({ theme, setMenuOpen, onOpenNotifications, cartCount }) => {
             <div
               className={`p-2 rounded-xl ${theme.primary} text-white shadow-lg shadow-${theme.primary}/30`}
             >
-              <Leaf size={20} fill="currentColor" className="opacity-90" />
+              <FaLeaf className="text-white -rotate-12" size={22} />
             </div>
             <div className="flex flex-col">
               <h1
@@ -622,16 +630,19 @@ const Header = ({ theme, setMenuOpen, onOpenNotifications, cartCount }) => {
           </div>
 
           {/* Desktop Search (Centered) */}
-          <div className="hidden md:flex flex-1 max-w-lg mx-auto relative group"  onClick={() => navigate("/search")}>
+          <div
+            className="hidden md:flex flex-1 max-w-lg mx-auto relative group"
+            onClick={() => navigate("/search")}
+          >
             <input
               type="text"
               placeholder="Search for fresh groceries..."
               className={`w-full bg-gray-100/50 border-2 border-transparent hover:bg-white hover:border-gray-100 focus:bg-white focus:border-${theme.primary.replace(
                 "bg-",
-                ""
+                "",
               )}/30 focus:ring-4 focus:ring-${theme.primary.replace(
                 "bg-",
-                ""
+                "",
               )}/10 text-gray-800 text-sm rounded-full py-2.5 px-5 pl-12 transition-all duration-300 outline-none`}
             />
             <Search
@@ -676,20 +687,20 @@ const Header = ({ theme, setMenuOpen, onOpenNotifications, cartCount }) => {
 
         {/* MOBILE SEARCH BAR (Floating) */}
         <div className="md:hidden pb-3 pt-1">
-       <div className="relative shadow-lg shadow-gray-200/50 rounded-2xl">
-    <input
-      readOnly
-      onFocus={() => navigate("/search")}
-      placeholder="Search 'Strawberries'..."
-      className="w-full bg-white text-sm rounded-2xl py-3 pl-11 pr-4 cursor-pointer focus:outline-none text-gray-700 placeholder-gray-400 shadow-sm border border-gray-100/50"
-    />
-    <div
-      className={`absolute left-3 top-2.5 p-1 rounded-lg ${theme.accent} ${theme.primaryText}`}
-    >
-      <Search size={14} strokeWidth={3} />
-    </div>
-  </div>
-</div>
+          <div className="relative shadow-lg shadow-gray-200/50 rounded-2xl">
+            <input
+              readOnly
+              onFocus={() => navigate("/search")}
+              placeholder="Search 'Strawberries'..."
+              className="w-full bg-white text-sm rounded-2xl py-3 pl-11 pr-4 cursor-pointer focus:outline-none text-gray-700 placeholder-gray-400 shadow-sm border border-gray-100/50"
+            />
+            <div
+              className={`absolute left-3 top-2.5 p-1 rounded-lg ${theme.accent} ${theme.primaryText}`}
+            >
+              <Search size={14} strokeWidth={3} />
+            </div>
+          </div>
+        </div>
       </div>
     </header>
   );
@@ -709,7 +720,7 @@ const BottomNav = ({ theme, cartCount }) => {
       special: true,
       route: "/cart",
     },
-     { id: "saved", icon: Store, label: "Groceries", route: "/groceries" },
+    { id: "saved", icon: Store, label: "Groceries", route: "/groceries" },
     { id: "profile", icon: User, label: "Profile", route: "/profile" },
   ];
 
@@ -777,60 +788,91 @@ const BottomNav = ({ theme, cartCount }) => {
 };
 // ✅ CLOUDINARY BANNERS (ONLY ONE SOURCE)
 // 3. MAIN PAGE CONTENT
+
+const ProductSkeleton = ({ count = 5 }) => (
+  <div className="flex gap-4 overflow-x-auto pb-6">
+    {[...Array(count)].map((_, i) => (
+      <div
+        key={i}
+        className="min-w-[160px] h-44 bg-gray-200 rounded-xl animate-pulse"
+      />
+    ))}
+  </div>
+);
+
 const MainContent = () => {
-
-
   const [cartItems, setCartItems] = useState([]);
-    const cartCount = cartItems.reduce((sum, item) => sum + Number(item.quantity || 0), 0);
-
+  const cartCount = cartItems.reduce(
+    (sum, item) => sum + Number(item.quantity || 0),
+    0,
+  );
 
   const { incrementCartCount } = useCart(); // optional if you use it
 
-
-const refreshCart = async () => {
-  try {
-    const res = await getCartAPI();
-    setCartItems(res.data.cart || []);
-  } catch (err) {
-    console.log("refreshCart error", err);
-  }
-};
-useEffect(() => {
-  refreshCart();
-}, []);
+  const refreshCart = async () => {
+    try {
+      const res = await getCartAPI();
+      setCartItems(res.data.cart || []);
+    } catch (err) {
+      console.log("refreshCart error", err);
+    }
+  };
+  useEffect(() => {
+    refreshCart();
+  }, []);
 
   /* ---------------- CART LOGIC (UNCHANGED) ---------------- */
- const handleAddToCart = async (product_id) => {
-  try {
-    await addToCartAPI(product_id, 1);
-    await refreshCart();
-  } catch (err) {
-    console.error(err);
-    toast.error("Please login to add items");
-    navigate("/login");
-  }
-};
+  const handleAddToCart = async (product_id) => {
+    if (cartLoadingId === product_id) return;
 
+    try {
+      setCartLoadingId(product_id);
 
- const handleRemoveFromCart = async (product_id) => {
-  try {
-    const cartItem = cartItems.find((c) => c.product_id === product_id);
+      await addToCartAPI(product_id, 1);
+      await refreshCart();
+    } catch (err) {
+      toast.error("Please login to add items");
+    } finally {
+      setCartLoadingId(null);
+    }
+  };
 
-    if (!cartItem) return;
+  const handleRemoveFromCart = async (product_id) => {
+    if (cartLoadingId === product_id) return;
 
-    const newQty = cartItem.quantity - 1;
+    try {
+      setCartLoadingId(product_id);
 
-    if (newQty <= 0) {
-      await removeCartItemAPI(cartItem.cart_id);
-    } else {
-      await updateCartQtyAPI(cartItem.cart_id, newQty);
+      const cartItem = cartItems.find((c) => c.product_id === product_id);
+
+      if (!cartItem) return;
+
+      const newQty = cartItem.quantity - 1;
+
+      if (newQty <= 0) {
+        await removeCartItemAPI(cartItem.cart_id);
+      } else {
+        await updateCartQtyAPI(cartItem.cart_id, newQty);
+      }
+
+      await refreshCart();
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setCartLoadingId(null);
+    }
+  };
+
+  const handleBannerClick = (categoryId) => {
+    if (!categoryId) {
+      console.warn("Banner categoryId missing");
+      return;
     }
 
-    await refreshCart();
-  } catch (err) {
-    console.error("remove error", err);
-  }
-};
+    navigate("/category", {
+      state: { id: categoryId },
+    });
+  };
 
   /* ---------------- THEME / BASIC STATE (UNCHANGED) ---------------- */
   const [currentSeason, setCurrentSeason] = useState("winter");
@@ -849,19 +891,28 @@ useEffect(() => {
      ✅ CLOUDINARY BANNERS (ONLY ONE SOURCE – FIXED)
      ========================================================= */
   const BANNERS = [
-  {
-    desktop: "https://res.cloudinary.com/duzladayx/image/upload/v1769334911/banner1_ximafq.png",
-    mobile: "https://res.cloudinary.com/duzladayx/image/upload/v1769337855/banner2_qkweie.png",
-  },
-  {
-    desktop: "https://res.cloudinary.com/duzladayx/image/upload/v1769335725/banner2_xgdmes.png",
-    mobile: "https://res.cloudinary.com/duzladayx/image/upload/v1769337869/banner3_qz3vej.png",
-  },
-  {
-    desktop: "https://res.cloudinary.com/duzladayx/image/upload/v1769334868/banner3_mnbf4k.png",
-    mobile: "https://res.cloudinary.com/duzladayx/image/upload/v1769337247/banner1_nvryqi.png",
-  },
-];
+    {
+      desktop:
+        "https://res.cloudinary.com/duzladayx/image/upload/v1769334911/banner1_ximafq.png",
+      mobile:
+        "https://res.cloudinary.com/duzladayx/image/upload/v1769337855/banner2_qkweie.png",
+      categoryId: 2,
+    },
+    {
+      desktop:
+        "https://res.cloudinary.com/duzladayx/image/upload/v1769335725/banner2_xgdmes.png",
+      mobile:
+        "https://res.cloudinary.com/duzladayx/image/upload/v1769337869/banner3_qz3vej.png",
+      categoryId: 8,
+    },
+    {
+      desktop:
+        "https://res.cloudinary.com/duzladayx/image/upload/v1769334868/banner3_mnbf4k.png",
+      mobile:
+        "https://res.cloudinary.com/duzladayx/image/upload/v1769337247/banner1_nvryqi.png",
+      categoryId: 8,
+    },
+  ];
 
   /* ---------------- SLIDER STATE (FIXED ORDER) ---------------- */
   const [slideIndex, setSlideIndex] = useState(0);
@@ -877,58 +928,60 @@ useEffect(() => {
   /* ---------------- DATA STATE (UNCHANGED) ---------------- */
   const [CATEGORIES, setCategories] = useState([]);
   const [SUPER_DEALS_DATA, setDealdata] = useState([]);
+  const [cartLoadingId, setCartLoadingId] = useState(null);
+  const [Loading, setLoading] = useState(true);
+
   const [FRUITS_DATA, setFruitdata] = useState([]);
   const [VEG_DATA, setVegdata] = useState([]);
   const [FEED_PRODUCTS, setRecomentdata] = useState([]);
 
   const fetchCategory = async () => {
-  try {
-    const response = await API.post(
-      "product/allcatedetails",
-      {
+    try {
+      const response = await API.post("product/allcatedetails", {
         mode_fetchorall: 0,
         register_id: STORE_ID, // ✅ INSIDE BODY
-      }
-    );
+      });
 
-    setCategories(formatCategories(response.data.data));
-  } catch (error) {
-    console.error("Category fetch error:", error);
-  }
-};
-  const fetchDeals = async () => {
-    try {
-      const response = await API.post(
-        "product/superdealsdata",
-        { register_id: STORE_ID } 
-      );
-      const { deals, veg, fruit, reco } = response.data.data;
-
-      setDealdata(deals);
-      setFruitdata(fruit);
-      setVegdata(veg);
-      setRecomentdata(reco);
-
-      console.log("Deals data:", response.data.data);
+      setCategories(formatCategories(response.data.data));
     } catch (error) {
-      console.error("Deals data fetch error:", error);
+      console.error("Category fetch error:", error);
     }
   };
+  const fetchDeals = async () => {
+    console.log("loading start");
+    setLoading(true); // 👈 start loading BEFORE API
 
+    try {
+      const response = await API.post("product/superdealsdata", {
+        register_id: STORE_ID,
+      });
+
+      const { deals, veg, fruit, reco } = response.data.data;
+
+      setDealdata(deals || []);
+      setFruitdata(fruit || []);
+      setVegdata(veg || []);
+      setRecomentdata(reco || []);
+    } catch (error) {
+      console.error("Deals fetch error:", error);
+    } finally {
+      setTimeout(() => setLoading(false), 300);
+    }
+  };
 
   const formatCategories = (items) => {
     return items.map((item) => ({
       cat_id: item.categories_id || 0,
       title: item.categories_name || "",
       subtitle: "",
-      img: item.cat_img,
+      img: item.image_url,
     }));
   };
   useEffect(() => {
     fetchCategory();
     fetchDeals();
   }, []);
-  
+
   const handleCateitm = (category) => {
     console.log(category, "categorycategorycategory");
 
@@ -945,6 +998,32 @@ useEffect(() => {
       },
     });
   };
+  const getSuperDealHoursLeft = () => {
+    const now = new Date();
+
+    // Today 12:01 AM
+    const start = new Date();
+    start.setHours(0, 1, 0, 0);
+
+    // If before 12:01 AM, deal hasn't started yet
+    if (now < start) return 24;
+
+    const diffMs = now - start;
+    const passedHours = Math.floor(diffMs / (1000 * 60 * 60));
+
+    const hoursLeft = 24 - passedHours;
+    return hoursLeft > 0 ? hoursLeft : 0;
+  };
+
+  const [hoursLeft, setHoursLeft] = useState(getSuperDealHoursLeft());
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setHoursLeft(getSuperDealHoursLeft());
+    }, 60000); // update every minute
+
+    return () => clearInterval(timer);
+  }, []);
 
   /* =========================================================
      ✅ JSX STARTS
@@ -971,63 +1050,56 @@ useEffect(() => {
       />
 
       {/* ATMOSPHERE - REMOVED animate-pulse TO STOP BLINKING */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
-        <div
-          className={`absolute top-0 left-0 w-[500px] h-[500px] rounded-full mix-blend-multiply filter blur-3xl opacity-20 ${theme.primary}`}
-        ></div>
-        <div
-          className={`absolute bottom-0 right-0 w-[400px] h-[400px] rounded-full mix-blend-multiply filter blur-3xl opacity-20 ${theme.accent}`}
-        ></div>
-      </div>
 
       <main className="relative z-10 max-w-7xl mx-auto px-4 md:px-6 pt-2">
-{/* --- 1. HERO SECTION --- */}
+        {/* --- 1. HERO SECTION --- */}
         <div className="w-full mb-8">
-  <div className="relative w-full overflow-hidden rounded-2xl shadow-xl
+          <div
+            className="relative w-full overflow-hidden rounded-2xl shadow-xl
   aspect-[16/10]
   md:aspect-[32/10]
-">
+"
+          >
+            {BANNERS.map((banner, i) => (
+              <div
+                key={i}
+                onClick={() => handleBannerClick(banner.categoryId)}
+                className={`absolute inset-0 transition-opacity duration-1000 ${
+                  i === slideIndex ? "opacity-100 z-10" : "opacity-0 z-0"
+                }`}
+              >
+                {/* DESKTOP IMAGE */}
+                <img
+                  src={banner.desktop}
+                  alt="Banner desktop"
+                  className="hidden md:block w-full h-full object-cover"
+                />
 
-    {BANNERS.map((banner, i) => (
-      <div
-        key={i}
-        className={`absolute inset-0 transition-opacity duration-1000 ${
-          i === slideIndex ? "opacity-100 z-10" : "opacity-0 z-0"
-        }`}
-      >
-        {/* DESKTOP IMAGE */}
-        <img
-          src={banner.desktop}
-          alt="Banner desktop"
-          className="hidden md:block w-full h-full object-cover"
-        />
+                {/* MOBILE IMAGE */}
+                <img
+                  src={banner.mobile}
+                  alt="Banner mobile"
+                  className="block md:hidden w-full h-full object-cover"
+                />
 
-        {/* MOBILE IMAGE */}
-        <img
-          src={banner.mobile}
-          alt="Banner mobile"
-          className="block md:hidden w-full h-full object-cover"
-        />
+                {/* Overlay Text */}
+              </div>
+            ))}
 
-        {/* Overlay Text */}
-      
-      </div>
-    ))}
+            {/* Dots */}
+            <div className="absolute bottom-4 left-6 z-20 flex gap-2">
+              {BANNERS.map((_, i) => (
+                <div
+                  key={i}
+                  className={`h-1.5 rounded-full transition-all duration-300 ${
+                    i === slideIndex ? "w-6 bg-white" : "w-1.5 bg-white/50"
+                  }`}
+                />
+              ))}
+            </div>
+          </div>
+        </div>
 
-    {/* Dots */}
-    <div className="absolute bottom-4 left-6 z-20 flex gap-2">
-      {BANNERS.map((_, i) => (
-        <div
-          key={i}
-          className={`h-1.5 rounded-full transition-all duration-300 ${
-            i === slideIndex ? "w-6 bg-white" : "w-1.5 bg-white/50"
-          }`}
-        />
-      ))}
-    </div>
-  </div>
-</div>
-        
         {/* --- 2. CATEGORIES --- */}
         {/* --- CATEGORIES SECTION --- */}
         <div className="mb-8">
@@ -1037,9 +1109,10 @@ useEffect(() => {
               Categories
             </h3>
 
-            <button 
-            onClick={() => navigate("/groceries")}
-            className={`text-sm font-semibold ${theme.primaryText} hover:underline flex items-center gap-1`}>
+            <button
+              onClick={() => navigate("/groceries")}
+              className={`text-sm font-semibold ${theme.primaryText} hover:underline flex items-center gap-1`}
+            >
               See all <ChevronDown className="-rotate-90" size={14} />
             </button>
           </div>
@@ -1100,90 +1173,105 @@ useEffect(() => {
         </div>
 
         {/* --- 3. SUPER DISCOUNT ROW (New) --- */}
-        {SUPER_DEALS_DATA.length > 0 && (
+        {Loading && (
           <div className="mb-12">
             <div className="flex items-center justify-between mb-4 bg-red-50 p-3 rounded-xl border border-red-100">
-              <div className="flex items-center gap-2 text-red-600">
-                <Percent
-                  size={24}
-                  fill="currentColor"
-                  className="animate-pulse"
-                />
-                <h3 className="text-xl font-black italic tracking-tighter">
-                  SUPER DEALS
-                </h3>
-              </div>
-              {/* <div className="flex items-center gap-1 bg-red-600 text-white px-3 py-1 rounded-lg text-xs font-bold shadow-sm animate-bounce">
-                <Clock size={12} /> Ends in 12h
-              </div> */}
+              <h3 className="text-xl font-black text-red-600">SUPER DEALS</h3>
             </div>
-            <HorizontalScrollRow
-              data={SUPER_DEALS_DATA}
-              onAddToCart={handleAddToCart}
-              cartItems={cartItems} 
-              onRemoveFromCart={handleRemoveFromCart}
-              theme={{
-                ...theme,
-                accent: "bg-red-50",
-                primaryText: "text-red-600",
-                primary: "bg-red-600",
-              }}
-            />
+
+            <div className="flex gap-4 overflow-x-auto pb-6">
+              {[...Array(5)].map((_, i) => (
+                <div
+                  key={i}
+                  className="min-w-[160px] h-44 bg-gray-200 rounded-xl animate-pulse"
+                />
+              ))}
+            </div>
           </div>
         )}
+
         {/* --- 4. AD BANNER 1 (New) --- */}
         <ParallaxAdBanner theme={theme} />
+{!Loading && SUPER_DEALS_DATA?.length > 0 && (
+  <div className="mb-10">
+    <SectionHeader title="Super Deals 🔥" theme={theme} />
+
+    <HorizontalScrollRow
+      data={SUPER_DEALS_DATA}
+      theme={theme}
+      cartItems={cartItems}
+      cartLoadingId={cartLoadingId}
+      onAddToCart={handleAddToCart}
+      onRemoveFromCart={handleRemoveFromCart}
+    />
+  </div>
+)}
+
+        {Loading ? (
+          <ProductSkeleton count={5} />
+        ) : (
+          VEG_DATA?.length > 0 && (
+            <div className="mb-10">
+              <SectionHeader
+                title="Fresh Vegetables"
+                icon={Carrot}
+                theme={theme}
+              />
+
+              <HorizontalScrollRow
+                data={VEG_DATA}
+                theme={theme}
+                cartItems={cartItems}
+                cartLoadingId={cartLoadingId}
+                onAddToCart={handleAddToCart}
+                onRemoveFromCart={handleRemoveFromCart}
+              />
+            </div>
+          )
+        )}
 
         {/* --- 6. VEGETABLES ROW (New) --- */}
-        <div className="mb-10">
-          <SectionHeader
-            title="Fresh Vegetables"
-            icon={Carrot}
-            theme={theme}
-          />
-          <HorizontalScrollRow
-            data={VEG_DATA}
-            theme={theme}
-            cartItems={cartItems} 
-            onAddToCart={handleAddToCart}
-            onRemoveFromCart={handleRemoveFromCart}
-          />
-        </div>
+        {Loading ? (
+          <ProductSkeleton count={5} />
+        ) : (
+          FRUITS_DATA?.length > 0 && (
+            <div className="mb-10">
+              <SectionHeader
+                title="Seasonal Fruit"
+                icon={Apple}
+                theme={theme}
+              />
 
+              <HorizontalScrollRow
+                data={FRUITS_DATA}
+                theme={theme}
+                cartItems={cartItems}
+                cartLoadingId={cartLoadingId}
+                onAddToCart={handleAddToCart}
+                onRemoveFromCart={handleRemoveFromCart}
+              />
+            </div>
+          )
+        )}
 
-        {/* --- 6. VEGETABLES ROW (New) --- */}
-        <div className="mb-10">
-          <SectionHeader
-            title="Sessional Fruit"
-            icon={Carrot}
-            theme={theme}
-          />
-          <HorizontalScrollRow
-            data={FRUITS_DATA}
-            theme={theme}
-            cartItems={cartItems} 
-            onAddToCart={handleAddToCart}
-            onRemoveFromCart={handleRemoveFromCart}
-          />
-        </div>
-        
-
-     {/* --- 7. WINTER FEST ESSENTIALS (Merged Grid) --- */}
+        {/* --- 7. WINTER FEST ESSENTIALS (Merged Grid) --- */}
         <div className="mb-12">
           {/* Header */}
           <div className="flex justify-between items-end px-1 mb-4">
             <h3 className="text-lg md:text-xl font-bold text-gray-800 flex items-center gap-2">
-              <ThemeIcon className={theme.primaryText} size={20} /> 
+              <ThemeIcon className={theme.primaryText} size={20} />
               {theme.name} Essentials
             </h3>
           </div>
 
           {/* Unified Grid Layout */}
-           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {/* 1. SPOTLIGHT (Large Left) - Full Image */}
-            <div className={`col-span-2 row-span-2 rounded-2xl relative overflow-hidden group cursor-pointer border border-gray-100 shadow-sm hover:shadow-md transition-all h-64 md:h-auto`}>
+            <div
+              className={`col-span-2 row-span-2 rounded-2xl relative overflow-hidden group cursor-pointer border border-gray-100 shadow-sm hover:shadow-md transition-all h-64 md:h-auto`}
+            >
               <img
+                onClick={() => handleBannerClick(10)}
                 src="https://res.cloudinary.com/duzladayx/image/upload/v1769347659/banner_6_uhhblj.png"
                 className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                 alt="immunity"
@@ -1193,6 +1281,7 @@ useEffect(() => {
             {/* 2. FRESH JUICES (Small Top) - Full Image */}
             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm relative overflow-hidden group h-32 md:h-40 cursor-pointer hover:-translate-y-1 transition-transform">
               <img
+                onClick={() => handleBannerClick(9)}
                 src="https://res.cloudinary.com/duzladayx/image/upload/v1769349038/banner8_aqhjpq.png"
                 className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                 alt="juice"
@@ -1202,6 +1291,7 @@ useEffect(() => {
             {/* 3. DAIRY (Small Top) - Full Image */}
             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm relative overflow-hidden group h-32 md:h-40 cursor-pointer hover:-translate-y-1 transition-transform">
               <img
+                onClick={() => handleBannerClick(14)}
                 src="https://res.cloudinary.com/duzladayx/image/upload/v1769349416/banner7_nxhmmw.png"
                 className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                 alt="dairy"
@@ -1216,30 +1306,32 @@ useEffect(() => {
                 alt="breakfast"
               />
             </div>
-
-            
-
           </div>
         </div>
         {/* --- 10. PRODUCT FEED --- */}
         <div className="mb-20">
-          <SectionHeader
-            title="Recommended For You"
-          
-            theme={theme}
-          />
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {FEED_PRODUCTS.map((prod, idx) => (
-              <RecommendedProductCard
-                key={idx}
-                prod={prod}
-                idx={idx}
-                theme={theme}
-                onAddToCart={handleAddToCart}
-                onRemoveFromCart={handleRemoveFromCart}
-              />
-            ))}
+          <SectionHeader title="Recommended For You" theme={theme} />
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-5">
+            {Loading
+              ? [...Array(10)].map((_, i) => (
+                  <div
+                    key={i}
+                    className="h-56 bg-gray-200 rounded-xl animate-pulse"
+                  />
+                ))
+              : FEED_PRODUCTS.map((prod, idx) => (
+                  <RecommendedProductCard
+                    key={idx}
+                    prod={prod}
+                    loading={cartLoadingId === prod.product_id}
+                    idx={idx}
+                    theme={theme}
+                    onAddToCart={handleAddToCart}
+                    onRemoveFromCart={handleRemoveFromCart}
+                  />
+                ))}
           </div>
+
           {/* <div className="text-center pb-8 mt-8">
             <button className="text-gray-400 font-semibold text-sm hover:text-gray-800 transition">
               Show More Products

@@ -294,7 +294,8 @@ const AddNewAddressPage = () => {
     { label: "Full Name", key: "name", colSpan: "col-span-2" },
     { label: "Phone Number", key: "phone", colSpan: "col-span-2" },
     {
-      label: "House / Building",
+      label: "Address",
+      
       key: "line1",
       colSpan: "col-span-2 md:col-span-1",
     },

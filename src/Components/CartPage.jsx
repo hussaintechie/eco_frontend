@@ -49,6 +49,7 @@ const iconMap = {
   Other: MapPin,
 };
 import { toast } from "react-toastify";
+import Footer from "./Footer.jsx";
 
 // ------------------------------------------------
 // STATIC DATA (UI-ONLY SECTIONS)
@@ -1744,6 +1745,7 @@ const cartpage = () => {
           </div>
         </div>
       )}
+      <Footer theme={theme} />
     </div>
   );
 };

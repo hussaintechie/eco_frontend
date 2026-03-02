@@ -248,14 +248,17 @@ export default function LoginForm() {
           </Box>
 
           {/* PHONE INPUT */}
+        {!otpSent && (
           <TextField
             fullWidth
             label="Phone Number"
+            inputMode="number"
+
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
             sx={{ mb: 3 }}
           />
-
+        )}
           {/* OTP INPUT */}
           {otpSent && (
             <TextField
