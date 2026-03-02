@@ -128,6 +128,7 @@ const ProductCardVertical = ({
   loading, // ✅ coming from parent
   onAddToCart,
   onRemoveFromCart,
+  showDiscount=false,
 }) => {
   const curstk = Number(product?.current_stock) || 0;
   const isOutOfStock = curstk <= 0;
@@ -158,7 +159,7 @@ const ProductCardVertical = ({
         />
 
         {/* DISCOUNT */}
-        {product.discount && !isOutOfStock && (
+        {showDiscount && product.discount && !isOutOfStock && (
           <span className="absolute top-2 left-2 bg-blue-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-md shadow-sm">
             {product.discount} OFF
           </span>
@@ -377,6 +378,7 @@ const HorizontalScrollRow = ({
   cartLoadingId,
   onAddToCart,
   onRemoveFromCart,
+  showDiscount=false,
 }) => (
   <div className="flex gap-4 overflow-x-auto no-scrollbar pb-6 pl-1 scroll-smooth">
     {data.map((item, i) => (
@@ -390,6 +392,7 @@ const HorizontalScrollRow = ({
         loading={cartLoadingId === item.product_id}
         onAddToCart={onAddToCart}
         onRemoveFromCart={onRemoveFromCart}
+         showDiscount={showDiscount}
       />
     ))}
 
@@ -1203,6 +1206,7 @@ const MainContent = () => {
       cartLoadingId={cartLoadingId}
       onAddToCart={handleAddToCart}
       onRemoveFromCart={handleRemoveFromCart}
+      showDiscount={true}
     />
   </div>
 )}
