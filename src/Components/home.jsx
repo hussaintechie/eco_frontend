@@ -257,7 +257,7 @@ const RecommendedProductCard = ({
   onAddToCart,
   onRemoveFromCart,
 }) => {
-  const curstk = Number(prod?.m) || 0;
+  const curstk = Number(prod?.current_stock) || 0;
   const isOutOfStock = curstk <= 0;
   const [qty, setQty] = useState(0);
 
@@ -282,6 +282,12 @@ const RecommendedProductCard = ({
       {/* IMAGE */}
       <div className="relative h-32 md:h-40 mb-3 rounded-xl overflow-hidden bg-gray-50">
         {/* 🔥 FIXED IMAGE loading FOR PRODUCTS 🔥 */}
+        <img
+          src={prod.img}
+          alt={prod.name}
+          className={`w-full h-full object-cover mix-blend-multiply transition-transform duration-500
+          ${isOutOfStock ? "blur-sm grayscale" : "group-hover:scale-110"}`}
+        />
 
         {/* WISHLIST */}
         {/* {!isOutOfStock && (
